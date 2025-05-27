@@ -80,20 +80,20 @@
         .resource-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 8px 4px;
+            padding: 8px 2px;
             text-align: center;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 13px;
             word-wrap: break-word;
             height: 40px;
             vertical-align: middle;
         }
         .resource-table td {
-            padding: 8px 4px;
+            padding: 8px 2px;
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
-            font-size: 11px;
+            font-size: 12px;
             word-wrap: break-word;
             overflow: hidden;
             height: 50px;
@@ -101,17 +101,17 @@
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
-            font-size: 10px;
+            font-size: 11px;
             overflow: hidden;
             white-space: normal;
             word-break: break-word;
-            padding: 4px 2px;
+            padding: 4px 1px;
             line-height: 1.2;
         }
         .resource-table .process-percentage {
             font-weight: bold;
             color: #e74c3c;
-            font-size: 11px;
+            font-size: 12px;
         }
         .run-btn {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -267,7 +267,7 @@ MuMuPlayer,安卓模拟器
         
         function generateTagHTML(tagType) {
             const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
-            return `<span style="background: ${style.background}; color: ${style.color}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block;">${tagType}</span>`;
+            return `<span style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 11px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block;">${tagType}</span>`;
         }
         
         function runProcessTest() {
