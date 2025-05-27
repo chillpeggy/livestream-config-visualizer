@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播配置层级可视化工具 - 完整演示</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .demo-section h2 {
+            margin: 0 0 15px 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .test-case {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .test-case:last-child { border-bottom: none; }
+        .process-name { font-family: 'Courier New', monospace; font-weight: bold; }
+        .result-success { color: #28a745; font-weight: bold; }
+        .result-error { color: #dc3545; font-weight: bold; }
+        .debug-info {
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .resource-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            table-layout: fixed;
+        }
+        .resource-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 2px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            word-wrap: break-word;
+            height: 40px;
+            vertical-align: middle;
+        }
+        .resource-table td {
+            padding: 8px 2px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            background: #fff;
+            font-size: 12px;
+            word-wrap: break-word;
+            overflow: hidden;
+            height: 50px;
+            vertical-align: middle;
+        }
+        .resource-table .process-name {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow: hidden;
+            white-space: normal;
+            word-break: break-word;
+            padding: 4px 1px;
+            line-height: 1.2;
+        }
+        .resource-table .process-percentage {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 12px;
+        }
+        .run-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .run-btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 直播配置层级可视化工具 - 字体测试版 (20250527-230208)</h1>
+            <p style="color: red; font-weight: bold;">⚠️ 缓存测试版本 - 字体已优化：标签11px，进程名11px，表格12px ⚠️</p>
+            <p>进程库匹配功能测试 | 支持1500+进程识别 | 16种进程类型标签</p>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🧪 进程匹配测试</h2>
+            <button class="run-btn" onclick="runProcessTest()">运行进程匹配测试</button>
+            <button class="run-btn" onclick="runResourceTest()">运行资源特征测试</button>
+            <div id="processTestResult"></div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📋 资源特征演示</h2>
+            <div id="resourceFeatureResult"></div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🐛 调试信息</h2>
+            <div id="debugInfo" class="debug-info">等待测试运行...</div>
+        </div>
+    </div>
+
+    <script>
+        // 内嵌进程库数据（精选版本）
+        const processLibraryData = `exe,type
+LeagueClientUx,游戏进程
+dota2,游戏进程
+chrome,浏览器进程
+firefox,浏览器进程
+obs64,伴侣进程
+直播伴侣,伴侣进程
+按键精灵,自动操作脚本
+GenshinImpact,游戏进程
+VALORANT-Win64-Shipping,游戏进程
+CS2,游戏进程
+League of Legends,游戏进程
+TslGame,游戏进程
+crossfire,游戏进程
+DNFM,游戏进程
+Overwatch,游戏进程
+WeChat,浏览器进程
+QQ,浏览器进程
+PotPlayer,视频播放器进程
+VLC,视频播放器进程
+ApowerMirror,手机投屏进程
+BlueStacks,安卓模拟器
+MuMuPlayer,安卓模拟器
+雷电模拟器,安卓模拟器
+抖音滑块,人机校验作弊进程
+游戏外挂,游戏外挂作弊
+上号器,盗号进程
+黑产工具,黑产进程`;
+
+        let processLibrary = [];
+        let debugOutput = '';
+        
+        // 标签颜色样式配置
+        const tagStyles = {
+            '游戏进程': { background: '#28a745', color: '#000000' },
+            '浏览器进程': { background: '#007bff', color: '#ffffff' },
+            '视频播放器进程': { background: '#6f42c1', color: '#ffffff' },
+            '手机投屏进程': { background: '#fd7e14', color: '#ffffff' },
+            '安卓模拟器': { background: '#20c997', color: '#ffffff' },
+            '串流作弊进程': { background: '#dc3545', color: '#ffffff' },
+            '弹幕爬取进程': { background: '#ffc107', color: '#000000' },
+            '人机校验作弊进程': { background: '#6c757d', color: '#ffffff' },
+            '音频录制AI互动进程': { background: '#e83e8c', color: '#ffffff' },
+            '自动操作脚本': { background: '#795548', color: '#ffffff' },
+            '游戏外挂作弊': { background: '#8b0000', color: '#ffffff' },
+            '伴侣进程': { background: '#17a2b8', color: '#ffffff' },
+            '私服进程': { background: '#ff5722', color: '#ffffff' },
+            '盗号进程': { background: '#9c27b0', color: '#ffffff' },
+            '黑产进程': { background: '#212529', color: '#ffffff' },
+            '非脚本进程': { background: '#607d8b', color: '#ffffff' },
+            '未知进程': { background: '#adb5bd', color: '#000000' }
+        };
+        
+        function addDebug(message) {
+            debugOutput += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            document.getElementById('debugInfo').textContent = debugOutput;
+        }
+        
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            processLibrary = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.split(',');
+                if (values.length >= 2 && values[0].trim() && values[1].trim()) {
+                    processLibrary.push({
+                        exe: values[0].trim(),
+                        type: values[1].trim()
+                    });
+                }
+            }
+            addDebug(`进程库解析完成，共 ${processLibrary.length} 条记录`);
+        }
+        
+        function matchProcessType(processName) {
+            if (!processName || processLibrary.length === 0) {
+                return '未知进程';
+            }
+            
+            const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
+            addDebug(`匹配进程: ${processName} → ${cleanProcessName}`);
+            
+            // 精确匹配
+            let match = processLibrary.find(item => 
+                item.exe.toLowerCase() === processName.toLowerCase() ||
+                item.exe.toLowerCase() === cleanProcessName
+            );
+            
+            if (match) {
+                addDebug(`精确匹配成功: ${match.exe} → ${match.type}`);
+                return match.type;
+            }
+            
+            // 模糊匹配
+            match = processLibrary.find(item => 
+                cleanProcessName.includes(item.exe.toLowerCase()) ||
+                item.exe.toLowerCase().includes(cleanProcessName)
+            );
+            
+            if (match) {
+                addDebug(`模糊匹配成功: ${match.exe} → ${match.type}`);
+                return match.type;
+            }
+            
+            addDebug(`匹配失败: ${processName}`);
+            return '未知进程';
+        }
+        
+        function generateTagHTML(tagType) {
+            const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
+            return `<span style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 11px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block;">${tagType}</span>`;
+        }
+        
+        function runProcessTest() {
+            debugOutput = '';
+            addDebug('=== 开始进程匹配测试 ===');
+            
+            // 解析进程库
+            parseCSV(processLibraryData);
+            
+            // 测试用例
+            const testCases = [
+                { name: 'LeagueClientUxRender.exe', expected: '游戏进程' },
+                { name: 'dota2.exe', expected: '游戏进程' },
+                { name: 'chrome.exe', expected: '浏览器进程' },
+                { name: 'obs64.exe', expected: '伴侣进程' },
+                { name: 'unknownprocess.exe', expected: '未知进程' }
+            ];
+            
+            let resultHTML = '<h3>测试结果</h3>';
+            let allPassed = true;
+            
+            testCases.forEach(testCase => {
+                const result = matchProcessType(testCase.name);
+                const passed = result === testCase.expected;
+                if (!passed) allPassed = false;
+                
+                resultHTML += `
+                    <div class="test-case">
+                        <span class="process-name">${testCase.name}</span>
+                        <span>→</span>
+                        <span>${generateTagHTML(result)}</span>
+                        <span class="${passed ? 'result-success' : 'result-error'}">
+                            ${passed ? '✅ 通过' : '❌ 失败'}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            resultHTML = `<div class="test-result">
+                <h4 style="color: ${allPassed ? '#28a745' : '#dc3545'}">
+                    ${allPassed ? '🎉 所有测试通过！' : '⚠️ 部分测试失败'}
+                </h4>
+                ${resultHTML}
+            </div>`;
+            
+            document.getElementById('processTestResult').innerHTML = resultHTML;
+        }
+        
+        function runResourceTest() {
+            addDebug('=== 开始资源特征测试 ===');
+            
+            // 模拟资源数据 - 增加到5个进程进行测试
+            const mockData = {
+                cpuTopProcessList: [
+                    { name: 'LeagueClientUxRender.exe', percentage: 35.4 },
+                    { name: 'chrome.exe', percentage: 12.8 },
+                    { name: 'obs64.exe', percentage: 8.5 },
+                    { name: 'discord.exe', percentage: 6.2 },
+                    { name: 'steam.exe', percentage: 4.1 }
+                ],
+                gpuTopProcessList: [
+                    { name: 'GenshinImpact.exe', percentage: 76.3 },
+                    { name: 'firefox.exe', percentage: 15.7 },
+                    { name: 'nvcontainer.exe', percentage: 5.2 },
+                    { name: 'dwm.exe', percentage: 2.1 },
+                    { name: 'explorer.exe', percentage: 0.7 }
+                ]
+            };
+            
+            // 计算最大进程数
+            const maxProcessCount = Math.max(mockData.cpuTopProcessList.length, mockData.gpuTopProcessList.length);
+            
+            let tableHTML = `
+                <table class="resource-table" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">资源类型</th>
+            `;
+            
+            // 重新设计列宽分配：进程名占更多空间，标签和占比占较少空间
+            const processNameWidth = `${92 / maxProcessCount * 0.5}%`; // 每个进程名占50%的进程空间
+            const tagWidth = `${92 / maxProcessCount * 0.3}%`; // 每个标签占30%的进程空间
+            const percentageWidth = `${92 / maxProcessCount * 0.2}%`; // 每个占比占20%的进程空间
+            
+            for (let i = 0; i < maxProcessCount; i++) {
+                tableHTML += `
+                            <th style="width: ${processNameWidth};">进程${i + 1}</th>
+                            <th style="width: ${tagWidth};">标签${i + 1}</th>
+                            <th style="width: ${percentageWidth};">占比${i + 1}</th>
+                `;
+            }
+            
+            tableHTML += `
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // CPU行
+            tableHTML += '<tr><td style="font-weight: bold;">CPU占用TOP</td>';
+            for (let i = 0; i < maxProcessCount; i++) {
+                if (i < mockData.cpuTopProcessList.length) {
+                    const process = mockData.cpuTopProcessList[i];
+                    const processType = matchProcessType(process.name);
+                    
+                    // 不再截断进程名，允许完整显示并换行
+                    const displayName = process.name;
+                    
+                    tableHTML += `
+                        <td class="process-name" title="${process.name}">${displayName}</td>
+                        <td>${generateTagHTML(processType)}</td>
+                        <td class="process-percentage">${process.percentage}%</td>
+                    `;
+                } else {
+                    tableHTML += '<td>-</td><td>-</td><td>-</td>';
+                }
+            }
+            tableHTML += '</tr>';
+            
+            // GPU行
+            tableHTML += '<tr><td style="font-weight: bold;">GPU占用TOP</td>';
+            for (let i = 0; i < maxProcessCount; i++) {
+                if (i < mockData.gpuTopProcessList.length) {
+                    const process = mockData.gpuTopProcessList[i];
+                    const processType = matchProcessType(process.name);
+                    
+                    // 不再截断进程名，允许完整显示并换行
+                    const displayName = process.name;
+                    
+                    tableHTML += `
+                        <td class="process-name" title="${process.name}">${displayName}</td>
+                        <td>${generateTagHTML(processType)}</td>
+                        <td class="process-percentage">${process.percentage}%</td>
+                    `;
+                } else {
+                    tableHTML += '<td>-</td><td>-</td><td>-</td>';
+                }
+            }
+            tableHTML += '</tr>';
+            
+            tableHTML += '</tbody></table>';
+            
+            document.getElementById('resourceFeatureResult').innerHTML = tableHTML;
+            addDebug(`资源特征测试完成 - 显示${maxProcessCount}个进程列`);
+        }
+        
+        // 页面加载时自动运行测试
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                runProcessTest();
+                setTimeout(() => runResourceTest(), 1000);
+            }, 500);
+        });
+    </script>
+</body>
+</html> 
