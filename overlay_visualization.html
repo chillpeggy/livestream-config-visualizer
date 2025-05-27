@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播配置层级可视化工具</title>
+    <style>
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 2200px;
+            margin: 0 auto;
+            width: 100%; /* 确保容器占满可用宽度 */
+        }
+        .header {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%; /* 确保与容器同宽 */
+            box-sizing: border-box;
+        }
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 15px;
+        }
+        .input-section {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%; /* 确保与容器同宽 */
+            box-sizing: border-box;
+        }
+        .input-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            color: #343a40;
+        }
+        .input-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #495057;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 0;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 2200px; /* 限制最大宽度 */
+            width: 100%; /* 确保占满可用宽度 */
+            margin: 0 auto; /* 居中对齐 */
+        }
+        .visualization-container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            height: 800px; /* 固定高度 */
+            overflow-y: auto; /* 内容超出时滚动 */
+            box-sizing: border-box;
+        }
+        .visualization-container h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .layer-panel {
+            width: 780px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            height: 800px; /* 与预览图保持一致的高度 */
+            overflow-y: auto; /* 内容超出时滚动 */
+            box-sizing: border-box;
+        }
+        .layer-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            color: #343a40;
+        }
+        .layer-panel p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #6c757d;
+        }
+        .game-image-container {
+            position: relative;
+            display: inline-block;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+            background: #000;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+        }
+        .game-image {
+            display: block;
+            width: 100%;
+            max-width: 1300px;
+            height: auto;
+            opacity: 0.9;
+        }
+        .layer-overlay {
+            position: absolute;
+            border: 4px solid;
+            border-style: dashed;
+            background: rgba(255,255,255,0.15);
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .layer-overlay:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.25);
+            border-style: solid;
+            border-width: 5px;
+            z-index: 100;
+            transform: scale(1.01);
+        }
+        .layer-overlay.hidden {
+            display: none;
+        }
+        .layer-label {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            white-space: nowrap;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            border-radius: 4px 0 8px 0;
+        }
+        .layer-details {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 0 0 4px 4px;
+        }
+        .layer-overlay:hover .layer-details {
+            opacity: 1;
+        }
+        .controls {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toggle-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .toggle-btn:hover {
+            background: #0056b3;
+        }
+        .toggle-btn.active {
+            background: #28a745;
+        }
+        .opacity-slider {
+            width: 100px;
+            margin: 0 10px;
+        }
+        .file-upload {
+            padding: 15px;
+            border: 2px dashed #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+        }
+        .file-upload:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f2ff 0%, #e8ebff 100%);
+        }
+        .file-upload p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #495057;
+        }
+        .file-upload p:last-of-type {
+            margin: 8px 0 0 0;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .json-input {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f8f9fa;
+            transition: border-color 0.3s ease;
+        }
+        .json-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .parse-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        .parse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+        .parse-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #f5c6cb;
+            font-size: 13px;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #c3e6cb;
+            font-size: 13px;
+        }
+        .layer-list {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .config-group-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            font-weight: bold;
+            color: #343a40;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .config-group-header .group-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .config-group-header.douyin {
+            background: #e8f4fd;
+            color: #0c5aa6;
+            border-left: 4px solid #0c5aa6;
+        }
+        .config-group-header.obs {
+            background: #f0e8fd;
+            color: #6b2c91;
+            border-left: 4px solid #6b2c91;
+        }
+        .config-group-header .group-icon.douyin-icon {
+            background: #0c5aa6;
+        }
+        .config-group-header .group-icon.obs-icon {
+            background: #6b2c91;
+        }
+        .layer-item {
+            padding: 15px 20px 15px 35px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+        .layer-item::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            width: 3px;
+            height: 50%;
+            background: #dee2e6;
+            top: 0;
+        }
+        .layer-item::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            width: 12px;
+            height: 3px;
+            background: #dee2e6;
+        }
+        .layer-item:last-child::before {
+            height: 50%;
+        }
+        .layer-item.show-all {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #cff4fc 0%, #b6effb 100%);
+            font-weight: bold;
+            color: #055160;
+            border-radius: 12px 12px 0 0;
+        }
+        .layer-item.show-all::before,
+        .layer-item.show-all::after {
+            display: none;
+        }
+        .layer-item.show-all.selected {
+            background: linear-gradient(135deg, #b6effb 0%, #9fecfa 100%);
+            border-left: 4px solid #0dcaf0;
+        }
+        .layer-item:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .layer-item.selected {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border-left: 4px solid #28a745;
+        }
+        .layer-color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .layer-text {
+            flex: 1;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .layer-title {
+            font-weight: bold;
+            color: #212529;
+            font-size: 16px;
+        }
+        .layer-desc {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .instructions {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        .instructions h3 {
+            margin: 0 0 10px 0;
+            color: #155724;
+            font-size: 16px;
+        }
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #155724;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .placeholder-message {
+            text-align: center;
+            color: #6c757d;
+            padding: 30px;
+            font-style: italic;
+            font-size: 14px;
+        }
+        .layer-item:last-child {
+            border-bottom: none;
+        }
+        .config-group-header + .layer-item:first-of-type::before {
+            top: 50%;
+            height: 50%;
+        }
+        .resource-features {
+            width: 100%;
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            overflow-x: auto; /* 表格超宽时水平滚动 */
+            box-sizing: border-box; /* 确保padding不影响宽度 */
+        }
+        .resource-features h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .resource-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .resource-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .resource-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            background: #fff;
+            font-size: 13px;
+        }
+        .resource-table tr:last-child td {
+            border-bottom: none;
+        }
+        .resource-table .process-type {
+            font-weight: bold;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #495057;
+        }
+        .resource-table .process-name {
+            font-family: 'Courier New', monospace;
+            color: #212529;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .resource-table .process-tag {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .resource-table .process-percentage {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .resource-table .process-empty {
+            color: #adb5bd;
+            font-style: italic;
+            background: #f8f9fa;
+        }
+        .resource-features .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        .layer-panel-container {
+            display: grid;
+            grid-template-columns: 1fr 780px;
+            gap: 20px;
+            width: 100%; /* 确保占满容器宽度 */
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 直播配置层级可视化工具</h1>
+            <p>上传底图并输入JSON配置，系统将自动解析并在图片上叠加显示各个源的位置和覆盖范围</p>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="input-section">
+            <h2>📥 输入配置</h2>
+            <div class="input-grid">
+                <!-- 图片上传 -->
+                <div>
+                    <h3>🖼️ 1. 上传底图</h3>
+                    <div class="file-upload">
+                        <p>请上传您的游戏截图或直播底图</p>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        <button class="upload-btn" onclick="document.getElementById('imageUpload').click();">选择图片文件</button>
+                        <p>支持 JPG, PNG, GIF 等常见图片格式</p>
+                    </div>
+                </div>
+                
+                <!-- JSON输入 -->
+                <div>
+                    <h3>⚙️ 2. 输入JSON配置</h3>
+                    <textarea 
+                        id="jsonInput" 
+                        class="json-input" 
+                        placeholder='请粘贴您的直播配置JSON，支持两种格式：
+
+1. sourceInfo格式：
+{
+  "resolution": "{\"width\":1920,\"height\":1080}",
+  "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"game.exe\",\"overlap\":0.25,\"canvasOverlap\":1,\"canvasOverlapRect\":[0,0,1920,1080],\"layer\":3}]}}"
+}
+
+2. obsSourceInfo格式：
+{
+  "resolution": "{\"width\":1920,\"height\":1080}",
+  "obsSourceInfo": "{\"process\":[{\"exeName\":\"TslGame.exe\",\"pos\":{\"x\":0,\"y\":0},\"name\":\"游戏源\"}],\"video\":[{\"volume\":1,\"filepath\":\"video.mp4\",\"fileSize\":962820755,\"pos\":{\"x\":240,\"y\":90}}]}"
+}'></textarea>
+                    <button class="parse-btn" id="parseBtn" onclick="parseConfiguration()">🔍 解析配置</button>
+                    <div id="parseMessage"></div>
+                </div>
+                
+                <!-- 使用说明 -->
+                <div>
+                    <h3>💡 3. 使用说明</h3>
+                    <div class="instructions">
+                        <h3>✨ 快速上手</h3>
+                        <ul>
+                            <li>上传您的游戏截图或直播底图</li>
+                            <li>粘贴直播配置的JSON代码</li>
+                            <li>点击"解析配置"自动生成可视化</li>
+                            <li>点击图层行查看单独效果</li>
+                            <li>调节透明度和显示选项</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- 资源特征模块 -->
+            <div class="resource-features" id="resourceFeatures" style="display: none;">
+                <h2>🖥️ 资源特征</h2>
+                <div id="resourceTableContainer">
+                    <div class="empty-state">暂无资源信息，请解析包含 cpuTopProcessList 或 gpuTopProcessList 的配置</div>
+                </div>
+            </div>
+            
+            <div class="layer-panel-container">
+                <div class="visualization-container">
+                    <h2>🖼️ 解析预览图</h2>
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>🎛️ 叠加层透明度:</label>
+                            <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.6" onchange="updateOpacity(this.value)">
+                            <span id="opacityValue">60%</span>
+                        </div>
+                        <div class="control-group">
+                            <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
+                            <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                        </div>
+                    </div>
+                    
+                    <div class="game-image-container" id="gameContainer">
+                        <img class="game-image" id="gameImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTkyMCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiBmaWxsPSIjZjhmOWZhIi8+Cjx0ZXh0IHg9Ijk2MCIgeT0iNTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LXNpemU9IjM2IiBmb250LWZhbWlseT0iQXJpYWwiPuivt+S4iuS8oOW6lembs+WSjOWkhOWtmemFjee9rjwvdGV4dD4KPHR4dCB4PSI5NjAiIHk9IjU2MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIj7miJjlsIbnjqnlrr3lj6/op4blhpnlm77lsYI8L3RleHQ+Cjwvc3ZnPg==" alt="等待上传底图">
+                        
+                        <!-- 动态生成的层级叠加覆盖层 -->
+                        <div class="layer-overlays" id="layerOverlays">
+                            <!-- 这里将根据JSON动态生成层级 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layer-panel">
+                    <h2>📋 配置图层列表</h2>
+                    <p>解析JSON配置后，点击下方列表中的任意行查看对应图层</p>
+                    
+                    <div class="layer-list" id="layerList">
+                        <div class="placeholder-message">
+                            请先上传底图并输入JSON配置，然后点击"解析配置"按钮
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSelectedLayer = 'all';
+        let parsedLayers = [];
+        let canvasResolution = { width: 1920, height: 1080 };
+        
+        // 层级颜色映射
+        const layerColors = {
+            0: '#3498db', // 蓝色
+            1: '#2ecc71', // 绿色
+            2: '#f39c12', // 橙色
+            3: '#9b59b6', // 紫色
+            4: '#e74c3c', // 红色
+            5: '#1abc9c', // 青色
+            6: '#f1c40f', // 黄色
+            7: '#e67e22'  // 深橙色
+        };
+
+        // 源类型中文映射
+        const sourceTypeNames = {
+            'camera': '摄像头',
+            'process': '进程',
+            'text': '文本',
+            'screenshot': '截图',
+            'video': '视频'
+        };
+
+        // 图片上传处理
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('gameImage').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 解析JSON配置
+        function parseConfiguration() {
+            const jsonInput = document.getElementById('jsonInput').value.trim();
+            const messageDiv = document.getElementById('parseMessage');
+            
+            if (!jsonInput) {
+                showMessage('请输入JSON配置代码', 'error');
+                return;
+            }
+
+            try {
+                // 解析主JSON
+                const data = JSON.parse(jsonInput);
+                
+                // 解析resolution
+                if (data.resolution) {
+                    canvasResolution = JSON.parse(data.resolution);
+                }
+                
+                // 收集所有图层
+                parsedLayers = [];
+                
+                // 处理sourceInfo格式
+                if (data.sourceInfo) {
+                    parseSourceInfo(JSON.parse(data.sourceInfo));
+                }
+                
+                // 处理obsSourceInfo格式
+                if (data.obsSourceInfo) {
+                    parseObsSourceInfo(JSON.parse(data.obsSourceInfo));
+                }
+                
+                // 处理资源特征数据
+                let hasResourceData = false;
+                if (data.cpuTopProcessList || data.gpuTopProcessList) {
+                    generateResourceFeatures(data);
+                    hasResourceData = true;
+                }
+                
+                // 显示或隐藏资源特征模块
+                const resourceFeatures = document.getElementById('resourceFeatures');
+                if (hasResourceData) {
+                    resourceFeatures.style.display = 'block';
+                } else {
+                    resourceFeatures.style.display = 'none';
+                }
+                
+                if (parsedLayers.length === 0) {
+                    throw new Error('未找到可解析的图层信息，请检查JSON格式');
+                }
+                
+                // 按layer排序
+                parsedLayers.sort((a, b) => a.layer - b.layer);
+                
+                showMessage(`✅ 成功解析配置！发现 ${parsedLayers.length} 个图层${hasResourceData ? '和资源特征数据' : ''}`, 'success');
+                
+                // 生成可视化
+                generateVisualization();
+                generateLayerList();
+                
+            } catch (err) {
+                console.error('JSON解析错误:', err);
+                showMessage(`❌ JSON解析失败: ${err.message}`, 'error');
+                clearVisualization();
+                // 隐藏资源特征模块
+                document.getElementById('resourceFeatures').style.display = 'none';
+            }
+        }
+
+        // 解析sourceInfo格式
+        function parseSourceInfo(sourceInfo) {
+            Object.keys(sourceInfo).forEach(sourceType => {
+                const sourceData = sourceInfo[sourceType];
+                if (sourceData.sourceList) {
+                    sourceData.sourceList.forEach(source => {
+                        parsedLayers.push({
+                            ...source,
+                            sourceType,
+                            configSource: 'douyin', // 标识来源为抖音直播伴侣
+                            name: source.name || source.exeName || source.fileName || `${sourceTypeNames[sourceType] || sourceType}源`
+                        });
+                    });
+                }
+            });
+        }
+
+        // 解析obsSourceInfo格式
+        function parseObsSourceInfo(obsSourceInfo) {
+            let layerIndex = 0;
+            
+            // 检测分辨率模式
+            const detectedResolution = detectResolutionMode(obsSourceInfo);
+            
+            // 处理process配置
+            if (obsSourceInfo.process) {
+                obsSourceInfo.process.forEach(processSource => {
+                    const convertedCoords = convertObsCoordinates(
+                        processSource.pos.x, 
+                        processSource.pos.y, 
+                        detectedResolution.width, 
+                        detectedResolution.height,
+                        detectedResolution
+                    );
+                    
+                    parsedLayers.push({
+                        sourceType: 'process',
+                        configSource: 'obs', // 标识来源为OBS
+                        name: processSource.name || processSource.exeName || '进程源',
+                        exeName: processSource.exeName,
+                        layer: layerIndex++,
+                        canvasOverlapRect: convertedCoords,
+                        canvasOverlap: calculateOverlap(convertedCoords),
+                        overlap: calculateOverlap(convertedCoords),
+                        pos: processSource.pos
+                    });
+                });
+            }
+            
+            // 处理video配置
+            if (obsSourceInfo.video) {
+                obsSourceInfo.video.forEach(videoSource => {
+                    const convertedCoords = convertObsCoordinates(
+                        videoSource.pos.x, 
+                        videoSource.pos.y, 
+                        detectedResolution.width, 
+                        detectedResolution.height,
+                        detectedResolution
+                    );
+                    
+                    parsedLayers.push({
+                        sourceType: 'video',
+                        configSource: 'obs', // 标识来源为OBS
+                        name: videoSource.name || '视频源',
+                        fileName: videoSource.filepath ? videoSource.filepath.split('/').pop() : '',
+                        layer: layerIndex++,
+                        canvasOverlapRect: convertedCoords,
+                        canvasOverlap: calculateOverlap(convertedCoords),
+                        overlap: calculateOverlap(convertedCoords),
+                        volume: videoSource.volume,
+                        fileSize: videoSource.fileSize,
+                        looping: videoSource.looping,
+                        pos: videoSource.pos
+                    });
+                });
+            }
+            
+            // otherScenes 已过滤，不进行解析
+        }
+
+        // 检测分辨率模式
+        function detectResolutionMode(obsSourceInfo) {
+            let maxX = 0, maxY = 0;
+            
+            // 检查process坐标
+            if (obsSourceInfo.process) {
+                obsSourceInfo.process.forEach(item => {
+                    maxX = Math.max(maxX, item.pos.x);
+                    maxY = Math.max(maxY, item.pos.y);
+                });
+            }
+            
+            // 检查video坐标
+            if (obsSourceInfo.video) {
+                obsSourceInfo.video.forEach(item => {
+                    maxX = Math.max(maxX, item.pos.x);
+                    maxY = Math.max(maxY, item.pos.y);
+                });
+            }
+            
+            // 根据最大坐标判断分辨率
+            if (maxX <= 1280 && maxY <= 720) {
+                return { width: 1280, height: 720, name: '720p' };
+            } else if (maxX <= 1920 && maxY <= 1080) {
+                return { width: 1920, height: 1080, name: '1080p' };
+            } else if (maxX <= 2560 && maxY <= 1440) {
+                return { width: 2560, height: 1440, name: '2K' };
+            } else {
+                return { width: 3840, height: 2160, name: '4K' };
+            }
+        }
+
+        // 转换OBS坐标到720p基准
+        function convertObsCoordinates(x, y, sourceWidth, sourceHeight, detectedResolution) {
+            // 先转换到720p基准
+            const scale720p = 720 / detectedResolution.height;
+            const converted720pX = x * scale720p;
+            const converted720pY = y * scale720p;
+            const converted720pWidth = sourceWidth * scale720p;
+            const converted720pHeight = sourceHeight * scale720p;
+            
+            // 再转换到当前画布分辨率
+            const scaleToCanvas = canvasResolution.height / 720;
+            const finalX = converted720pX * scaleToCanvas;
+            const finalY = converted720pY * scaleToCanvas;
+            const finalWidth = converted720pWidth * scaleToCanvas;
+            const finalHeight = converted720pHeight * scaleToCanvas;
+            
+            return [finalX, finalY, finalWidth, finalHeight];
+        }
+
+        // 计算覆盖率
+        function calculateOverlap(rect) {
+            const [x, y, width, height] = rect;
+            const totalArea = canvasResolution.width * canvasResolution.height;
+            const rectArea = width * height;
+            return Math.min(rectArea / totalArea, 1);
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('parseMessage');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+        }
+
+        // 生成可视化层级
+        function generateVisualization() {
+            const overlaysContainer = document.getElementById('layerOverlays');
+            overlaysContainer.innerHTML = '';
+
+            parsedLayers.forEach((layer, index) => {
+                const [x, y, width, height] = layer.canvasOverlapRect;
+                const color = layerColors[layer.layer] || '#95a5a6';
+                
+                // 计算百分比位置
+                const leftPercent = (x / canvasResolution.width * 100).toFixed(2);
+                const topPercent = (y / canvasResolution.height * 100).toFixed(2);
+                const widthPercent = (width / canvasResolution.width * 100).toFixed(2);
+                const heightPercent = (height / canvasResolution.height * 100).toFixed(2);
+                
+                const overlayDiv = document.createElement('div');
+                overlayDiv.className = 'layer-overlay';
+                overlayDiv.setAttribute('data-layer', layer.layer);
+                overlayDiv.style.cssText = `
+                    left: ${leftPercent}%;
+                    top: ${topPercent}%;
+                    width: ${widthPercent}%;
+                    height: ${heightPercent}%;
+                    border-color: ${color};
+                    background: ${color}20;
+                `;
+                
+                // 创建标签
+                const label = document.createElement('div');
+                label.className = 'layer-label';
+                label.style.background = color;
+                label.textContent = `L${layer.layer}: ${layer.name}`;
+                
+                // 创建详细信息
+                const details = document.createElement('div');
+                details.className = 'layer-details';
+                details.innerHTML = generateDetailsHTML(layer);
+                
+                overlayDiv.appendChild(label);
+                overlayDiv.appendChild(details);
+                overlaysContainer.appendChild(overlayDiv);
+            });
+        }
+
+        // 生成详细信息HTML
+        function generateDetailsHTML(layer) {
+            let html = `<div><strong>类型:</strong> ${sourceTypeNames[layer.sourceType] || layer.sourceType}</div>`;
+            html += `<div><strong>层级:</strong> 第${layer.layer}层</div>`;
+            
+            if (layer.exeName) html += `<div><strong>进程:</strong> ${layer.exeName.split(':').pop() || layer.exeName}</div>`;
+            if (layer.fileName) html += `<div><strong>文件:</strong> ${layer.fileName}</div>`;
+            if (layer.id) html += `<div><strong>ID:</strong> ${layer.id}</div>`;
+            
+            if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
+            if (layer.overlap !== undefined) html += `<div><strong>原始占比:</strong> ${(layer.overlap * 100).toFixed(1)}%</div>`;
+            
+            // obsSourceInfo特有字段
+            if (layer.volume !== undefined) {
+                const volumeText = layer.volume === 0 ? '静音' : `${layer.volume * 100}%`;
+                html += `<div><strong>音量:</strong> ${volumeText}</div>`;
+            }
+            if (layer.fileSize !== undefined) {
+                const sizeText = formatFileSize(layer.fileSize);
+                html += `<div><strong>文件大小:</strong> ${sizeText}</div>`;
+            }
+            if (layer.looping !== undefined) {
+                html += `<div><strong>循环播放:</strong> ${layer.looping ? '是' : '否'}</div>`;
+            }
+            
+            const [x, y, width, height] = layer.canvasOverlapRect;
+            html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
+            
+            return html;
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 生成图层列表
+        function generateLayerList() {
+            const layerList = document.getElementById('layerList');
+            layerList.innerHTML = '';
+            
+            // 按配置来源分组
+            const douyinLayers = parsedLayers.filter(layer => layer.configSource === 'douyin');
+            const obsLayers = parsedLayers.filter(layer => layer.configSource === 'obs');
+            
+            // 添加"显示全部"选项
+            const showAllItem = document.createElement('div');
+            showAllItem.className = 'layer-item show-all selected';
+            showAllItem.setAttribute('data-layer', 'all');
+            showAllItem.onclick = () => showAllLayers(showAllItem);
+            showAllItem.innerHTML = `
+                <div class="layer-color-dot" style="background: linear-gradient(45deg, ${Object.values(layerColors).slice(0, parsedLayers.length).join(', ')});"></div>
+                <div class="layer-text">
+                    <div class="layer-title">🔄 显示全部图层</div>
+                    <div class="layer-desc">查看所有${parsedLayers.length}个图层的叠加效果</div>
+                </div>
+            `;
+            layerList.appendChild(showAllItem);
+            
+            // 先显示抖音直播伴侣配置
+            if (douyinLayers.length > 0) {
+                const douyinGroupHeader = document.createElement('div');
+                douyinGroupHeader.className = 'config-group-header douyin';
+                douyinGroupHeader.innerHTML = `
+                    <div class="group-icon douyin-icon">抖</div>
+                    <span>抖音直播伴侣配置 (${douyinLayers.length}层)</span>
+                `;
+                layerList.appendChild(douyinGroupHeader);
+                
+                // 添加抖音配置的图层
+                douyinLayers.forEach(layer => {
+                    const layerItem = createLayerItem(layer);
+                    layerList.appendChild(layerItem);
+                });
+            }
+            
+            // 再显示OBS配置
+            if (obsLayers.length > 0) {
+                const obsGroupHeader = document.createElement('div');
+                obsGroupHeader.className = 'config-group-header obs';
+                obsGroupHeader.innerHTML = `
+                    <div class="group-icon obs-icon">OBS</div>
+                    <span>OBS配置 (${obsLayers.length}层)</span>
+                `;
+                layerList.appendChild(obsGroupHeader);
+                
+                // 添加OBS配置的图层
+                obsLayers.forEach(layer => {
+                    const layerItem = createLayerItem(layer);
+                    layerList.appendChild(layerItem);
+                });
+            }
+        }
+
+        // 创建图层项元素
+        function createLayerItem(layer) {
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item';
+            layerItem.setAttribute('data-layer', layer.layer);
+            layerItem.onclick = () => showSingleLayer(layerItem, layer.layer);
+            
+            const color = layerColors[layer.layer] || '#95a5a6';
+            const desc = generateLayerDescription(layer);
+            
+            // 添加配置来源标识
+            const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
+            
+            layerItem.innerHTML = `
+                <div class="layer-color-dot" style="background: ${color};"></div>
+                <div class="layer-text">
+                    <div class="layer-title">第${layer.layer}层 - ${layer.name}</div>
+                    <div class="layer-desc">[${sourceLabel}] ${desc}</div>
+                </div>
+            `;
+            
+            return layerItem;
+        }
+
+        // 生成图层描述
+        function generateLayerDescription(layer) {
+            let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            
+            // 添加特殊信息
+            if (layer.exeName) {
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                desc += ` | ${processName}`;
+            }
+            if (layer.fileName) {
+                desc += ` | ${layer.fileName}`;
+            }
+            if (layer.fileSize) {
+                desc += ` | ${formatFileSize(layer.fileSize)}`;
+            }
+            if (layer.volume !== undefined) {
+                const volumeText = layer.volume === 0 ? '静音' : `音量${layer.volume * 100}%`;
+                desc += ` | ${volumeText}`;
+            }
+            
+            if (layer.canvasOverlap !== undefined) {
+                desc += ` | 画面占比: ${(layer.canvasOverlap * 100).toFixed(1)}%`;
+            }
+            const [x, y, width, height] = layer.canvasOverlapRect;
+            desc += ` | 坐标: (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})`;
+            return desc;
+        }
+
+        // 显示所有图层
+        function showAllLayers(element) {
+            currentSelectedLayer = 'all';
+            updateSelectedItem(element);
+            
+            const overlays = document.querySelectorAll('.layer-overlay');
+            overlays.forEach(overlay => {
+                overlay.classList.remove('hidden');
+            });
+        }
+
+        // 显示单个图层
+        function showSingleLayer(element, layerNumber) {
+            currentSelectedLayer = layerNumber;
+            updateSelectedItem(element);
+            
+            const overlays = document.querySelectorAll('.layer-overlay');
+            overlays.forEach(overlay => {
+                const layerData = parseInt(overlay.getAttribute('data-layer'));
+                if (layerData === layerNumber) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            });
+        }
+
+        // 更新选中项样式
+        function updateSelectedItem(selectedElement) {
+            const items = document.querySelectorAll('.layer-item');
+            items.forEach(item => item.classList.remove('selected'));
+            selectedElement.classList.add('selected');
+        }
+
+        // 清除可视化
+        function clearVisualization() {
+            document.getElementById('layerOverlays').innerHTML = '';
+            const layerList = document.getElementById('layerList');
+            layerList.innerHTML = '<div class="placeholder-message">请先上传底图并输入JSON配置，然后点击"解析配置"按钮</div>';
+        }
+
+        // 更新透明度
+        function updateOpacity(value) {
+            const overlays = document.querySelectorAll('.layer-overlay:not(.hidden)');
+            overlays.forEach(overlay => {
+                overlay.style.opacity = value;
+            });
+            document.getElementById('opacityValue').textContent = Math.round(value * 100) + '%';
+        }
+
+        // 切换层级显示
+        function toggleLayers() {
+            const overlays = document.getElementById('layerOverlays');
+            const btn = document.getElementById('layerToggle');
+            if (overlays.style.display === 'none') {
+                overlays.style.display = 'block';
+                btn.textContent = '隐藏层级叠加';
+                btn.classList.add('active');
+            } else {
+                overlays.style.display = 'none';
+                btn.textContent = '显示层级叠加';
+                btn.classList.remove('active');
+            }
+        }
+
+        // 切换详细信息显示
+        function toggleDetails() {
+            const details = document.querySelectorAll('.layer-details');
+            details.forEach(detail => {
+                if (detail.style.opacity === '1') {
+                    detail.style.opacity = '0';
+                } else {
+                    detail.style.opacity = '1';
+                }
+            });
+        }
+
+        // 拖拽上传功能
+        const container = document.getElementById('gameContainer');
+        container.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            container.style.border = '3px solid #007bff';
+        });
+        
+        container.addEventListener('dragleave', function(e) {
+            container.style.border = '3px solid #333';
+        });
+        
+        container.addEventListener('drop', function(e) {
+            e.preventDefault();
+            container.style.border = '3px solid #333';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('gameImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // 生成资源特征表格
+        function generateResourceFeatures(data) {
+            const container = document.getElementById('resourceTableContainer');
+            
+            let cpuTopProcesses = [];
+            let gpuTopProcesses = [];
+            
+            // 解析CPU进程列表
+            if (data.cpuTopProcessList) {
+                try {
+                    const allCpuProcesses = JSON.parse(data.cpuTopProcessList);
+                    cpuTopProcesses = allCpuProcesses.slice(0, 5); // 只保留前5个
+                } catch (e) {
+                    console.warn('无法解析cpuTopProcessList:', e);
+                }
+            }
+            
+            // 解析GPU进程列表
+            if (data.gpuTopProcessList) {
+                try {
+                    const allGpuProcesses = JSON.parse(data.gpuTopProcessList);
+                    gpuTopProcesses = allGpuProcesses.slice(0, 5); // 只保留前5个
+                } catch (e) {
+                    console.warn('无法解析gpuTopProcessList:', e);
+                }
+            }
+            
+            if (cpuTopProcesses.length === 0 && gpuTopProcesses.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无资源信息，请解析包含 cpuTopProcessList 或 gpuTopProcessList 的配置</div>';
+                return;
+            }
+            
+            // 计算最大进程数，决定表格列数（最多5个进程）
+            const maxProcessCount = Math.max(cpuTopProcesses.length, gpuTopProcesses.length);
+            const totalColumns = maxProcessCount * 3; // 每个进程3列：进程名、标签、占比
+            
+            let tableHTML = `
+                <table class="resource-table">
+                    <thead>
+                        <tr>
+                            <th>资源类型</th>
+            `;
+            
+            // 动态生成表头
+            for (let i = 0; i < maxProcessCount; i++) {
+                tableHTML += `
+                            <th>进程名${i + 1}</th>
+                            <th>标签${i + 1}</th>
+                            <th>占比${i + 1}</th>
+                `;
+            }
+            
+            tableHTML += `
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // 添加CPU进程行
+            if (cpuTopProcesses.length > 0) {
+                tableHTML += `<tr><td class="process-type">CPU占用TOP</td>`;
+                
+                for (let i = 0; i < maxProcessCount; i++) {
+                    if (i < cpuTopProcesses.length) {
+                        const process = cpuTopProcesses[i];
+                        tableHTML += `
+                            <td class="process-name" title="${process.name}">${process.name}</td>
+                            <td class="process-tag">-</td>
+                            <td class="process-percentage">${process.percentage}%</td>
+                        `;
+                    } else {
+                        // 空白列
+                        tableHTML += `
+                            <td class="process-empty">-</td>
+                            <td class="process-empty">-</td>
+                            <td class="process-empty">-</td>
+                        `;
+                    }
+                }
+                
+                tableHTML += `</tr>`;
+            }
+            
+            // 添加GPU进程行
+            if (gpuTopProcesses.length > 0) {
+                tableHTML += `<tr><td class="process-type">GPU占用TOP</td>`;
+                
+                for (let i = 0; i < maxProcessCount; i++) {
+                    if (i < gpuTopProcesses.length) {
+                        const process = gpuTopProcesses[i];
+                        tableHTML += `
+                            <td class="process-name" title="${process.name}">${process.name}</td>
+                            <td class="process-tag">-</td>
+                            <td class="process-percentage">${process.percentage}%</td>
+                        `;
+                    } else {
+                        // 空白列
+                        tableHTML += `
+                            <td class="process-empty">-</td>
+                            <td class="process-empty">-</td>
+                            <td class="process-empty">-</td>
+                        `;
+                    }
+                }
+                
+                tableHTML += `</tr>`;
+            }
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html> 
