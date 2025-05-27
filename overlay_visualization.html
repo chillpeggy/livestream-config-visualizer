@@ -706,7 +706,7 @@
         
         // 标签颜色样式配置
         const tagStyles = {
-            '游戏进程': { background: '#28a745', color: '#000000' }, // 绿色底色，黑色字体（按需求设定）
+            '游戏进程': { background: '#40c057', color: '#000000' }, // 调浅绿色底色
             '浏览器进程': { background: '#007bff', color: '#ffffff' }, // 蓝色
             '视频播放器进程': { background: '#6f42c1', color: '#ffffff' }, // 紫色
             '手机投屏进程': { background: '#fd7e14', color: '#ffffff' }, // 橙色
@@ -1405,90 +1405,3 @@
             
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
-                            <th style="width: ${processNameWidth};">进程名${i + 1}</th>
-                            <th style="width: ${tagWidth};">标签${i + 1}</th>
-                            <th style="width: ${percentageWidth};">占比${i + 1}</th>
-                `;
-            }
-            
-            tableHTML += `
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            // 添加CPU进程行
-            if (cpuTopProcesses.length > 0) {
-                tableHTML += `<tr><td class="process-type">CPU占用TOP</td>`;
-                
-                for (let i = 0; i < maxProcessCount; i++) {
-                    if (i < cpuTopProcesses.length) {
-                        const process = cpuTopProcesses[i];
-                        const processType = matchProcessType(process.name);
-                        const tagHTML = generateTagHTML(processType);
-                        
-                        // 不再截断进程名，允许完整显示并换行
-                        const displayName = process.name;
-                        
-                        tableHTML += `
-                            <td class="process-name" title="${process.name}">${displayName}</td>
-                            <td class="process-tag">${tagHTML}</td>
-                            <td class="process-percentage">${process.percentage}%</td>
-                        `;
-                    } else {
-                        // 空白列
-                        tableHTML += `
-                            <td class="process-empty">-</td>
-                            <td class="process-empty">-</td>
-                            <td class="process-empty">-</td>
-                        `;
-                    }
-                }
-                
-                tableHTML += `</tr>`;
-            }
-            
-            // 添加GPU进程行
-            if (gpuTopProcesses.length > 0) {
-                tableHTML += `<tr><td class="process-type">GPU占用TOP</td>`;
-                
-                for (let i = 0; i < maxProcessCount; i++) {
-                    if (i < gpuTopProcesses.length) {
-                        const process = gpuTopProcesses[i];
-                        const processType = matchProcessType(process.name);
-                        const tagHTML = generateTagHTML(processType);
-                        
-                        // 不再截断进程名，允许完整显示并换行
-                        const displayName = process.name;
-                        
-                        tableHTML += `
-                            <td class="process-name" title="${process.name}">${displayName}</td>
-                            <td class="process-tag">${tagHTML}</td>
-                            <td class="process-percentage">${process.percentage}%</td>
-                        `;
-                    } else {
-                        // 空白列
-                        tableHTML += `
-                            <td class="process-empty">-</td>
-                            <td class="process-empty">-</td>
-                            <td class="process-empty">-</td>
-                        `;
-                    }
-                }
-                
-                tableHTML += `</tr>`;
-            }
-            
-            tableHTML += `
-                    </tbody>
-                </table>
-            `;
-            
-            container.innerHTML = tableHTML;
-            
-            // 添加调试信息
-            console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
-        }
-    </script>
-</body>
-</html> 
