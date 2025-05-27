@@ -1387,14 +1387,14 @@
             const tableClass = maxProcessCount >= 5 ? 'resource-table five-processes' : 'resource-table';
             
             let tableHTML = `
-                <table class="${tableClass}">
+                <table class="${tableClass}" style="table-layout: fixed;">
                     <thead>
                         <tr>
-                            <th style="width: 100px;">资源类型</th>
+                            <th style="width: 8%;">资源类型</th>
             `;
             
             // 动态生成表头，计算每列的宽度
-            const remainingWidth = maxProcessCount > 0 ? `${(100 - 10) / (maxProcessCount * 3)}%` : '30%'; // 减去第一列的10%
+            const remainingWidth = maxProcessCount > 0 ? `${92 / (maxProcessCount * 3)}%` : '30%'; // 剩余92%平均分配给所有进程列
             
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `

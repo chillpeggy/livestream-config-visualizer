@@ -338,11 +338,11 @@ MuMuPlayer,安卓模拟器
                 <table class="resource-table" style="table-layout: fixed;">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">资源类型</th>
+                            <th style="width: 8%;">资源类型</th>
             `;
             
             // 动态生成表头，平均分配剩余宽度
-            const columnWidth = `${(100 - 8) / (maxProcessCount * 3)}%`; // 减去第一列的8%
+            const columnWidth = `${92 / (maxProcessCount * 3)}%`; // 剩余92%平均分配，第一列占8%
             
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
