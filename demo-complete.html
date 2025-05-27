@@ -341,14 +341,16 @@ MuMuPlayer,安卓模拟器
                             <th style="width: 8%;">资源类型</th>
             `;
             
-            // 动态生成表头，平均分配剩余宽度
-            const columnWidth = `${92 / (maxProcessCount * 3)}%`; // 剩余92%平均分配，第一列占8%
+            // 重新设计列宽分配：进程名占更多空间，标签和占比占较少空间
+            const processNameWidth = `${92 / maxProcessCount * 0.5}%`; // 每个进程名占50%的进程空间
+            const tagWidth = `${92 / maxProcessCount * 0.3}%`; // 每个标签占30%的进程空间
+            const percentageWidth = `${92 / maxProcessCount * 0.2}%`; // 每个占比占20%的进程空间
             
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
-                            <th style="width: ${columnWidth};">进程${i + 1}</th>
-                            <th style="width: ${columnWidth};">标签${i + 1}</th>
-                            <th style="width: ${columnWidth};">占比${i + 1}</th>
+                            <th style="width: ${processNameWidth};">进程${i + 1}</th>
+                            <th style="width: ${tagWidth};">标签${i + 1}</th>
+                            <th style="width: ${percentageWidth};">占比${i + 1}</th>
                 `;
             }
             
@@ -365,9 +367,9 @@ MuMuPlayer,安卓模拟器
                     const process = mockData.cpuTopProcessList[i];
                     const processType = matchProcessType(process.name);
                     
-                    // 截断过长的进程名
-                    const displayName = process.name.length > 12 ? 
-                        process.name.substring(0, 9) + '...' : process.name;
+                    // 调整进程名截断长度，允许显示更多字符
+                    const displayName = process.name.length > 20 ? 
+                        process.name.substring(0, 17) + '...' : process.name;
                     
                     tableHTML += `
                         <td class="process-name" title="${process.name}">${displayName}</td>
@@ -387,9 +389,9 @@ MuMuPlayer,安卓模拟器
                     const process = mockData.gpuTopProcessList[i];
                     const processType = matchProcessType(process.name);
                     
-                    // 截断过长的进程名
-                    const displayName = process.name.length > 12 ? 
-                        process.name.substring(0, 9) + '...' : process.name;
+                    // 调整进程名截断长度，允许显示更多字符
+                    const displayName = process.name.length > 20 ? 
+                        process.name.substring(0, 17) + '...' : process.name;
                     
                     tableHTML += `
                         <td class="process-name" title="${process.name}">${displayName}</td>

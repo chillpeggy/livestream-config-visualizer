@@ -516,17 +516,17 @@
             font-weight: bold;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             color: #495057;
-            width: 100px; /* 固定第一列宽度 */
-            min-width: 100px;
+            width: 8%; /* 改为百分比，确保一致性 */
+            min-width: 80px; /* 设置最小宽度 */
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
             color: #212529;
-            max-width: none; /* 移除最大宽度限制 */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             font-size: 10px; /* 进一步减小进程名字体 */
+            padding: 8px 2px; /* 减少左右内边距，增加显示空间 */
         }
         .resource-table .process-tag {
             color: #6c757d;
@@ -1393,14 +1393,16 @@
                             <th style="width: 8%;">资源类型</th>
             `;
             
-            // 动态生成表头，计算每列的宽度
-            const remainingWidth = maxProcessCount > 0 ? `${92 / (maxProcessCount * 3)}%` : '30%'; // 剩余92%平均分配给所有进程列
+            // 重新设计列宽分配：进程名占更多空间，标签和占比占较少空间
+            const processNameWidth = `${92 / maxProcessCount * 0.5}%`; // 每个进程名占50%的进程空间
+            const tagWidth = `${92 / maxProcessCount * 0.3}%`; // 每个标签占30%的进程空间
+            const percentageWidth = `${92 / maxProcessCount * 0.2}%`; // 每个占比占20%的进程空间
             
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
-                            <th style="width: ${remainingWidth};">进程名${i + 1}</th>
-                            <th style="width: ${remainingWidth};">标签${i + 1}</th>
-                            <th style="width: ${remainingWidth};">占比${i + 1}</th>
+                            <th style="width: ${processNameWidth};">进程名${i + 1}</th>
+                            <th style="width: ${tagWidth};">标签${i + 1}</th>
+                            <th style="width: ${percentageWidth};">占比${i + 1}</th>
                 `;
             }
             
@@ -1420,9 +1422,9 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
-                        // 截断过长的进程名
-                        const displayName = process.name.length > 15 ? 
-                            process.name.substring(0, 12) + '...' : process.name;
+                        // 调整进程名截断长度，允许显示更多字符
+                        const displayName = process.name.length > 20 ? 
+                            process.name.substring(0, 17) + '...' : process.name;
                         
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${displayName}</td>
@@ -1452,9 +1454,9 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
-                        // 截断过长的进程名
-                        const displayName = process.name.length > 15 ? 
-                            process.name.substring(0, 12) + '...' : process.name;
+                        // 调整进程名截断长度，允许显示更多字符
+                        const displayName = process.name.length > 20 ? 
+                            process.name.substring(0, 17) + '...' : process.name;
                         
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${displayName}</td>
