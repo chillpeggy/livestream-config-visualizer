@@ -499,6 +499,8 @@
             font-weight: bold;
             font-size: 12px; /* 减小字体以适应更多列 */
             word-wrap: break-word;
+            height: 40px; /* 设置表头高度 */
+            vertical-align: middle;
         }
         .resource-table td {
             padding: 8px 4px; /* 减少内边距 */
@@ -508,6 +510,8 @@
             font-size: 11px; /* 减小字体 */
             word-wrap: break-word;
             overflow: hidden;
+            height: 50px; /* 设置双行行高 */
+            vertical-align: middle;
         }
         .resource-table tr:last-child td {
             border-bottom: none;
@@ -523,10 +527,11 @@
             font-family: 'Courier New', monospace;
             color: #212529;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal; /* 允许换行 */
+            word-break: break-word; /* 长单词可以换行 */
             font-size: 10px; /* 进一步减小进程名字体 */
-            padding: 8px 2px; /* 减少左右内边距，增加显示空间 */
+            padding: 4px 2px; /* 减少上下内边距，适应双行高度 */
+            line-height: 1.2; /* 设置行高 */
         }
         .resource-table .process-tag {
             color: #6c757d;
@@ -1422,9 +1427,8 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
-                        // 调整进程名截断长度，允许显示更多字符
-                        const displayName = process.name.length > 20 ? 
-                            process.name.substring(0, 17) + '...' : process.name;
+                        // 不再截断进程名，允许完整显示并换行
+                        const displayName = process.name;
                         
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${displayName}</td>
@@ -1454,9 +1458,8 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
-                        // 调整进程名截断长度，允许显示更多字符
-                        const displayName = process.name.length > 20 ? 
-                            process.name.substring(0, 17) + '...' : process.name;
+                        // 不再截断进程名，允许完整显示并换行
+                        const displayName = process.name;
                         
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${displayName}</td>
