@@ -4,7 +4,7 @@
 
 ## 🌟 在线体验
 
-**🔗 立即使用**: [点击这里访问在线版本](#) *(部署后更新链接)*
+**🔗 立即使用**: [https://chillpeggy.github.io/livestream-config-visualizer/](https://chillpeggy.github.io/livestream-config-visualizer/)
 
 ## ✨ 核心功能
 
@@ -32,7 +32,7 @@
 ## 🚀 快速开始
 
 ### 方式一：在线使用 (推荐)
-1. 访问在线版本链接
+1. 访问 [在线版本](https://chillpeggy.github.io/livestream-config-visualizer/)
 2. 上传您的底图文件
 3. 粘贴JSON配置代码
 4. 实时查看可视化效果
@@ -40,7 +40,7 @@
 ### 方式二：本地部署
 ```bash
 # 克隆项目
-git clone [仓库地址]
+git clone https://github.com/chillpeggy/livestream-config-visualizer.git
 cd livestream-config-visualizer
 
 # 启动本地服务器
@@ -127,8 +127,8 @@ open http://localhost:8080
 
 ### 联系方式
 - 📧 邮箱: [您的邮箱]
-- 🐛 问题反馈: [GitHub Issues链接]
-- 📖 使用文档: [文档链接]
+- 🐛 问题反馈: [GitHub Issues](https://github.com/chillpeggy/livestream-config-visualizer/issues)
+- 📖 使用文档: [项目文档](https://github.com/chillpeggy/livestream-config-visualizer)
 
 ## 📄 开源协议
 
@@ -136,4 +136,4 @@ open http://localhost:8080
 
 ---
 
-**版本**: 1.0.0 | **更新**: 2024年5月 | **开发者**: [您的名称] 
+**版本**: 1.0.0 | **更新**: 2024年5月 | **开发者**: chillpeggy
