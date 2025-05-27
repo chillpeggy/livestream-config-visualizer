@@ -1,0 +1,6 @@
+{
+  "resolution": "{\"width\":1920,\"height\":1080}",
+  "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"dota2.exe\",\"overlap\":0.8,\"canvasOverlap\":1,\"canvasOverlapRect\":[0,0,1920,1080],\"layer\":3}]}}",
+  "cpuTopProcessList": "[{\"name\":\"dota2.exe\",\"percentage\":45.2},{\"name\":\"chrome.exe\",\"percentage\":12.8},{\"name\":\"obs64.exe\",\"percentage\":8.5},{\"name\":\"按键精灵.exe\",\"percentage\":5.1},{\"name\":\"unknownapp.exe\",\"percentage\":3.2}]",
+  "gpuTopProcessList": "[{\"name\":\"GenshinImpact.exe\",\"percentage\":76.3},{\"name\":\"firefox.exe\",\"percentage\":15.7},{\"name\":\"直播伴侣.exe\",\"percentage\":8.0}]"
+} 

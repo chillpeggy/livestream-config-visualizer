@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>内联进程匹配测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; border: 1px solid #ff0000; }
+        .success { background: #e6ffe6; border: 1px solid #00ff00; }
+    </style>
+</head>
+<body>
+    <h1>内联进程匹配测试</h1>
+    <p>此测试不依赖外部文件，直接内嵌CSV数据</p>
+    <div id="result"></div>
+    <div id="debug" class="debug"></div>
+    
+    <script>
+        // 内嵌的CSV数据（部分）
+        const csvData = `exe,type
+._cache_小红点,人机校验作弊进程
+音频助手,音频录制AI互动进程
+比特浏览器,浏览器进程
+5EClient,游戏进程
+dota2,游戏进程
+LeagueClientUx,游戏进程
+chrome,浏览器进程
+firefox,浏览器进程
+obs64,伴侣进程
+直播伴侣,伴侣进程`;
+
+        let processLibrary = [];
+        
+        function updateDebug(message) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += '<div>' + message + '</div>';
+        }
+        
+        // 解析CSV数据
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            updateDebug(`CSV总行数: ${lines.length}`);
+            
+            processLibrary = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.split(',');
+                if (values.length >= 2 && values[0].trim() && values[1].trim()) {
+                    processLibrary.push({
+                        exe: values[0].trim(),
+                        type: values[1].trim()
+                    });
+                }
+            }
+            updateDebug(`进程库解析完成，共 ${processLibrary.length} 条记录`);
+            updateDebug(`进程库内容: ${JSON.stringify(processLibrary, null, 2)}`);
+        }
+        
+        // 进程名模糊匹配
+        function matchProcessType(processName) {
+            updateDebug(`开始匹配进程: ${processName}`);
+            
+            if (!processName || processLibrary.length === 0) {
+                updateDebug(`匹配失败: processName=${processName}, processLibrary.length=${processLibrary.length}`);
+                return '未知进程';
+            }
+            
+            const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
+            updateDebug(`清理后的进程名: ${processName} → ${cleanProcessName}`);
+            
+            // 精确匹配
+            let match = processLibrary.find(item => 
+                item.exe.toLowerCase() === processName.toLowerCase() ||
+                item.exe.toLowerCase() === cleanProcessName
+            );
+            
+            if (match) {
+                updateDebug(`精确匹配成功: ${JSON.stringify(match)}`);
+                return match.type;
+            }
+            
+            // 模糊匹配（包含关系）
+            updateDebug('开始模糊匹配...');
+            for (let item of processLibrary) {
+                const itemLower = item.exe.toLowerCase();
+                const contains1 = cleanProcessName.includes(itemLower);
+                const contains2 = itemLower.includes(cleanProcessName);
+                updateDebug(`测试 "${itemLower}": "${cleanProcessName}".includes("${itemLower}")=${contains1}, "${itemLower}".includes("${cleanProcessName}")=${contains2}`);
+                
+                if (contains1 || contains2) {
+                    updateDebug(`模糊匹配成功: ${JSON.stringify(item)}`);
+                    return item.type;
+                }
+            }
+            
+            updateDebug('模糊匹配失败');
+            return '未知进程';
+        }
+        
+        // 运行测试
+        function runTest() {
+            updateDebug('=== 开始内联测试 ===');
+            
+            // 解析内嵌数据
+            parseCSV(csvData);
+            
+            // 测试多个进程
+            const testCases = [
+                'LeagueClientUxRender.exe',
+                'dota2.exe', 
+                'chrome.exe',
+                'unknownprocess.exe'
+            ];
+            
+            let results = '<h2>测试结果</h2>';
+            
+            testCases.forEach(testProcess => {
+                updateDebug(`\n--- 测试: ${testProcess} ---`);
+                const result = matchProcessType(testProcess);
+                const isExpected = (testProcess === 'LeagueClientUxRender.exe' && result === '游戏进程') ||
+                                 (testProcess === 'dota2.exe' && result === '游戏进程') ||
+                                 (testProcess === 'chrome.exe' && result === '浏览器进程') ||
+                                 (testProcess === 'unknownprocess.exe' && result === '未知进程');
+                
+                results += `<p><strong>${testProcess}:</strong> 
+                    <span style="color: ${isExpected ? 'green' : 'red'}; font-weight: bold;">${result}</span>
+                    ${isExpected ? '✅' : '❌'}
+                </p>`;
+            });
+            
+            document.getElementById('result').innerHTML = results;
+        }
+        
+        // 页面加载时运行测试
+        window.addEventListener('load', runTest);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>进程匹配测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; border: 1px solid #ff0000; }
+        .success { background: #e6ffe6; border: 1px solid #00ff00; }
+    </style>
+</head>
+<body>
+    <h1>进程匹配测试</h1>
+    <div id="status">正在加载...</div>
+    <div id="result"></div>
+    <div id="debug" class="debug"></div>
+    
+    <script>
+        let processLibrary = [];
+        
+        // 更新状态显示
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = type === 'error' ? 'debug error' : type === 'success' ? 'debug success' : 'debug';
+        }
+        
+        // 更新调试信息
+        function updateDebug(message) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += '<div>' + message + '</div>';
+        }
+        
+        // 加载进程库
+        async function loadProcessLibrary() {
+            try {
+                updateStatus('正在加载进程库...');
+                updateDebug('开始加载 process-library.csv');
+                
+                const response = await fetch('process-library.csv');
+                updateDebug(`HTTP响应状态: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const csvText = await response.text();
+                updateDebug(`CSV文件大小: ${csvText.length} 字符`);
+                updateDebug(`CSV文件前100字符: ${csvText.substring(0, 100)}`);
+                
+                parseCSV(csvText);
+                updateDebug(`进程库解析完成，共 ${processLibrary.length} 条记录`);
+                updateDebug(`进程库前5条: ${JSON.stringify(processLibrary.slice(0, 5), null, 2)}`);
+                
+                updateStatus(`进程库加载成功，共 ${processLibrary.length} 条记录`, 'success');
+                
+                // 测试匹配
+                testMatch();
+            } catch (error) {
+                updateStatus(`进程库加载失败: ${error.message}`, 'error');
+                updateDebug(`错误详情: ${error.stack}`);
+                console.error('进程库加载失败:', error);
+            }
+        }
+        
+        // 解析CSV数据
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            updateDebug(`CSV总行数: ${lines.length}`);
+            updateDebug(`第一行(标题): ${lines[0]}`);
+            updateDebug(`第二行(数据): ${lines[1]}`);
+            
+            processLibrary = [];
+            let validLines = 0;
+            let skipLines = 0;
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) {
+                    skipLines++;
+                    continue;
+                }
+                
+                const values = line.split(',');
+                if (values.length >= 2 && values[0].trim() && values[1].trim()) {
+                    processLibrary.push({
+                        exe: values[0].trim(),
+                        type: values[1].trim()
+                    });
+                    validLines++;
+                } else {
+                    skipLines++;
+                    if (skipLines <= 3) { // 只记录前3个无效行
+                        updateDebug(`跳过无效行 ${i}: ${line}`);
+                    }
+                }
+            }
+            
+            updateDebug(`有效行数: ${validLines}, 跳过行数: ${skipLines}`);
+        }
+        
+        // 进程名模糊匹配
+        function matchProcessType(processName) {
+            updateDebug(`开始匹配进程: ${processName}`);
+            
+            if (!processName || processLibrary.length === 0) {
+                updateDebug(`匹配失败: processName=${processName}, processLibrary.length=${processLibrary.length}`);
+                return '未知进程';
+            }
+            
+            const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
+            updateDebug(`清理后的进程名: ${processName} → ${cleanProcessName}`);
+            
+            // 精确匹配
+            let match = processLibrary.find(item => 
+                item.exe.toLowerCase() === processName.toLowerCase() ||
+                item.exe.toLowerCase() === cleanProcessName
+            );
+            
+            if (match) {
+                updateDebug(`精确匹配成功: ${JSON.stringify(match)}`);
+                return match.type;
+            }
+            
+            // 模糊匹配（包含关系）
+            match = processLibrary.find(item => 
+                cleanProcessName.includes(item.exe.toLowerCase()) ||
+                item.exe.toLowerCase().includes(cleanProcessName)
+            );
+            
+            if (match) {
+                updateDebug(`模糊匹配成功: ${JSON.stringify(match)}`);
+                return match.type;
+            } else {
+                updateDebug('匹配失败，查找包含 league 的条目:');
+                const leagueItems = processLibrary.filter(item => 
+                    item.exe.toLowerCase().includes('league') || 
+                    'league'.includes(item.exe.toLowerCase())
+                );
+                updateDebug(`League相关条目: ${JSON.stringify(leagueItems)}`);
+                
+                // 检查模糊匹配逻辑
+                updateDebug('检查模糊匹配条件:');
+                updateDebug(`cleanProcessName: "${cleanProcessName}"`);
+                const testItems = processLibrary.filter(item => item.exe.toLowerCase().includes('league'));
+                updateDebug(`包含league的条目: ${JSON.stringify(testItems)}`);
+                
+                for (let item of testItems) {
+                    const itemLower = item.exe.toLowerCase();
+                    const contains1 = cleanProcessName.includes(itemLower);
+                    const contains2 = itemLower.includes(cleanProcessName);
+                    updateDebug(`测试 "${itemLower}": "${cleanProcessName}".includes("${itemLower}")=${contains1}, "${itemLower}".includes("${cleanProcessName}")=${contains2}`);
+                }
+                
+                return '未知进程';
+            }
+        }
+        
+        // 测试匹配
+        function testMatch() {
+            const testProcess = 'LeagueClientUxRender.exe';
+            updateDebug(`开始测试匹配: ${testProcess}`);
+            const result = matchProcessType(testProcess);
+            
+            document.getElementById('result').innerHTML = `
+                <h2>测试结果</h2>
+                <p><strong>输入进程:</strong> ${testProcess}</p>
+                <p><strong>匹配结果:</strong> <span style="color: ${result === '游戏进程' ? 'green' : 'red'}; font-weight: bold;">${result}</span></p>
+                <p><strong>进程库大小:</strong> ${processLibrary.length}</p>
+                <p><strong>期望结果:</strong> 游戏进程</p>
+            `;
+        }
+        
+        // 页面加载时运行测试
+        window.addEventListener('load', loadProcessLibrary);
+    </script>
+</body>
+</html> 
