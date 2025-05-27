@@ -3,85 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直播配置可视化工具</title>
-    <link rel="icon" href="assets/icon.png" type="image/png">
+    <title>直播配置层级可视化工具</title>
     <style>
+        * { box-sizing: border-box; }
         body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+            min-height: 100vh;
         }
-        .container {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1rem;
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
             background: white;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
         }
-        h1 {
-            margin: 0 0 1rem;
-            font-size: 2rem;
-            font-weight: 600;
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        p {
-            margin: 0 0 2rem;
-            opacity: 0.9;
-            font-size: 1.1rem;
+        .header p {
+            color: #666;
+            font-size: 16px;
+            margin: 0;
         }
-        .btn {
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .demo-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .demo-card:hover {
+            transform: translateY(-5px);
+        }
+        .demo-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 20px;
+        }
+        .demo-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .demo-btn {
             display: inline-block;
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             text-decoration: none;
-            border-radius: 12px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
         }
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .demo-btn:hover {
             transform: translateY(-2px);
         }
-        .loading {
-            margin-top: 1rem;
-            opacity: 0.7;
-            font-size: 0.9rem;
+        .features {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .features h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+            text-align: center;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .feature-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .feature-item strong {
+            color: #667eea;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🎥</div>
-        <h1>直播配置可视化工具</h1>
-        <p>专业的直播层级配置解析与可视化平台</p>
-        <a href="overlay_visualization.html" class="btn">立即使用</a>
-        <div class="loading">正在加载应用...</div>
+        <div class="header">
+            <h1>📊 直播配置层级可视化工具</h1>
+            <p>支持进程库匹配功能 | 1500+进程识别 | 16种进程类型标签</p>
+        </div>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🎯 主应用演示</h3>
+                <p>完整的直播配置层级可视化工具，支持抖音直播伴侣和OBS配置格式解析，包含进程库匹配和资源特征分析功能。</p>
+                <a href="overlay_visualization.html" class="demo-btn">打开主应用</a>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🧪 进程匹配测试</h3>
+                <p>专门的进程匹配功能测试页面，内嵌进程库数据，可以直接测试LeagueClientUxRender.exe等进程的标签匹配效果。</p>
+                <a href="demo-complete.html" class="demo-btn">进程匹配测试</a>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🔧 调试工具</h3>
+                <p>提供详细的调试信息和日志输出，帮助开发者了解进程匹配的具体过程和排查问题。</p>
+                <a href="test-inline.html" class="demo-btn">调试工具</a>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>🌟 功能特点</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <strong>多格式支持</strong><br>
+                    抖音直播伴侣 + OBS
+                </div>
+                <div class="feature-item">
+                    <strong>进程库匹配</strong><br>
+                    1500+ 进程智能识别
+                </div>
+                <div class="feature-item">
+                    <strong>标签体系</strong><br>
+                    16种进程类型标签
+                </div>
+                <div class="feature-item">
+                    <strong>资源特征</strong><br>
+                    CPU/GPU占用分析
+                </div>
+                <div class="feature-item">
+                    <strong>层级可视化</strong><br>
+                    图像叠加显示
+                </div>
+                <div class="feature-item">
+                    <strong>实时预览</strong><br>
+                    即时配置解析
+                </div>
+            </div>
+        </div>
     </div>
-
-    <script>
-        // 3秒后自动跳转到主应用
-        setTimeout(() => {
-            window.location.href = 'overlay_visualization.html';
-        }, 3000);
-    </script>
 </body>
 </html> 
