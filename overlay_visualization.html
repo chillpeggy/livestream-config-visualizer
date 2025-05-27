@@ -489,21 +489,25 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            table-layout: fixed; /* 固定表格布局，确保列宽均匀分布 */
         }
         .resource-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 12px;
+            padding: 8px 4px; /* 减少内边距以节省空间 */
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px; /* 减小字体以适应更多列 */
+            word-wrap: break-word;
         }
         .resource-table td {
-            padding: 12px;
+            padding: 8px 4px; /* 减少内边距 */
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
-            font-size: 13px;
+            font-size: 11px; /* 减小字体 */
+            word-wrap: break-word;
+            overflow: hidden;
         }
         .resource-table tr:last-child td {
             border-bottom: none;
@@ -512,27 +516,57 @@
             font-weight: bold;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             color: #495057;
+            width: 100px; /* 固定第一列宽度 */
+            min-width: 100px;
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
             color: #212529;
-            max-width: 200px;
+            max-width: none; /* 移除最大宽度限制 */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-size: 10px; /* 进一步减小进程名字体 */
         }
         .resource-table .process-tag {
             color: #6c757d;
-            font-style: italic;
+            font-style: normal; /* 移除斜体 */
+            padding: 0; /* 移除内边距 */
+        }
+        .resource-table .process-tag .process-tag-badge {
+            font-size: 10px !important; /* 减小标签字体 */
+            padding: 2px 4px !important; /* 减小标签内边距 */
         }
         .resource-table .process-percentage {
             font-weight: bold;
             color: #e74c3c;
+            font-size: 11px;
         }
         .resource-table .process-empty {
             color: #adb5bd;
             font-style: italic;
             background: #f8f9fa;
+        }
+        
+        /* 响应式设计：当屏幕较小时，使用水平滚动 */
+        .resource-features {
+            overflow-x: auto;
+        }
+        
+        /* 当有5个进程时的特殊样式 */
+        .resource-table.five-processes th,
+        .resource-table.five-processes td {
+            padding: 6px 2px; /* 进一步减少内边距 */
+            font-size: 10px; /* 进一步减小字体 */
+        }
+        
+        .resource-table.five-processes .process-name {
+            font-size: 9px; /* 5个进程时使用更小字体 */
+        }
+        
+        .resource-table.five-processes .process-tag .process-tag-badge {
+            font-size: 8px !important; /* 5个进程时标签使用更小字体 */
+            padding: 1px 3px !important;
         }
         .resource-features .empty-state {
             text-align: center;
@@ -1349,19 +1383,24 @@
             const maxProcessCount = Math.max(cpuTopProcesses.length, gpuTopProcesses.length);
             const totalColumns = maxProcessCount * 3; // 每个进程3列：进程名、标签、占比
             
+            // 根据进程数量决定表格样式类
+            const tableClass = maxProcessCount >= 5 ? 'resource-table five-processes' : 'resource-table';
+            
             let tableHTML = `
-                <table class="resource-table">
+                <table class="${tableClass}">
                     <thead>
                         <tr>
-                            <th>资源类型</th>
+                            <th style="width: 100px;">资源类型</th>
             `;
             
-            // 动态生成表头
+            // 动态生成表头，计算每列的宽度
+            const remainingWidth = maxProcessCount > 0 ? `${(100 - 10) / (maxProcessCount * 3)}%` : '30%'; // 减去第一列的10%
+            
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
-                            <th>进程名${i + 1}</th>
-                            <th>标签${i + 1}</th>
-                            <th>占比${i + 1}</th>
+                            <th style="width: ${remainingWidth};">进程名${i + 1}</th>
+                            <th style="width: ${remainingWidth};">标签${i + 1}</th>
+                            <th style="width: ${remainingWidth};">占比${i + 1}</th>
                 `;
             }
             
@@ -1381,8 +1420,12 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
+                        // 截断过长的进程名
+                        const displayName = process.name.length > 15 ? 
+                            process.name.substring(0, 12) + '...' : process.name;
+                        
                         tableHTML += `
-                            <td class="process-name" title="${process.name}">${process.name}</td>
+                            <td class="process-name" title="${process.name}">${displayName}</td>
                             <td class="process-tag">${tagHTML}</td>
                             <td class="process-percentage">${process.percentage}%</td>
                         `;
@@ -1409,8 +1452,12 @@
                         const processType = matchProcessType(process.name);
                         const tagHTML = generateTagHTML(processType);
                         
+                        // 截断过长的进程名
+                        const displayName = process.name.length > 15 ? 
+                            process.name.substring(0, 12) + '...' : process.name;
+                        
                         tableHTML += `
-                            <td class="process-name" title="${process.name}">${process.name}</td>
+                            <td class="process-name" title="${process.name}">${displayName}</td>
                             <td class="process-tag">${tagHTML}</td>
                             <td class="process-percentage">${process.percentage}%</td>
                         `;
@@ -1433,6 +1480,9 @@
             `;
             
             container.innerHTML = tableHTML;
+            
+            // 添加调试信息
+            console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
         }
     </script>
 </body>

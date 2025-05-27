@@ -75,19 +75,37 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            table-layout: fixed;
         }
         .resource-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px;
+            padding: 8px 4px;
             text-align: center;
             font-weight: bold;
+            font-size: 12px;
+            word-wrap: break-word;
         }
         .resource-table td {
-            padding: 10px;
+            padding: 8px 4px;
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
+            font-size: 11px;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+        .resource-table .process-name {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .resource-table .process-percentage {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 11px;
         }
         .run-btn {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -295,33 +313,46 @@ MuMuPlayer,安卓模拟器
         function runResourceTest() {
             addDebug('=== 开始资源特征测试 ===');
             
-            // 模拟资源数据
+            // 模拟资源数据 - 增加到5个进程进行测试
             const mockData = {
                 cpuTopProcessList: [
                     { name: 'LeagueClientUxRender.exe', percentage: 35.4 },
                     { name: 'chrome.exe', percentage: 12.8 },
-                    { name: 'obs64.exe', percentage: 8.5 }
+                    { name: 'obs64.exe', percentage: 8.5 },
+                    { name: 'discord.exe', percentage: 6.2 },
+                    { name: 'steam.exe', percentage: 4.1 }
                 ],
                 gpuTopProcessList: [
                     { name: 'GenshinImpact.exe', percentage: 76.3 },
-                    { name: 'firefox.exe', percentage: 15.7 }
+                    { name: 'firefox.exe', percentage: 15.7 },
+                    { name: 'nvcontainer.exe', percentage: 5.2 },
+                    { name: 'dwm.exe', percentage: 2.1 },
+                    { name: 'explorer.exe', percentage: 0.7 }
                 ]
             };
             
+            // 计算最大进程数
+            const maxProcessCount = Math.max(mockData.cpuTopProcessList.length, mockData.gpuTopProcessList.length);
+            
             let tableHTML = `
-                <table class="resource-table">
+                <table class="resource-table" style="table-layout: fixed;">
                     <thead>
                         <tr>
-                            <th>资源类型</th>
-                            <th>进程名1</th>
-                            <th>标签1</th>
-                            <th>占比1</th>
-                            <th>进程名2</th>
-                            <th>标签2</th>
-                            <th>占比2</th>
-                            <th>进程名3</th>
-                            <th>标签3</th>
-                            <th>占比3</th>
+                            <th style="width: 80px;">资源类型</th>
+            `;
+            
+            // 动态生成表头，平均分配剩余宽度
+            const columnWidth = `${(100 - 8) / (maxProcessCount * 3)}%`; // 减去第一列的8%
+            
+            for (let i = 0; i < maxProcessCount; i++) {
+                tableHTML += `
+                            <th style="width: ${columnWidth};">进程${i + 1}</th>
+                            <th style="width: ${columnWidth};">标签${i + 1}</th>
+                            <th style="width: ${columnWidth};">占比${i + 1}</th>
+                `;
+            }
+            
+            tableHTML += `
                         </tr>
                     </thead>
                     <tbody>
@@ -329,14 +360,19 @@ MuMuPlayer,安卓模拟器
             
             // CPU行
             tableHTML += '<tr><td style="font-weight: bold;">CPU占用TOP</td>';
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < maxProcessCount; i++) {
                 if (i < mockData.cpuTopProcessList.length) {
                     const process = mockData.cpuTopProcessList[i];
                     const processType = matchProcessType(process.name);
+                    
+                    // 截断过长的进程名
+                    const displayName = process.name.length > 12 ? 
+                        process.name.substring(0, 9) + '...' : process.name;
+                    
                     tableHTML += `
-                        <td style="font-family: 'Courier New', monospace;">${process.name}</td>
+                        <td class="process-name" title="${process.name}">${displayName}</td>
                         <td>${generateTagHTML(processType)}</td>
-                        <td style="font-weight: bold; color: #e74c3c;">${process.percentage}%</td>
+                        <td class="process-percentage">${process.percentage}%</td>
                     `;
                 } else {
                     tableHTML += '<td>-</td><td>-</td><td>-</td>';
@@ -346,14 +382,19 @@ MuMuPlayer,安卓模拟器
             
             // GPU行
             tableHTML += '<tr><td style="font-weight: bold;">GPU占用TOP</td>';
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < maxProcessCount; i++) {
                 if (i < mockData.gpuTopProcessList.length) {
                     const process = mockData.gpuTopProcessList[i];
                     const processType = matchProcessType(process.name);
+                    
+                    // 截断过长的进程名
+                    const displayName = process.name.length > 12 ? 
+                        process.name.substring(0, 9) + '...' : process.name;
+                    
                     tableHTML += `
-                        <td style="font-family: 'Courier New', monospace;">${process.name}</td>
+                        <td class="process-name" title="${process.name}">${displayName}</td>
                         <td>${generateTagHTML(processType)}</td>
-                        <td style="font-weight: bold; color: #e74c3c;">${process.percentage}%</td>
+                        <td class="process-percentage">${process.percentage}%</td>
                     `;
                 } else {
                     tableHTML += '<td>-</td><td>-</td><td>-</td>';
@@ -364,7 +405,7 @@ MuMuPlayer,安卓模拟器
             tableHTML += '</tbody></table>';
             
             document.getElementById('resourceFeatureResult').innerHTML = tableHTML;
-            addDebug('资源特征测试完成');
+            addDebug(`资源特征测试完成 - 显示${maxProcessCount}个进程列`);
         }
         
         // 页面加载时自动运行测试
