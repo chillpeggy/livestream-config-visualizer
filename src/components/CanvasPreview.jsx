@@ -130,7 +130,7 @@ function CanvasPreview({ data }) {
                     backgroundColor: color + '20'
                   }}
                 ></div>
-                <span className="text-sm">
+                <span className="text-sm" style={{ color: color }}>
                   第{layer.layer}层: {getSourceTypeName(layer.sourceType)}
                 </span>
               </div>

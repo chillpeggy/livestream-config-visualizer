@@ -34,7 +34,7 @@ function LayerItem({ layer }) {
             className="w-4 h-4 rounded"
             style={{ backgroundColor: color }}
           ></div>
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold" style={{ color: color }}>
             第{layer.layer}层
           </span>
         </div>
