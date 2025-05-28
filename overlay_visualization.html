@@ -603,15 +603,15 @@
         }
         .layer-label {
             position: absolute;
-            top: -2px;
-            left: -2px;
             color: white;
             font-size: 12px;
             font-weight: bold;
             padding: 4px 8px;
             white-space: nowrap;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            border-radius: 4px 0 8px 0;
+            border-radius: 4px;
+            z-index: 10;
+            /* 动态定位，通过JavaScript设置 */
         }
         .layer-details {
             position: absolute;
@@ -1206,6 +1206,9 @@
                         height: ${heightPercent}%;
                         border-color: ${color};
                     `;
+                    
+                    // 智能定位标签
+                    positionLabelIntelligently(label, parseFloat(leftPercent), parseFloat(topPercent), parseFloat(widthPercent), parseFloat(heightPercent));
                 }
                 
                 // 获取友好的显示名称
@@ -1233,6 +1236,93 @@
                     gameImage.onload = calculateAndSetOverlayPosition;
                 }
             });
+        }
+
+        // 智能定位标签函数
+        function positionLabelIntelligently(label, leftPercent, topPercent, widthPercent, heightPercent) {
+            // 计算图层的边界
+            const rightPercent = leftPercent + widthPercent;
+            const bottomPercent = topPercent + heightPercent;
+            
+            // 标签的默认尺寸（估算）
+            const labelWidth = 8; // 大约8%的容器宽度
+            const labelHeight = 3; // 大约3%的容器高度
+            
+            let labelLeft, labelTop;
+            let labelPosition = 'top-left'; // 默认位置
+            
+            // 优先级：左上 > 右上 > 左下 > 右下 > 内部居中
+            
+            // 1. 尝试左上角（图层外部）
+            if (leftPercent >= labelWidth && topPercent >= labelHeight) {
+                labelLeft = leftPercent - labelWidth;
+                labelTop = topPercent - labelHeight;
+                labelPosition = 'top-left-outside';
+            }
+            // 2. 尝试右上角（图层外部）
+            else if (rightPercent <= (100 - labelWidth) && topPercent >= labelHeight) {
+                labelLeft = rightPercent;
+                labelTop = topPercent - labelHeight;
+                labelPosition = 'top-right-outside';
+            }
+            // 3. 尝试左下角（图层外部）
+            else if (leftPercent >= labelWidth && bottomPercent <= (100 - labelHeight)) {
+                labelLeft = leftPercent - labelWidth;
+                labelTop = bottomPercent;
+                labelPosition = 'bottom-left-outside';
+            }
+            // 4. 尝试右下角（图层外部）
+            else if (rightPercent <= (100 - labelWidth) && bottomPercent <= (100 - labelHeight)) {
+                labelLeft = rightPercent;
+                labelTop = bottomPercent;
+                labelPosition = 'bottom-right-outside';
+            }
+            // 5. 图层内部左上角
+            else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
+                labelLeft = leftPercent + 1; // 稍微偏移避免边框重叠
+                labelTop = topPercent + 1;
+                labelPosition = 'top-left-inside';
+            }
+            // 6. 图层内部右上角
+            else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
+                labelLeft = rightPercent - labelWidth - 1;
+                labelTop = topPercent + 1;
+                labelPosition = 'top-right-inside';
+            }
+            // 7. 图层内部居中（最后的选择）
+            else {
+                labelLeft = leftPercent + (widthPercent - labelWidth) / 2;
+                labelTop = topPercent + (heightPercent - labelHeight) / 2;
+                labelPosition = 'center-inside';
+            }
+            
+            // 确保标签不会超出容器边界
+            labelLeft = Math.max(0, Math.min(labelLeft, 100 - labelWidth));
+            labelTop = Math.max(0, Math.min(labelTop, 100 - labelHeight));
+            
+            // 应用位置
+            label.style.left = `${labelLeft}%`;
+            label.style.top = `${labelTop}%`;
+            
+            // 根据位置调整样式
+            switch (labelPosition) {
+                case 'top-left-outside':
+                case 'top-left-inside':
+                    label.style.borderRadius = '4px 0 8px 0';
+                    break;
+                case 'top-right-outside':
+                case 'top-right-inside':
+                    label.style.borderRadius = '0 4px 0 8px';
+                    break;
+                case 'bottom-left-outside':
+                    label.style.borderRadius = '8px 0 4px 0';
+                    break;
+                case 'bottom-right-outside':
+                    label.style.borderRadius = '0 8px 0 4px';
+                    break;
+                default:
+                    label.style.borderRadius = '4px';
+            }
         }
 
         // 获取图层显示名称
