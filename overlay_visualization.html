@@ -80,7 +80,7 @@
             padding: 25px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12);
             border: 1px solid #e9ecef;
-            min-height: 400px; /* 设置最小高度而不是固定高度 */
+            min-height: 500px; /* 与右侧面板保持一致 */
             max-height: 90vh; /* 最大高度不超过视窗高度的90% */
             overflow: hidden; /* 隐藏滚动条 */
             box-sizing: border-box;
@@ -522,8 +522,8 @@
             gap: 20px;
             width: 100%; /* 确保占满容器宽度 */
             box-sizing: border-box;
-            align-items: start; /* 顶部对齐 */
-            min-height: 400px; /* 最小高度 */
+            align-items: stretch; /* 改为拉伸对齐，确保等高 */
+            min-height: 500px; /* 增加最小高度 */
             max-height: 90vh; /* 最大高度 */
         }
         .layer-panel {
@@ -532,7 +532,7 @@
             padding: 25px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12);
             border: 1px solid #e9ecef;
-            min-height: 400px; /* 与左侧面板保持一致 */
+            min-height: 500px; /* 与左侧面板保持一致 */
             max-height: 90vh; /* 最大高度不超过视窗高度的90% */
             overflow-y: auto; /* 内容超出时滚动 */
             box-sizing: border-box;
