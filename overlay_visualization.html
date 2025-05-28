@@ -1244,56 +1244,131 @@
             const rightPercent = leftPercent + widthPercent;
             const bottomPercent = topPercent + heightPercent;
             
-            // 标签的默认尺寸（估算）
-            const labelWidth = 8; // 大约8%的容器宽度
+            // 检测图层是否超出画布范围
+            const isOverflowLeft = leftPercent < 0;
+            const isOverflowTop = topPercent < 0;
+            const isOverflowRight = rightPercent > 100;
+            const isOverflowBottom = bottomPercent > 100;
+            const hasOverflow = isOverflowLeft || isOverflowTop || isOverflowRight || isOverflowBottom;
+            
+            // 如果有超出，修改标签文本
+            if (hasOverflow) {
+                const originalText = label.textContent;
+                if (!originalText.includes('(部分画面超出画布)')) {
+                    label.textContent = originalText + ' (部分画面超出画布)';
+                }
+            }
+            
+            // 标签的默认尺寸（估算，超出时需要更大空间）
+            const labelWidth = hasOverflow ? 12 : 8; // 超出时标签更宽
             const labelHeight = 3; // 大约3%的容器高度
             
             let labelLeft, labelTop;
             let labelPosition = 'top-left'; // 默认位置
             
-            // 优先级：左上 > 右上 > 左下 > 右下 > 内部居中
-            
-            // 1. 尝试左上角（图层外部）
-            if (leftPercent >= labelWidth && topPercent >= labelHeight) {
-                labelLeft = leftPercent - labelWidth;
-                labelTop = topPercent - labelHeight;
-                labelPosition = 'top-left-outside';
-            }
-            // 2. 尝试右上角（图层外部）
-            else if (rightPercent <= (100 - labelWidth) && topPercent >= labelHeight) {
-                labelLeft = rightPercent;
-                labelTop = topPercent - labelHeight;
-                labelPosition = 'top-right-outside';
-            }
-            // 3. 尝试左下角（图层外部）
-            else if (leftPercent >= labelWidth && bottomPercent <= (100 - labelHeight)) {
-                labelLeft = leftPercent - labelWidth;
-                labelTop = bottomPercent;
-                labelPosition = 'bottom-left-outside';
-            }
-            // 4. 尝试右下角（图层外部）
-            else if (rightPercent <= (100 - labelWidth) && bottomPercent <= (100 - labelHeight)) {
-                labelLeft = rightPercent;
-                labelTop = bottomPercent;
-                labelPosition = 'bottom-right-outside';
-            }
-            // 5. 图层内部左上角
-            else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
-                labelLeft = leftPercent + 1; // 稍微偏移避免边框重叠
-                labelTop = topPercent + 1;
-                labelPosition = 'top-left-inside';
-            }
-            // 6. 图层内部右上角
-            else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
-                labelLeft = rightPercent - labelWidth - 1;
-                labelTop = topPercent + 1;
-                labelPosition = 'top-right-inside';
-            }
-            // 7. 图层内部居中（最后的选择）
-            else {
-                labelLeft = leftPercent + (widthPercent - labelWidth) / 2;
-                labelTop = topPercent + (heightPercent - labelHeight) / 2;
-                labelPosition = 'center-inside';
+            // 如果图层超出画布，使用特殊定位策略
+            if (hasOverflow) {
+                // 计算图层在画布内的可见部分
+                const visibleLeft = Math.max(0, leftPercent);
+                const visibleTop = Math.max(0, topPercent);
+                const visibleRight = Math.min(100, rightPercent);
+                const visibleBottom = Math.min(100, bottomPercent);
+                const visibleWidth = visibleRight - visibleLeft;
+                const visibleHeight = visibleBottom - visibleTop;
+                
+                // 根据超出方向选择标签位置
+                if (isOverflowTop && !isOverflowLeft) {
+                    // 上方超出：在图片上边缘且图层左侧显示
+                    labelLeft = Math.max(0, visibleLeft);
+                    labelTop = 0;
+                    labelPosition = 'overflow-top';
+                } else if (isOverflowLeft && !isOverflowTop) {
+                    // 左侧超出：在图片左边缘且图层上方显示
+                    labelLeft = 0;
+                    labelTop = Math.max(0, visibleTop);
+                    labelPosition = 'overflow-left';
+                } else if (isOverflowRight && !isOverflowBottom) {
+                    // 右侧超出：在图片右边缘且图层上方显示
+                    labelLeft = Math.max(0, 100 - labelWidth);
+                    labelTop = Math.max(0, visibleTop);
+                    labelPosition = 'overflow-right';
+                } else if (isOverflowBottom && !isOverflowRight) {
+                    // 下方超出：在图片下边缘且图层左侧显示
+                    labelLeft = Math.max(0, visibleLeft);
+                    labelTop = Math.max(0, 100 - labelHeight);
+                    labelPosition = 'overflow-bottom';
+                } else if (isOverflowTop && isOverflowLeft) {
+                    // 左上角超出：在可见区域的左上角
+                    labelLeft = visibleLeft;
+                    labelTop = visibleTop;
+                    labelPosition = 'overflow-top-left';
+                } else if (isOverflowTop && isOverflowRight) {
+                    // 右上角超出：在可见区域的右上角
+                    labelLeft = Math.max(0, visibleRight - labelWidth);
+                    labelTop = visibleTop;
+                    labelPosition = 'overflow-top-right';
+                } else if (isOverflowBottom && isOverflowLeft) {
+                    // 左下角超出：在可见区域的左下角
+                    labelLeft = visibleLeft;
+                    labelTop = Math.max(0, visibleBottom - labelHeight);
+                    labelPosition = 'overflow-bottom-left';
+                } else if (isOverflowBottom && isOverflowRight) {
+                    // 右下角超出：在可见区域的右下角
+                    labelLeft = Math.max(0, visibleRight - labelWidth);
+                    labelTop = Math.max(0, visibleBottom - labelHeight);
+                    labelPosition = 'overflow-bottom-right';
+                } else {
+                    // 多方向超出：在可见区域中心
+                    labelLeft = visibleLeft + (visibleWidth - labelWidth) / 2;
+                    labelTop = visibleTop + (visibleHeight - labelHeight) / 2;
+                    labelPosition = 'overflow-center';
+                }
+            } else {
+                // 正常情况下的定位策略（原有逻辑）
+                // 优先级：左上 > 右上 > 左下 > 右下 > 内部居中
+                
+                // 1. 尝试左上角（图层外部）
+                if (leftPercent >= labelWidth && topPercent >= labelHeight) {
+                    labelLeft = leftPercent - labelWidth;
+                    labelTop = topPercent - labelHeight;
+                    labelPosition = 'top-left-outside';
+                }
+                // 2. 尝试右上角（图层外部）
+                else if (rightPercent <= (100 - labelWidth) && topPercent >= labelHeight) {
+                    labelLeft = rightPercent;
+                    labelTop = topPercent - labelHeight;
+                    labelPosition = 'top-right-outside';
+                }
+                // 3. 尝试左下角（图层外部）
+                else if (leftPercent >= labelWidth && bottomPercent <= (100 - labelHeight)) {
+                    labelLeft = leftPercent - labelWidth;
+                    labelTop = bottomPercent;
+                    labelPosition = 'bottom-left-outside';
+                }
+                // 4. 尝试右下角（图层外部）
+                else if (rightPercent <= (100 - labelWidth) && bottomPercent <= (100 - labelHeight)) {
+                    labelLeft = rightPercent;
+                    labelTop = bottomPercent;
+                    labelPosition = 'bottom-right-outside';
+                }
+                // 5. 图层内部左上角
+                else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
+                    labelLeft = leftPercent + 1; // 稍微偏移避免边框重叠
+                    labelTop = topPercent + 1;
+                    labelPosition = 'top-left-inside';
+                }
+                // 6. 图层内部右上角
+                else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
+                    labelLeft = rightPercent - labelWidth - 1;
+                    labelTop = topPercent + 1;
+                    labelPosition = 'top-right-inside';
+                }
+                // 7. 图层内部居中（最后的选择）
+                else {
+                    labelLeft = leftPercent + (widthPercent - labelWidth) / 2;
+                    labelTop = topPercent + (heightPercent - labelHeight) / 2;
+                    labelPosition = 'center-inside';
+                }
             }
             
             // 确保标签不会超出容器边界
@@ -1308,20 +1383,39 @@
             switch (labelPosition) {
                 case 'top-left-outside':
                 case 'top-left-inside':
+                case 'overflow-top-left':
                     label.style.borderRadius = '4px 0 8px 0';
                     break;
                 case 'top-right-outside':
                 case 'top-right-inside':
+                case 'overflow-top-right':
                     label.style.borderRadius = '0 4px 0 8px';
                     break;
                 case 'bottom-left-outside':
+                case 'overflow-bottom-left':
                     label.style.borderRadius = '8px 0 4px 0';
                     break;
                 case 'bottom-right-outside':
+                case 'overflow-bottom-right':
                     label.style.borderRadius = '0 8px 0 4px';
+                    break;
+                case 'overflow-top':
+                case 'overflow-left':
+                    label.style.borderRadius = '0 0 8px 0';
+                    break;
+                case 'overflow-right':
+                case 'overflow-bottom':
+                    label.style.borderRadius = '0 0 0 8px';
                     break;
                 default:
                     label.style.borderRadius = '4px';
+            }
+            
+            // 超出画布时添加特殊样式
+            if (hasOverflow) {
+                label.style.backgroundColor = label.style.backgroundColor || '#95a5a6';
+                label.style.border = '1px solid #fff';
+                label.style.fontWeight = 'bold';
             }
         }
 
