@@ -946,6 +946,33 @@
             // 检测分辨率模式
             const detectedResolution = detectResolutionMode(obsSourceInfo);
             
+            // 处理image配置
+            if (obsSourceInfo.image) {
+                obsSourceInfo.image.forEach(imageSource => {
+                    const convertedCoords = convertObsCoordinates(
+                        imageSource.pos.x, 
+                        imageSource.pos.y, 
+                        detectedResolution.width, 
+                        detectedResolution.height,
+                        detectedResolution
+                    );
+                    
+                    parsedLayers.push({
+                        sourceType: 'image',
+                        configSource: 'obs', // 标识来源为OBS
+                        name: imageSource.name || '图片源',
+                        fileName: imageSource.filepath ? imageSource.filepath.split('/').pop() : '',
+                        layer: layerIndex++,
+                        canvasOverlapRect: convertedCoords,
+                        canvasOverlap: calculateOverlap(convertedCoords),
+                        overlap: calculateOverlap(convertedCoords),
+                        fileSize: imageSource.fileSize,
+                        pos: imageSource.pos,
+                        filepath: imageSource.filepath
+                    });
+                });
+            }
+            
             // 处理process配置
             if (obsSourceInfo.process) {
                 obsSourceInfo.process.forEach(processSource => {
@@ -999,12 +1026,46 @@
                 });
             }
             
+            // 处理camera配置
+            if (obsSourceInfo.camera) {
+                obsSourceInfo.camera.forEach(cameraSource => {
+                    const convertedCoords = convertObsCoordinates(
+                        cameraSource.pos.x, 
+                        cameraSource.pos.y, 
+                        detectedResolution.width, 
+                        detectedResolution.height,
+                        detectedResolution
+                    );
+                    
+                    parsedLayers.push({
+                        sourceType: 'captureCard',
+                        configSource: 'obs', // 标识来源为OBS
+                        name: cameraSource.name || '采集卡',
+                        deviceId: cameraSource.deviceId,
+                        layer: layerIndex++,
+                        canvasOverlapRect: convertedCoords,
+                        canvasOverlap: calculateOverlap(convertedCoords),
+                        overlap: calculateOverlap(convertedCoords),
+                        volume: cameraSource.volume,
+                        pos: cameraSource.pos
+                    });
+                });
+            }
+            
             // otherScenes 已过滤，不进行解析
         }
 
         // 检测分辨率模式
         function detectResolutionMode(obsSourceInfo) {
             let maxX = 0, maxY = 0;
+            
+            // 检查image坐标
+            if (obsSourceInfo.image) {
+                obsSourceInfo.image.forEach(item => {
+                    maxX = Math.max(maxX, item.pos.x);
+                    maxY = Math.max(maxY, item.pos.y);
+                });
+            }
             
             // 检查process坐标
             if (obsSourceInfo.process) {
@@ -1017,6 +1078,14 @@
             // 检查video坐标
             if (obsSourceInfo.video) {
                 obsSourceInfo.video.forEach(item => {
+                    maxX = Math.max(maxX, item.pos.x);
+                    maxY = Math.max(maxY, item.pos.y);
+                });
+            }
+            
+            // 检查camera坐标
+            if (obsSourceInfo.camera) {
+                obsSourceInfo.camera.forEach(item => {
                     maxX = Math.max(maxX, item.pos.x);
                     maxY = Math.max(maxY, item.pos.y);
                 });
@@ -1131,6 +1200,8 @@
             
             if (layer.exeName) html += `<div><strong>进程:</strong> ${layer.exeName.split(':').pop() || layer.exeName}</div>`;
             if (layer.fileName) html += `<div><strong>文件:</strong> ${layer.fileName}</div>`;
+            if (layer.filepath) html += `<div><strong>文件路径:</strong> ${layer.filepath}</div>`;
+            if (layer.deviceId) html += `<div><strong>设备ID:</strong> ${layer.deviceId}</div>`;
             if (layer.id) html += `<div><strong>ID:</strong> ${layer.id}</div>`;
             
             if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
