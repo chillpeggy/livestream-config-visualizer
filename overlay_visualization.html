@@ -1087,11 +1087,19 @@
                     background: ${color}20;
                 `;
                 
+                // 对于进程类型，使用进程匹配的标签作为显示名称
+                let displayName = layer.name;
+                if (layer.sourceType === 'process' && layer.exeName) {
+                    const processName = layer.exeName.split(':').pop() || layer.exeName;
+                    const processType = matchProcessType(processName);
+                    displayName = processType;
+                }
+                
                 // 创建标签
                 const label = document.createElement('div');
                 label.className = 'layer-label';
                 label.style.background = color;
-                label.textContent = `L${layer.layer}: ${layer.name}`;
+                label.textContent = `L${layer.layer}: ${displayName}`;
                 
                 // 创建详细信息
                 const details = document.createElement('div');
@@ -1215,10 +1223,18 @@
             // 添加配置来源标识
             const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
             
+            // 对于进程类型，使用进程匹配的标签作为标题
+            let displayName = layer.name;
+            if (layer.sourceType === 'process' && layer.exeName) {
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                const processType = matchProcessType(processName);
+                displayName = processType;
+            }
+            
             layerItem.innerHTML = `
                 <div class="layer-color-dot" style="background: ${color};"></div>
                 <div class="layer-text">
-                    <div class="layer-title">第${layer.layer}层 - ${layer.name}</div>
+                    <div class="layer-title">第${layer.layer}层 - ${displayName}</div>
                     <div class="layer-desc">[${sourceLabel}] ${desc}</div>
                 </div>
             `;
