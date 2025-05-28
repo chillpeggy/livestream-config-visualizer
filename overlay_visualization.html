@@ -91,115 +91,51 @@
             font-weight: bold;
             display: flex;
             align-items: center;
+            justify-content: space-between; /* 标题和控制区分布在两端 */
             gap: 8px;
         }
-        .layer-panel {
-            background: #fff;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-            border: 1px solid #e9ecef;
-            height: 800px; /* 与预览图保持一致的高度 */
-            overflow-y: auto; /* 内容超出时滚动 */
-            box-sizing: border-box;
-        }
-        .layer-panel h2 {
-            margin: 0 0 15px 0;
-            font-size: 22px;
-            color: #343a40;
-        }
-        .layer-panel p {
-            margin: 0 0 20px 0;
-            font-size: 16px;
-            color: #6c757d;
-        }
-        .game-image-container {
-            position: relative;
-            display: inline-block;
-            border: 3px solid #667eea;
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 15px 0;
-            background: #000;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
-        }
-        .game-image {
-            display: block;
-            width: 100%;
-            max-width: 1300px;
-            height: auto;
-            opacity: 0.9;
-        }
-        .layer-overlay {
-            position: absolute;
-            border: 4px solid;
-            border-style: dashed;
-            opacity: 0.6;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .layer-overlay:hover {
-            opacity: 1;
-            border-style: solid;
-            border-width: 5px;
-            z-index: 100;
-        }
-        .layer-overlay.hidden {
-            display: none;
-        }
-        .layer-label {
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 4px 8px;
-            white-space: nowrap;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            border-radius: 4px 0 8px 0;
-        }
-        .layer-details {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 8px 12px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 0 0 4px 4px;
-        }
-        .layer-overlay:hover .layer-details {
-            opacity: 1;
+        .visualization-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .controls {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 8px 12px; /* 减小内边距 */
+            border-radius: 8px; /* 减小圆角 */
+            margin: 0; /* 移除外边距 */
             display: flex;
-            gap: 15px;
+            gap: 10px; /* 减小间距 */
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap; /* 不换行 */
             border: 1px solid rgba(255,255,255,0.3);
+            font-size: 12px; /* 减小字体 */
         }
         .control-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* 减小间距 */
+        }
+        .control-group label {
+            font-size: 11px; /* 减小标签字体 */
+            color: #495057;
+            white-space: nowrap;
+        }
+        #opacityValue {
+            font-size: 11px;
+            color: #495057;
+            min-width: 30px;
         }
         .toggle-btn {
             background: #007bff;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 10px; /* 减小按钮尺寸 */
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 11px; /* 减小字体 */
             transition: background 0.3s;
+            white-space: nowrap; /* 防止文字换行 */
         }
         .toggle-btn:hover {
             background: #0056b3;
@@ -208,8 +144,8 @@
             background: #28a745;
         }
         .opacity-slider {
-            width: 100px;
-            margin: 0 10px;
+            width: 80px; /* 减小滑块宽度 */
+            margin: 0 6px; /* 减小边距 */
         }
         .file-upload {
             padding: 15px;
@@ -582,6 +518,88 @@
             width: 100%; /* 确保占满容器宽度 */
             box-sizing: border-box;
         }
+        .layer-panel {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            height: 800px; /* 与预览图保持一致的高度 */
+            overflow-y: auto; /* 内容超出时滚动 */
+            box-sizing: border-box;
+        }
+        .layer-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            color: #343a40;
+        }
+        .layer-panel p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #6c757d;
+        }
+        .game-image-container {
+            position: relative;
+            display: inline-block;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+            background: #000;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+        }
+        .game-image {
+            display: block;
+            width: 100%;
+            max-width: 1300px;
+            height: auto;
+            opacity: 0.9;
+        }
+        .layer-overlay {
+            position: absolute;
+            border: 4px solid;
+            border-style: dashed;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .layer-overlay:hover {
+            opacity: 1;
+            border-style: solid;
+            border-width: 5px;
+            z-index: 100;
+        }
+        .layer-overlay.hidden {
+            display: none;
+        }
+        .layer-label {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            white-space: nowrap;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            border-radius: 4px 0 8px 0;
+        }
+        .layer-details {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 0 0 4px 4px;
+        }
+        .layer-overlay:hover .layer-details {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -657,18 +675,22 @@
             
             <div class="layer-panel-container">
                 <div class="visualization-container">
-                    <h2>🖼️ 解析预览图</h2>
-                    <div class="controls">
-                        <div class="control-group">
-                            <label>🎛️ 叠加层透明度:</label>
-                            <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.6" onchange="updateOpacity(this.value)">
-                            <span id="opacityValue">60%</span>
+                    <h2>
+                        <div class="visualization-title">
+                            🖼️ 解析预览图
                         </div>
-                        <div class="control-group">
-                            <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
-                            <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                        <div class="controls">
+                            <div class="control-group">
+                                <label>🎛️ 叠加层透明度:</label>
+                                <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.6" onchange="updateOpacity(this.value)">
+                                <span id="opacityValue">60%</span>
+                            </div>
+                            <div class="control-group">
+                                <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
+                                <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                            </div>
                         </div>
-                    </div>
+                    </h2>
                     
                     <div class="game-image-container" id="gameContainer">
                         <img class="game-image" id="gameImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTkyMCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiBmaWxsPSIjZjhmOWZhIi8+Cjx0ZXh0IHg9Ijk2MCIgeT0iNTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LXNpemU9IjM2IiBmb250LWZhbWlseT0iQXJpYWwiPuivt+S4iuS8oOW6lembs+WSjOWkhOWtmemFjee9rjwvdGV4dD4KPHR4dCB4PSI5NjAiIHk9IjU2MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIj7miJjlsIbnjqnlrr3lj6/op4blhpnlm77lsYI8L3RleHQ+Cjwvc3ZnPg==" alt="等待上传底图">
