@@ -94,7 +94,6 @@
             gap: 8px;
         }
         .layer-panel {
-            width: 780px;
             background: #fff;
             border-radius: 16px;
             padding: 25px;
@@ -525,11 +524,11 @@
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
-            color: #212529;
+            color: #000000; /* 改为更深的黑色 */
             overflow: hidden;
             white-space: normal; /* 允许换行 */
             word-break: break-word; /* 长单词可以换行 */
-            font-size: 11px; /* 增大进程名字体 */
+            font-size: 13px; /* 从11px增加到13px */
             padding: 4px 1px; /* 减少左右内边距，减少留白 */
             line-height: 1.2; /* 设置行高 */
         }
@@ -566,7 +565,7 @@
         }
         
         .resource-table.five-processes .process-name {
-            font-size: 10px; /* 5个进程时进程名字体 */
+            font-size: 12px; /* 5个进程时进程名字体从10px增加到12px */
         }
         
         .resource-table.five-processes .process-tag .process-tag-badge {
@@ -581,7 +580,7 @@
         }
         .layer-panel-container {
             display: grid;
-            grid-template-columns: 1fr 780px;
+            grid-template-columns: 3fr 2fr; /* 改为固定的3:2比例 */
             gap: 20px;
             width: 100%; /* 确保占满容器宽度 */
             box-sizing: border-box;
@@ -910,6 +909,12 @@
         // 解析sourceInfo格式
         function parseSourceInfo(sourceInfo) {
             Object.keys(sourceInfo).forEach(sourceType => {
+                // 过滤掉pipe源，不进行解析
+                if (sourceType === 'pipe') {
+                    console.log('过滤掉pipe源，不进行展示');
+                    return;
+                }
+                
                 const sourceData = sourceInfo[sourceType];
                 if (sourceData.sourceList) {
                     sourceData.sourceList.forEach(source => {
