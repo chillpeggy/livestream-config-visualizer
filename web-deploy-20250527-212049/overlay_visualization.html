@@ -552,6 +552,44 @@
         .hidden {
             display: none !important;
         }
+        
+        /* 全局详细信息显示区域 */
+        .global-layer-details {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            max-width: 400px;
+            min-width: auto;
+            width: auto;
+            pointer-events: none;
+            display: none;
+            white-space: normal;
+            line-height: 1.4;
+        }
+        
+        .global-layer-details.show {
+            opacity: 1;
+            display: block;
+        }
+        
+        /* 详细信息内部样式 */
+        .global-layer-details div {
+            margin-bottom: 4px;
+        }
+        
+        .global-layer-details div:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -631,8 +669,8 @@
                     <div class="controls">
                         <div class="control-group">
                             <label>🎛️ 叠加层透明度:</label>
-                            <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.6" onchange="updateOpacity(this.value)">
-                            <span id="opacityValue">60%</span>
+                            <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.7" onchange="updateOpacity(this.value)">
+                            <span id="opacityValue">70%</span>
                         </div>
                         <div class="control-group">
                             <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
@@ -663,6 +701,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 全局详细信息显示区域 -->
+    <div class="global-layer-details" id="globalLayerDetails"></div>
 
     <script>
         let currentSelectedLayer = 'all';
@@ -986,7 +1027,11 @@
                 
                 const overlayDiv = document.createElement('div');
                 overlayDiv.className = 'layer-overlay';
+                // 使用唯一标识符：配置来源-层级
+                const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
                 overlayDiv.setAttribute('data-layer', layer.layer);
+                overlayDiv.setAttribute('data-unique-id', uniqueLayerId);
+                overlayDiv.setAttribute('data-config-source', layer.configSource);
                 overlayDiv.style.cssText = `
                     left: ${leftPercent}%;
                     top: ${topPercent}%;
@@ -995,6 +1040,15 @@
                     border-color: ${color};
                     background: ${color}20;
                 `;
+                
+                // 添加鼠标悬停事件来显示全局详细信息
+                overlayDiv.addEventListener('mouseenter', function() {
+                    showGlobalLayerDetails(layer);
+                });
+                
+                overlayDiv.addEventListener('mouseleave', function() {
+                    hideGlobalLayerDetails();
+                });
                 
                 // 创建标签
                 const label = document.createElement('div');
@@ -1018,12 +1072,6 @@
                 label.style.margin = '0'; // 移除任何边距
                 label.style.padding = '4px 6px'; // 保持内边距
                 
-                // 创建详细信息
-                const details = document.createElement('div');
-                details.className = 'layer-details';
-                details.innerHTML = generateDetailsHTML(layer);
-                
-                overlayDiv.appendChild(details); // 只将详细信息添加到overlayDiv
                 overlaysContainer.appendChild(overlayDiv);
                 overlaysContainer.appendChild(label); // 将标签直接添加到容器中
             });
@@ -1034,25 +1082,13 @@
             let html = `<div><strong>类型:</strong> ${sourceTypeNames[layer.sourceType] || layer.sourceType}</div>`;
             html += `<div><strong>层级:</strong> 第${layer.layer}层</div>`;
             
-            if (layer.exeName) html += `<div><strong>进程:</strong> ${layer.exeName.split(':').pop() || layer.exeName}</div>`;
+            if (layer.exeName) {
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                html += `<div><strong>进程:</strong> ${processName}</div>`;
+            }
             if (layer.fileName) html += `<div><strong>文件:</strong> ${layer.fileName}</div>`;
-            if (layer.id) html += `<div><strong>ID:</strong> ${layer.id}</div>`;
-            
+            if (layer.name && layer.name !== layer.fileName) html += `<div><strong>名称:</strong> ${layer.name}</div>`;
             if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
-            if (layer.overlap !== undefined) html += `<div><strong>原始占比:</strong> ${(layer.overlap * 100).toFixed(1)}%</div>`;
-            
-            // obsSourceInfo特有字段
-            if (layer.volume !== undefined) {
-                const volumeText = layer.volume === 0 ? '静音' : `${layer.volume * 100}%`;
-                html += `<div><strong>音量:</strong> ${volumeText}</div>`;
-            }
-            if (layer.fileSize !== undefined) {
-                const sizeText = formatFileSize(layer.fileSize);
-                html += `<div><strong>文件大小:</strong> ${sizeText}</div>`;
-            }
-            if (layer.looping !== undefined) {
-                html += `<div><strong>循环播放:</strong> ${layer.looping ? '是' : '否'}</div>`;
-            }
             
             const [x, y, width, height] = layer.canvasOverlapRect;
             html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
@@ -1131,8 +1167,11 @@
         function createLayerItem(layer) {
             const layerItem = document.createElement('div');
             layerItem.className = 'layer-item';
+            const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
             layerItem.setAttribute('data-layer', layer.layer);
-            layerItem.onclick = () => showSingleLayer(layerItem, layer.layer);
+            layerItem.setAttribute('data-unique-id', uniqueLayerId);
+            layerItem.setAttribute('data-config-source', layer.configSource);
+            layerItem.onclick = () => showSingleLayer(layerItem, uniqueLayerId);
             
             const color = getLayerColor(layer.layer);
             const desc = generateLayerDescription(layer);
@@ -1198,15 +1237,15 @@
         }
 
         // 显示单个图层
-        function showSingleLayer(element, layerNumber) {
-            currentSelectedLayer = layerNumber;
+        function showSingleLayer(element, uniqueLayerId) {
+            currentSelectedLayer = uniqueLayerId;
             updateSelectedItem(element);
             
             // 控制边框的显示/隐藏
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
-                const layerData = parseInt(overlay.getAttribute('data-layer'));
-                if (layerData === layerNumber) {
+                const overlayUniqueId = overlay.getAttribute('data-unique-id');
+                if (overlayUniqueId === uniqueLayerId) {
                     overlay.classList.remove('hidden');
                 } else {
                     overlay.classList.add('hidden');
@@ -1216,8 +1255,8 @@
             // 控制标签的显示/隐藏
             const labels = document.querySelectorAll('.layer-label');
             labels.forEach(label => {
-                const labelLayerData = parseInt(label.getAttribute('data-layer'));
-                if (labelLayerData === layerNumber) {
+                const labelUniqueId = label.getAttribute('data-unique-id');
+                if (labelUniqueId === uniqueLayerId) {
                     label.classList.remove('hidden');
                 } else {
                     label.classList.add('hidden');
@@ -1424,6 +1463,24 @@
             `;
             
             container.innerHTML = tableHTML;
+        }
+        
+        // 显示全局详细信息
+        function showGlobalLayerDetails(layer) {
+            // 只有在选择单个图层时才显示详细信息，显示全部图层时不显示
+            if (currentSelectedLayer === 'all') {
+                return; // 显示全部图层时，不显示详细信息
+            }
+            
+            const globalDetails = document.getElementById('globalLayerDetails');
+            globalDetails.innerHTML = generateDetailsHTML(layer);
+            globalDetails.classList.add('show');
+        }
+        
+        // 隐藏全局详细信息
+        function hideGlobalLayerDetails() {
+            const globalDetails = document.getElementById('globalLayerDetails');
+            globalDetails.classList.remove('show');
         }
     </script>
 </body>

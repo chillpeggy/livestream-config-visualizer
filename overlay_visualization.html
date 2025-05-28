@@ -586,7 +586,7 @@
         .layer-overlay {
             position: absolute;
             border: 6px dashed; /* 改为虚线边框 */
-            opacity: 0.9; /* 增加透明度 */
+            opacity: 0.7; /* 增加透明度 */
             transition: all 0.3s ease;
             cursor: pointer;
             pointer-events: auto; /* 恢复叠加层的点击事件 */
@@ -618,17 +618,22 @@
             /* 移除背景色、边框和模糊效果，保持透明 */
         }
         .layer-details {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: fixed; /* 改为固定定位 */
+            top: 50%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 精确居中 */
             background: rgba(0,0,0,0.9);
             color: white;
-            padding: 8px 12px;
-            font-size: 12px;
+            padding: 15px 20px; /* 增加内边距 */
+            font-size: 14px; /* 增大字体 */
             opacity: 0;
             transition: opacity 0.3s ease;
-            border-radius: 0 0 4px 4px;
+            border-radius: 8px; /* 增加圆角 */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /* 添加阴影 */
+            z-index: 1000; /* 确保在最上层 */
+            max-width: 400px; /* 限制最大宽度 */
+            min-width: 250px; /* 设置最小宽度 */
+            pointer-events: none; /* 防止阻挡鼠标事件 */
         }
         .layer-overlay:hover .layer-details {
             opacity: 1;
@@ -637,6 +642,44 @@
         /* 隐藏类样式 */
         .hidden {
             display: none !important;
+        }
+        
+        /* 全局详细信息显示区域 */
+        .global-layer-details {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            max-width: 400px; /* 设置合理的最大宽度 */
+            min-width: auto; /* 移除最小宽度限制 */
+            width: auto; /* 自适应宽度 */
+            pointer-events: none;
+            display: none;
+            white-space: normal; /* 允许文本换行 */
+            line-height: 1.4; /* 设置行高提高可读性 */
+        }
+        
+        .global-layer-details.show {
+            opacity: 1;
+            display: block;
+        }
+        
+        /* 详细信息内部样式 */
+        .global-layer-details div {
+            margin-bottom: 4px; /* 行间距 */
+        }
+        
+        .global-layer-details div:last-child {
+            margin-bottom: 0; /* 最后一行不需要底部间距 */
         }
     </style>
 </head>
@@ -720,8 +763,8 @@
                         <div class="controls">
                             <div class="control-group">
                                 <label>🎛️ 叠加层透明度:</label>
-                                <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.9" onchange="updateOpacity(this.value)">
-                                <span id="opacityValue">90%</span>
+                                <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.7" onchange="updateOpacity(this.value)">
+                                <span id="opacityValue">70%</span>
                             </div>
                             <div class="control-group">
                                 <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
@@ -753,6 +796,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 全局详细信息显示区域 -->
+    <div class="global-layer-details" id="globalLayerDetails"></div>
 
     <script>
         let currentSelectedLayer = 'all';
@@ -1285,6 +1331,15 @@
                 label.setAttribute('data-layer', layer.layer);
                 label.setAttribute('data-unique-id', uniqueLayerId);
                 label.setAttribute('data-config-source', layer.configSource);
+                
+                // 添加鼠标悬停事件来显示全局详细信息
+                overlayDiv.addEventListener('mouseenter', function() {
+                    showGlobalLayerDetails(layer);
+                });
+                
+                overlayDiv.addEventListener('mouseleave', function() {
+                    hideGlobalLayerDetails();
+                });
                 
                 // 创建详细信息
                 const details = document.createElement('div');
@@ -1845,6 +1900,24 @@
                 }, 100); // 稍微延迟确保图片完全渲染
             }
         });
+
+        // 显示全局详细信息
+        function showGlobalLayerDetails(layer) {
+            // 只有在选择单个图层时才显示详细信息，显示全部图层时不显示
+            if (currentSelectedLayer === 'all') {
+                return; // 显示全部图层时，不显示详细信息
+            }
+            
+            const globalDetails = document.getElementById('globalLayerDetails');
+            globalDetails.innerHTML = generateDetailsHTML(layer);
+            globalDetails.classList.add('show');
+        }
+        
+        // 隐藏全局详细信息
+        function hideGlobalLayerDetails() {
+            const globalDetails = document.getElementById('globalLayerDetails');
+            globalDetails.classList.remove('show');
+        }
     </script>
 </body>
 </html>
