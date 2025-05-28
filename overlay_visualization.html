@@ -1133,11 +1133,16 @@
                     sourceData.forEach(source => {
                         // 检查是否有位置信息
                         if (source.pos && typeof source.pos === 'object') {
+                            // 对于OBS配置，所有图层的右下角都对齐到图片右下角
+                            // 计算从左上角到图片右下角的宽度和高度
+                            const obsLayerWidth = canvasResolution.width - (source.pos.x || 0);
+                            const obsLayerHeight = canvasResolution.height - (source.pos.y || 0);
+                            
                             const convertedCoords = convertObsCoordinates(
                                 source.pos.x || 0, 
                                 source.pos.y || 0, 
-                                detectedResolution.width, 
-                                detectedResolution.height,
+                                obsLayerWidth, 
+                                obsLayerHeight,
                                 detectedResolution
                             );
                             

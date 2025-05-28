@@ -890,11 +890,16 @@
             // 处理process配置
             if (obsSourceInfo.process) {
                 obsSourceInfo.process.forEach(processSource => {
+                    // 对于OBS配置，所有图层的右下角都对齐到图片右下角
+                    // 计算从左上角到图片右下角的宽度和高度
+                    const obsLayerWidth = canvasResolution.width - processSource.pos.x;
+                    const obsLayerHeight = canvasResolution.height - processSource.pos.y;
+                    
                     const convertedCoords = convertObsCoordinates(
                         processSource.pos.x, 
                         processSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
+                        obsLayerWidth, 
+                        obsLayerHeight,
                         detectedResolution
                     );
                     
@@ -915,11 +920,16 @@
             // 处理video配置
             if (obsSourceInfo.video) {
                 obsSourceInfo.video.forEach(videoSource => {
+                    // 对于OBS配置，所有图层的右下角都对齐到图片右下角
+                    // 计算从左上角到图片右下角的宽度和高度
+                    const obsLayerWidth = canvasResolution.width - videoSource.pos.x;
+                    const obsLayerHeight = canvasResolution.height - videoSource.pos.y;
+                    
                     const convertedCoords = convertObsCoordinates(
                         videoSource.pos.x, 
                         videoSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
+                        obsLayerWidth, 
+                        obsLayerHeight,
                         detectedResolution
                     );
                     
