@@ -146,10 +146,10 @@ function CanvasPreview({ data }) {
                     opacity="0.1"
                   />
                   
-                  {/* 标签 - 直接定位到图层左上角，无背景 */}
+                  {/* 标签 - 精确对齐到图层边框左上角 */}
                   <text
-                    x={displayX + 4}
-                    y={displayY + 16}
+                    x={displayX + 2}
+                    y={displayY + 14}
                     fill={color}
                     fontSize="14"
                     fontWeight="bold"

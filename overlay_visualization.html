@@ -1282,9 +1282,9 @@
                 details.className = 'layer-details';
                 details.innerHTML = generateDetailsHTML(layer);
                 
-                overlayDiv.appendChild(label);
-                overlayDiv.appendChild(details);
+                overlayDiv.appendChild(details); // 只将详细信息添加到overlayDiv
                 overlaysContainer.appendChild(overlayDiv);
+                overlaysContainer.appendChild(label); // 将标签直接添加到容器中
                 
                 // 等待图片加载完成后再计算位置
                 if (gameImage.complete && gameImage.naturalWidth > 0) {
@@ -1297,13 +1297,16 @@
 
         // 简化的标签定位函数 - 直接对齐到图层边框(0,0)坐标
         function positionLabelAtLayerOrigin(label, leftPercent, topPercent, widthPercent, heightPercent) {
-            // 直接将标签定位到图层的左上角(0,0)坐标
+            // 标签直接使用图层边框的左上角坐标，确保完美对齐
             label.style.left = `${leftPercent}%`;
             label.style.top = `${topPercent}%`;
             label.style.position = 'absolute';
             label.style.zIndex = '20'; // 确保标签在最上层
+            label.style.transform = 'translate(0, 0)'; // 确保没有额外的偏移
+            label.style.margin = '0'; // 移除任何边距
+            label.style.padding = '4px 6px'; // 保持内边距
             
-            console.log(`标签定位到图层原点: (${leftPercent}%, ${topPercent}%)`);
+            console.log(`标签精确定位到图层边框左上角: (${leftPercent}%, ${topPercent}%)`);
         }
 
         // 获取图层显示名称
