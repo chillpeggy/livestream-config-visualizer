@@ -1248,7 +1248,7 @@
                     const imageOffsetX = (containerWidth - actualImageWidth) / 2;
                     const imageOffsetY = (containerHeight - actualImageHeight) / 2;
                     
-                    // 将配置坐标转换为相对于实际显示图片的百分比位置
+                    // 将配置坐标转换为相对于实际显示图片的百分比位置（用于边框）
                     const leftPercent = ((x / canvasResolution.width * actualImageWidth + imageOffsetX) / containerWidth * 100).toFixed(2);
                     const topPercent = ((y / canvasResolution.height * actualImageHeight + imageOffsetY) / containerHeight * 100).toFixed(2);
                     const widthPercent = ((width / canvasResolution.width * actualImageWidth) / containerWidth * 100).toFixed(2);
@@ -1263,8 +1263,8 @@
                         border-color: ${color};
                     `;
                     
-                    // 直接将标签定位到图层原点
-                    positionLabelAtLayerOrigin(label, parseFloat(leftPercent), parseFloat(topPercent), parseFloat(widthPercent), parseFloat(heightPercent));
+                    // 标签定位：完全基于边框坐标，与图片位置解耦
+                    positionLabelAtLayerOrigin(label, parseFloat(leftPercent), parseFloat(topPercent));
                 }
                 
                 // 获取友好的显示名称
@@ -1295,9 +1295,10 @@
             });
         }
 
-        // 简化的标签定位函数 - 直接对齐到图层边框(0,0)坐标
-        function positionLabelAtLayerOrigin(label, leftPercent, topPercent, widthPercent, heightPercent) {
-            // 标签直接使用图层边框的左上角坐标，确保完美对齐
+        // 标签定位函数 - 完全基于边框左上角坐标，与图片位置解耦
+        function positionLabelAtLayerOrigin(label, leftPercent, topPercent) {
+            // 标签直接使用边框的左上角坐标，完全解耦于图片位置
+            // leftPercent 和 topPercent 是边框在容器中的百分比位置
             label.style.left = `${leftPercent}%`;
             label.style.top = `${topPercent}%`;
             label.style.position = 'absolute';

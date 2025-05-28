@@ -1001,7 +1001,8 @@
                 label.style.background = 'transparent'; // 透明背景
                 label.textContent = `L${layer.layer}: ${layer.name}`;
                 
-                // 精确定位标签到图层边框的左上角(0,0)坐标
+                // 标签定位：完全基于边框左上角坐标，与图片位置解耦
+                // leftPercent 和 topPercent 是边框在容器中的百分比位置
                 label.style.left = `${leftPercent}%`;
                 label.style.top = `${topPercent}%`;
                 label.style.position = 'absolute';
