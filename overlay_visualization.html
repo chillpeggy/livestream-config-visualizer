@@ -585,18 +585,20 @@
         }
         .layer-overlay {
             position: absolute;
-            border: 4px solid;
-            border-style: dashed;
-            opacity: 0.6;
+            border: 6px solid; /* 增加边框宽度 */
+            border-style: solid; /* 改为实线边框 */
+            opacity: 0.9; /* 增加透明度 */
             transition: all 0.3s ease;
             cursor: pointer;
             pointer-events: auto; /* 恢复叠加层的点击事件 */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); /* 添加阴影增强可见性 */
         }
         .layer-overlay:hover {
             opacity: 1;
             border-style: solid;
-            border-width: 5px;
+            border-width: 8px; /* 悬停时进一步增加边框宽度 */
             z-index: 100;
+            box-shadow: 0 0 15px rgba(0,0,0,0.7); /* 悬停时增强阴影 */
         }
         .layer-overlay.hidden {
             display: none;
@@ -604,13 +606,15 @@
         .layer-label {
             position: absolute;
             color: white;
-            font-size: 12px;
+            font-size: 14px; /* 增加字体大小 */
             font-weight: bold;
-            padding: 4px 8px;
+            padding: 6px 10px; /* 增加内边距 */
             white-space: nowrap;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9); /* 增强文字阴影 */
             border-radius: 4px;
             z-index: 10;
+            border: 2px solid rgba(255,255,255,0.8); /* 添加白色边框增强对比 */
+            backdrop-filter: blur(2px); /* 添加背景模糊效果 */
             /* 动态定位，通过JavaScript设置 */
         }
         .layer-details {
@@ -864,16 +868,24 @@
             }).join('');
         }
         
-        // 层级颜色映射
+        // 层级颜色映射 - 使用更鲜亮的颜色
         const layerColors = {
-            0: '#3498db', // 蓝色
-            1: '#2ecc71', // 绿色
-            2: '#f39c12', // 橙色
-            3: '#9b59b6', // 紫色
-            4: '#e74c3c', // 红色
-            5: '#1abc9c', // 青色
-            6: '#f1c40f', // 黄色
-            7: '#e67e22'  // 深橙色
+            0: '#FF0080', // 鲜艳的粉红色
+            1: '#00FF00', // 鲜绿色
+            2: '#FF4500', // 橙红色
+            3: '#00BFFF', // 深天蓝色
+            4: '#FF1493', // 深粉红色
+            5: '#32CD32', // 酸橙绿
+            6: '#FFD700', // 金色
+            7: '#FF6347', // 番茄红
+            8: '#00CED1', // 深绿松石色
+            9: '#DA70D6', // 兰花紫
+            10: '#FF8C00', // 深橙色
+            11: '#7FFF00', // 查特酒绿
+            12: '#DC143C', // 深红色
+            13: '#00FFFF', // 青色
+            14: '#FF69B4', // 热粉红色
+            15: '#ADFF2F'  // 绿黄色
         };
 
         // 源类型中文映射 - 扩展版本
@@ -1152,7 +1164,7 @@
 
             parsedLayers.forEach((layer, index) => {
                 const [x, y, width, height] = layer.canvasOverlapRect;
-                const color = layerColors[layer.layer] || '#95a5a6';
+                const color = layerColors[layer.layer] || layerColors[layer.layer % 16] || '#FF0080'; // 使用循环颜色或默认鲜亮颜色
                 
                 // 创建叠加层元素
                 const overlayDiv = document.createElement('div');
