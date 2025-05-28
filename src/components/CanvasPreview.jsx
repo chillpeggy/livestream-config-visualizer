@@ -146,21 +146,16 @@ function CanvasPreview({ data }) {
                     opacity="0.1"
                   />
                   
-                  {/* 标签 */}
-                  <rect
-                    x={displayX}
-                    y={displayY}
-                    width={Math.min(displayW, 120)}
-                    height="24"
-                    fill={color}
-                    opacity="0.9"
-                  />
+                  {/* 标签 - 直接定位到图层左上角，无背景 */}
                   <text
                     x={displayX + 4}
                     y={displayY + 16}
-                    fill="white"
-                    fontSize="12"
+                    fill={color}
+                    fontSize="14"
                     fontWeight="bold"
+                    style={{
+                      textShadow: '2px 2px 4px rgba(0,0,0,1), -1px -1px 2px rgba(0,0,0,1), 1px -1px 2px rgba(0,0,0,1), -1px 1px 2px rgba(0,0,0,1)'
+                    }}
                   >
                     L{layer.layer}: {layer.name.length > 10 ? layer.name.substring(0, 10) + '...' : layer.name}
                   </text>

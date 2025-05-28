@@ -605,17 +605,18 @@
         }
         .layer-label {
             position: absolute;
-            color: white;
-            font-size: 14px; /* 增加字体大小 */
+            color: white; /* 默认白色，会被JavaScript动态设置 */
+            font-size: 16px; /* 增加字体大小提高可见性 */
             font-weight: bold;
-            padding: 6px 10px; /* 增加内边距 */
+            padding: 4px 6px; /* 减少内边距 */
             white-space: nowrap;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.9); /* 增强文字阴影 */
-            border-radius: 4px;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,1), 
+                -1px -1px 2px rgba(0,0,0,1),
+                1px -1px 2px rgba(0,0,0,1),
+                -1px 1px 2px rgba(0,0,0,1); /* 增强文字阴影，四个方向都有阴影 */
             z-index: 10;
-            border: 2px solid rgba(255,255,255,0.8); /* 添加白色边框增强对比 */
-            backdrop-filter: blur(2px); /* 添加背景模糊效果 */
-            /* 动态定位，通过JavaScript设置 */
+            /* 移除背景色、边框和模糊效果，保持透明 */
         }
         .layer-details {
             position: absolute;
@@ -1262,8 +1263,8 @@
                         border-color: ${color};
                     `;
                     
-                    // 智能定位标签
-                    positionLabelIntelligently(label, parseFloat(leftPercent), parseFloat(topPercent), parseFloat(widthPercent), parseFloat(heightPercent));
+                    // 直接将标签定位到图层原点
+                    positionLabelAtLayerOrigin(label, parseFloat(leftPercent), parseFloat(topPercent), parseFloat(widthPercent), parseFloat(heightPercent));
                 }
                 
                 // 获取友好的显示名称
@@ -1272,7 +1273,8 @@
                 // 创建标签
                 const label = document.createElement('div');
                 label.className = 'layer-label';
-                label.style.background = color;
+                label.style.color = color; // 设置文字颜色为边框颜色
+                label.style.background = 'transparent'; // 透明背景
                 label.textContent = `L${layer.layer}: ${displayName}`;
                 
                 // 创建详细信息
@@ -1293,124 +1295,15 @@
             });
         }
 
-        // 智能定位标签函数
-        function positionLabelIntelligently(label, leftPercent, topPercent, widthPercent, heightPercent) {
-            // 计算图层的边界
-            const rightPercent = leftPercent + widthPercent;
-            const bottomPercent = topPercent + heightPercent;
-            
-            // 检测图层是否超出画布范围
-            const isOverflowLeft = leftPercent < 0;
-            const isOverflowTop = topPercent < 0;
-            const isOverflowRight = rightPercent > 100;
-            const isOverflowBottom = bottomPercent > 100;
-            const hasOverflow = isOverflowLeft || isOverflowTop || isOverflowRight || isOverflowBottom;
-            
-            // 如果有超出，修改标签文本
-            if (hasOverflow) {
-                const originalText = label.textContent;
-                if (!originalText.includes('(部分画面超出画布)')) {
-                    label.textContent = originalText + ' (部分画面超出画布)';
-                }
-            }
-            
-            // 标签的默认尺寸（估算，超出时需要更大空间）
-            const labelWidth = hasOverflow ? 15 : 10; // 增加标签宽度估算
-            const labelHeight = 4; // 增加标签高度估算
-            
-            let labelLeft, labelTop;
-            let labelPosition = 'top-left'; // 默认位置
-            
-            // 简化的定位策略：优先考虑图层左上角
-            if (!isOverflowLeft && !isOverflowTop) {
-                // 左侧和上方都没有超出：直接在图层左上角显示
-                labelLeft = leftPercent;
-                labelTop = topPercent;
-                labelPosition = 'top-left-on-layer';
-            } else if (hasOverflow) {
-                // 有超出的情况：使用特殊定位策略
-                const visibleLeft = Math.max(0, leftPercent);
-                const visibleTop = Math.max(0, topPercent);
-                const visibleRight = Math.min(100, rightPercent);
-                const visibleBottom = Math.min(100, bottomPercent);
-                
-                if (isOverflowTop && !isOverflowLeft && !isOverflowRight) {
-                    // 仅上方超出：在图层左侧边缘，Y坐标为0
-                    labelLeft = leftPercent;
-                    labelTop = 0;
-                    labelPosition = 'overflow-top';
-                } else if (isOverflowLeft && !isOverflowTop && !isOverflowBottom) {
-                    // 仅左侧超出：在图层上边缘，X坐标为0
-                    labelLeft = 0;
-                    labelTop = topPercent;
-                    labelPosition = 'overflow-left';
-                } else if (isOverflowTop && isOverflowLeft) {
-                    // 左上角超出：标签在画布左上角
-                    labelLeft = 0;
-                    labelTop = 0;
-                    labelPosition = 'overflow-top-left';
-                } else {
-                    // 其他超出情况：在可见区域内
-                    labelLeft = visibleLeft;
-                    labelTop = visibleTop;
-                    labelPosition = 'overflow-visible';
-                }
-            } else {
-                // 没有超出但左上角不可用：尝试其他位置
-                if (leftPercent >= labelWidth && topPercent >= labelHeight) {
-                    // 图层外部左上角
-                    labelLeft = leftPercent - labelWidth;
-                    labelTop = topPercent - labelHeight;
-                    labelPosition = 'top-left-outside';
-                } else if (widthPercent >= labelWidth && heightPercent >= labelHeight) {
-                    // 图层内部左上角
-                    labelLeft = leftPercent + 1;
-                    labelTop = topPercent + 1;
-                    labelPosition = 'top-left-inside';
-                } else {
-                    // 最后选择：图层左上角
-                    labelLeft = leftPercent;
-                    labelTop = topPercent;
-                    labelPosition = 'top-left-fallback';
-                }
-            }
-            
-            // 确保标签不会超出容器边界
-            labelLeft = Math.max(0, Math.min(labelLeft, 100 - labelWidth));
-            labelTop = Math.max(0, Math.min(labelTop, 100 - labelHeight));
-            
-            // 应用位置
-            label.style.left = `${labelLeft}%`;
-            label.style.top = `${labelTop}%`;
+        // 简化的标签定位函数 - 直接对齐到图层边框(0,0)坐标
+        function positionLabelAtLayerOrigin(label, leftPercent, topPercent, widthPercent, heightPercent) {
+            // 直接将标签定位到图层的左上角(0,0)坐标
+            label.style.left = `${leftPercent}%`;
+            label.style.top = `${topPercent}%`;
             label.style.position = 'absolute';
             label.style.zIndex = '20'; // 确保标签在最上层
             
-            // 根据位置调整样式
-            switch (labelPosition) {
-                case 'top-left-on-layer':
-                case 'top-left-inside':
-                case 'top-left-fallback':
-                    label.style.borderRadius = '4px 0 8px 0';
-                    break;
-                case 'top-left-outside':
-                    label.style.borderRadius = '4px 0 8px 0';
-                    break;
-                case 'overflow-top':
-                case 'overflow-left':
-                case 'overflow-top-left':
-                    label.style.borderRadius = '0 0 8px 0';
-                    break;
-                default:
-                    label.style.borderRadius = '4px';
-            }
-            
-            // 超出画布时添加特殊样式
-            if (hasOverflow) {
-                label.style.border = '2px solid #fff';
-                label.style.fontWeight = 'bold';
-            }
-            
-            console.log(`标签定位: ${labelPosition}, 位置: (${labelLeft.toFixed(1)}%, ${labelTop.toFixed(1)}%), 图层: (${leftPercent}%, ${topPercent}%)`);
+            console.log(`标签定位到图层原点: (${leftPercent}%, ${topPercent}%)`);
         }
 
         // 获取图层显示名称

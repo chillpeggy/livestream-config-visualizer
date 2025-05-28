@@ -153,15 +153,18 @@
         }
         .layer-label {
             position: absolute;
-            top: -2px;
-            left: -2px;
-            color: white;
-            font-size: 12px;
+            color: white; /* 默认白色，会被JavaScript动态设置 */
+            font-size: 16px; /* 增加字体大小提高可见性 */
             font-weight: bold;
-            padding: 4px 8px;
+            padding: 4px 6px; /* 减少内边距 */
             white-space: nowrap;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            border-radius: 4px 0 8px 0;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,1), 
+                -1px -1px 2px rgba(0,0,0,1),
+                1px -1px 2px rgba(0,0,0,1),
+                -1px 1px 2px rgba(0,0,0,1); /* 增强文字阴影，四个方向都有阴影 */
+            z-index: 10;
+            /* 移除背景色、边框和模糊效果，保持透明 */
         }
         .layer-details {
             position: absolute;
@@ -994,8 +997,15 @@
                 // 创建标签
                 const label = document.createElement('div');
                 label.className = 'layer-label';
-                label.style.background = color;
+                label.style.color = color; // 设置文字颜色为边框颜色
+                label.style.background = 'transparent'; // 透明背景
                 label.textContent = `L${layer.layer}: ${layer.name}`;
+                
+                // 直接将标签定位到图层的左上角(0,0)坐标
+                label.style.left = `${leftPercent}%`;
+                label.style.top = `${topPercent}%`;
+                label.style.position = 'absolute';
+                label.style.zIndex = '20';
                 
                 // 创建详细信息
                 const details = document.createElement('div');
