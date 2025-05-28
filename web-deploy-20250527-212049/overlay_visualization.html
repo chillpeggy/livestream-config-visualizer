@@ -1312,14 +1312,9 @@
 
         // 切换详细信息显示
         function toggleDetails() {
-            const details = document.querySelectorAll('.layer-details');
-            details.forEach(detail => {
-                if (detail.style.opacity === '1') {
-                    detail.style.opacity = '0';
-                } else {
-                    detail.style.opacity = '1';
-                }
-            });
+            // 由于现在使用全局详细信息，这个函数不再需要操作
+            // 详细信息的显示完全由鼠标悬停和图层选择状态控制
+            console.log('详细信息显示由鼠标悬停和图层选择状态自动控制');
         }
 
         // 拖拽上传功能
@@ -1470,6 +1465,12 @@
             // 只有在选择单个图层时才显示详细信息，显示全部图层时不显示
             if (currentSelectedLayer === 'all') {
                 return; // 显示全部图层时，不显示详细信息
+            }
+            
+            // 检查当前选择的图层是否与悬停的图层匹配
+            const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
+            if (currentSelectedLayer !== uniqueLayerId) {
+                return; // 只有当前选择的图层才显示详细信息
             }
             
             const globalDetails = document.getElementById('globalLayerDetails');
