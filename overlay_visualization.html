@@ -1121,16 +1121,7 @@
                 `;
                 
                 // 获取友好的显示名称
-                let displayName = layer.name;
-                if (layer.sourceType === 'process' && layer.exeName) {
-                    // 进程类型：使用进程匹配的标签
-                    const processName = layer.exeName.split(':').pop() || layer.exeName;
-                    const processTypes = matchProcessType(processName);
-                    displayName = processTypes.join(' + '); // 多个标签用 + 连接
-                } else if (sourceTypeNames[layer.sourceType]) {
-                    // 其他源类型：使用友好的中文名称
-                    displayName = sourceTypeNames[layer.sourceType];
-                }
+                let displayName = getLayerDisplayName(layer);
                 
                 // 创建标签
                 const label = document.createElement('div');
@@ -1147,6 +1138,30 @@
                 overlayDiv.appendChild(details);
                 overlaysContainer.appendChild(overlayDiv);
             });
+        }
+
+        // 获取图层显示名称
+        function getLayerDisplayName(layer) {
+            if (layer.configSource === 'obs') {
+                // OBS配置：优先显示name字段
+                if (layer.name && layer.name.trim()) {
+                    return layer.name;
+                }
+            }
+            
+            // 其他情况的处理逻辑
+            if (layer.sourceType === 'process' && layer.exeName) {
+                // 进程类型：使用进程匹配的标签
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                const processTypes = matchProcessType(processName);
+                return processTypes.join(' + '); // 多个标签用 + 连接
+            } else if (sourceTypeNames[layer.sourceType]) {
+                // 其他源类型：使用友好的中文名称
+                return sourceTypeNames[layer.sourceType];
+            }
+            
+            // 默认返回原始名称或类型
+            return layer.name || `${sourceTypeNames[layer.sourceType] || layer.sourceType}源`;
         }
 
         // 生成详细信息HTML - 通用版本
@@ -1302,16 +1317,7 @@
             const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
             
             // 获取友好的显示名称
-            let displayName = layer.name;
-            if (layer.sourceType === 'process' && layer.exeName) {
-                // 进程类型：使用进程匹配的标签
-                const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                displayName = processTypes.join(' + '); // 多个标签用 + 连接
-            } else if (sourceTypeNames[layer.sourceType]) {
-                // 其他源类型：使用友好的中文名称
-                displayName = sourceTypeNames[layer.sourceType];
-            }
+            const displayName = getLayerDisplayName(layer);
             
             layerItem.innerHTML = `
                 <div class="layer-color-dot" style="background: ${color};"></div>
@@ -1327,21 +1333,35 @@
         // 生成图层描述
         function generateLayerDescription(layer) {
             // 描述中保留原始的源类型信息
-            let desc = `${layer.sourceType}`;
+            let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
             
             // 添加特殊信息
             if (layer.exeName) {
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
                 desc += ` | ${processName}`;
             }
-            if (layer.fileName) {
-                desc += ` | ${layer.fileName}`;
+            
+            // 对于OBS配置，优先显示文件名而不是完整路径
+            if (layer.configSource === 'obs') {
+                if (layer.fileName) {
+                    desc += ` | ${layer.fileName}`;
+                } else if (layer.filepath) {
+                    // 如果没有fileName但有filepath，提取文件名
+                    const fileName = layer.filepath.split('/').pop().split('\\').pop();
+                    desc += ` | ${fileName}`;
+                }
+            } else {
+                // 非OBS配置保持原有逻辑
+                if (layer.fileName) {
+                    desc += ` | ${layer.fileName}`;
+                }
             }
+            
             if (layer.fileSize) {
                 desc += ` | ${formatFileSize(layer.fileSize)}`;
             }
             if (layer.volume !== undefined) {
-                const volumeText = layer.volume === 0 ? '静音' : `音量${layer.volume * 100}%`;
+                const volumeText = layer.volume === 0 ? '静音' : `音量${(layer.volume * 100).toFixed(0)}%`;
                 desc += ` | ${volumeText}`;
             }
             
