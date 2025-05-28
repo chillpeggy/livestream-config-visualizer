@@ -1289,50 +1289,50 @@
                 const visibleHeight = visibleBottom - visibleTop;
                 
                 // 根据超出方向选择标签位置
-                if (isOverflowTop && !isOverflowLeft) {
-                    // 上方超出：在图片上边缘且图层左侧显示
-                    labelLeft = Math.max(0, visibleLeft);
+                if (isOverflowTop && !isOverflowLeft && !isOverflowRight) {
+                    // 仅上方超出：在图层左侧边缘，但Y坐标为0（画布顶部）
+                    labelLeft = Math.max(0, leftPercent);
                     labelTop = 0;
                     labelPosition = 'overflow-top';
-                } else if (isOverflowLeft && !isOverflowTop) {
-                    // 左侧超出：在图片左边缘且图层上方显示
+                } else if (isOverflowLeft && !isOverflowTop && !isOverflowBottom) {
+                    // 仅左侧超出：在图层上边缘，但X坐标为0（画布左侧）
                     labelLeft = 0;
-                    labelTop = Math.max(0, visibleTop);
+                    labelTop = Math.max(0, topPercent);
                     labelPosition = 'overflow-left';
-                } else if (isOverflowRight && !isOverflowBottom) {
-                    // 右侧超出：在图片右边缘且图层上方显示
-                    labelLeft = Math.max(0, 100 - labelWidth);
-                    labelTop = Math.max(0, visibleTop);
+                } else if (isOverflowRight && !isOverflowTop && !isOverflowBottom) {
+                    // 仅右侧超出：在可见区域右边缘
+                    labelLeft = Math.max(0, visibleRight - labelWidth);
+                    labelTop = Math.max(0, topPercent);
                     labelPosition = 'overflow-right';
-                } else if (isOverflowBottom && !isOverflowRight) {
-                    // 下方超出：在图片下边缘且图层左侧显示
-                    labelLeft = Math.max(0, visibleLeft);
-                    labelTop = Math.max(0, 100 - labelHeight);
+                } else if (isOverflowBottom && !isOverflowLeft && !isOverflowRight) {
+                    // 仅下方超出：在可见区域下边缘
+                    labelLeft = Math.max(0, leftPercent);
+                    labelTop = Math.max(0, visibleBottom - labelHeight);
                     labelPosition = 'overflow-bottom';
                 } else if (isOverflowTop && isOverflowLeft) {
-                    // 左上角超出：在可见区域的左上角
-                    labelLeft = visibleLeft;
-                    labelTop = visibleTop;
+                    // 左上角超出：标签在(0,0)位置，即画布左上角
+                    labelLeft = 0;
+                    labelTop = 0;
                     labelPosition = 'overflow-top-left';
                 } else if (isOverflowTop && isOverflowRight) {
-                    // 右上角超出：在可见区域的右上角
-                    labelLeft = Math.max(0, visibleRight - labelWidth);
-                    labelTop = visibleTop;
+                    // 右上角超出：标签在画布右上角
+                    labelLeft = Math.max(0, 100 - labelWidth);
+                    labelTop = 0;
                     labelPosition = 'overflow-top-right';
                 } else if (isOverflowBottom && isOverflowLeft) {
-                    // 左下角超出：在可见区域的左下角
-                    labelLeft = visibleLeft;
-                    labelTop = Math.max(0, visibleBottom - labelHeight);
+                    // 左下角超出：标签在画布左下角
+                    labelLeft = 0;
+                    labelTop = Math.max(0, 100 - labelHeight);
                     labelPosition = 'overflow-bottom-left';
                 } else if (isOverflowBottom && isOverflowRight) {
-                    // 右下角超出：在可见区域的右下角
-                    labelLeft = Math.max(0, visibleRight - labelWidth);
-                    labelTop = Math.max(0, visibleBottom - labelHeight);
+                    // 右下角超出：标签在画布右下角
+                    labelLeft = Math.max(0, 100 - labelWidth);
+                    labelTop = Math.max(0, 100 - labelHeight);
                     labelPosition = 'overflow-bottom-right';
                 } else {
                     // 多方向超出：在可见区域中心
-                    labelLeft = visibleLeft + (visibleWidth - labelWidth) / 2;
-                    labelTop = visibleTop + (visibleHeight - labelHeight) / 2;
+                    labelLeft = visibleLeft + Math.max(0, (visibleWidth - labelWidth) / 2);
+                    labelTop = visibleTop + Math.max(0, (visibleHeight - labelHeight) / 2);
                     labelPosition = 'overflow-center';
                 }
             } else {
