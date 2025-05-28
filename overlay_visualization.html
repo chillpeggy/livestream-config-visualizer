@@ -1111,7 +1111,11 @@
                 
                 const overlayDiv = document.createElement('div');
                 overlayDiv.className = 'layer-overlay';
+                // 使用唯一标识符：配置来源-层级
+                const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
                 overlayDiv.setAttribute('data-layer', layer.layer);
+                overlayDiv.setAttribute('data-unique-id', uniqueLayerId);
+                overlayDiv.setAttribute('data-config-source', layer.configSource);
                 overlayDiv.style.cssText = `
                     left: ${leftPercent}%;
                     top: ${topPercent}%;
@@ -1307,8 +1311,11 @@
         function createLayerItem(layer) {
             const layerItem = document.createElement('div');
             layerItem.className = 'layer-item';
+            const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
             layerItem.setAttribute('data-layer', layer.layer);
-            layerItem.onclick = () => showSingleLayer(layerItem, layer.layer);
+            layerItem.setAttribute('data-unique-id', uniqueLayerId);
+            layerItem.setAttribute('data-config-source', layer.configSource);
+            layerItem.onclick = () => showSingleLayer(layerItem, uniqueLayerId);
             
             const color = layerColors[layer.layer] || '#95a5a6';
             const desc = generateLayerDescription(layer);
@@ -1385,14 +1392,14 @@
         }
 
         // 显示单个图层
-        function showSingleLayer(element, layerNumber) {
-            currentSelectedLayer = layerNumber;
+        function showSingleLayer(element, uniqueLayerId) {
+            currentSelectedLayer = uniqueLayerId;
             updateSelectedItem(element);
             
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
-                const layerData = parseInt(overlay.getAttribute('data-layer'));
-                if (layerData === layerNumber) {
+                const overlayUniqueId = overlay.getAttribute('data-unique-id');
+                if (overlayUniqueId === uniqueLayerId) {
                     overlay.classList.remove('hidden');
                 } else {
                     overlay.classList.add('hidden');
