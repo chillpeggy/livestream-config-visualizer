@@ -760,47 +760,59 @@
             }
         }
         
-        // 进程名模糊匹配
+        // 进程名模糊匹配 - 返回所有匹配的标签
         function matchProcessType(processName) {
             if (!processName || processLibrary.length === 0) {
                 console.log('匹配失败: processName =', processName, ', processLibrary.length =', processLibrary.length);
-                return '未知进程';
+                return ['未知进程'];
             }
             
             // 移除.exe后缀进行匹配
             const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
             console.log('匹配进程:', processName, '→', cleanProcessName);
             
-            // 精确匹配
-            let match = processLibrary.find(item => 
+            let matchedTypes = [];
+            
+            // 精确匹配 - 收集所有匹配项
+            const exactMatches = processLibrary.filter(item => 
                 item.exe.toLowerCase() === processName.toLowerCase() ||
                 item.exe.toLowerCase() === cleanProcessName
             );
             
-            if (match) {
-                console.log('精确匹配成功:', match);
-                return match.type;
-            }
-            
-            // 模糊匹配（包含关系）
-            match = processLibrary.find(item => 
-                cleanProcessName.includes(item.exe.toLowerCase()) ||
-                item.exe.toLowerCase().includes(cleanProcessName)
-            );
-            
-            if (match) {
-                console.log('模糊匹配成功:', match);
-                return match.type;
+            if (exactMatches.length > 0) {
+                matchedTypes = exactMatches.map(match => match.type);
+                console.log('精确匹配成功:', exactMatches);
             } else {
-                console.log('匹配失败，进程库前5条:', processLibrary.slice(0, 5));
-                return '未知进程';
+                // 模糊匹配（包含关系） - 收集所有匹配项
+                const fuzzyMatches = processLibrary.filter(item => 
+                    cleanProcessName.includes(item.exe.toLowerCase()) ||
+                    item.exe.toLowerCase().includes(cleanProcessName)
+                );
+                
+                if (fuzzyMatches.length > 0) {
+                    matchedTypes = fuzzyMatches.map(match => match.type);
+                    console.log('模糊匹配成功:', fuzzyMatches);
+                } else {
+                    console.log('匹配失败，进程库前5条:', processLibrary.slice(0, 5));
+                    matchedTypes = ['未知进程'];
+                }
             }
+            
+            // 去重
+            return [...new Set(matchedTypes)];
         }
         
-        // 生成标签HTML
-        function generateTagHTML(tagType) {
-            const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
-            return `<span class="process-tag-badge" style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 11px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block;">${tagType}</span>`;
+        // 生成标签HTML - 支持多个标签
+        function generateTagHTML(tagTypes) {
+            // 如果是字符串，转换为数组
+            if (typeof tagTypes === 'string') {
+                tagTypes = [tagTypes];
+            }
+            
+            return tagTypes.map(tagType => {
+                const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
+                return `<span class="process-tag-badge" style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 11px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block; margin-right: 4px;">${tagType}</span>`;
+            }).join('');
         }
         
         // 层级颜色映射
@@ -1091,8 +1103,8 @@
                 if (layer.sourceType === 'process' && layer.exeName) {
                     // 进程类型：使用进程匹配的标签
                     const processName = layer.exeName.split(':').pop() || layer.exeName;
-                    const processType = matchProcessType(processName);
-                    displayName = processType;
+                    const processTypes = matchProcessType(processName);
+                    displayName = processTypes.join(' + '); // 多个标签用 + 连接
                 } else if (sourceTypeNames[layer.sourceType]) {
                     // 其他源类型：使用友好的中文名称
                     displayName = sourceTypeNames[layer.sourceType];
@@ -1231,8 +1243,8 @@
             if (layer.sourceType === 'process' && layer.exeName) {
                 // 进程类型：使用进程匹配的标签
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processType = matchProcessType(processName);
-                displayName = processType;
+                const processTypes = matchProcessType(processName);
+                displayName = processTypes.join(' + '); // 多个标签用 + 连接
             } else if (sourceTypeNames[layer.sourceType]) {
                 // 其他源类型：使用友好的中文名称
                 displayName = sourceTypeNames[layer.sourceType];
@@ -1454,8 +1466,8 @@
                 for (let i = 0; i < maxProcessCount; i++) {
                     if (i < cpuTopProcesses.length) {
                         const process = cpuTopProcesses[i];
-                        const processType = matchProcessType(process.name);
-                        const tagHTML = generateTagHTML(processType);
+                        const processTypes = matchProcessType(process.name);
+                        const tagHTML = generateTagHTML(processTypes);
                         
                         // 不再截断进程名，允许完整显示并换行
                         const displayName = process.name;
@@ -1485,8 +1497,8 @@
                 for (let i = 0; i < maxProcessCount; i++) {
                     if (i < gpuTopProcesses.length) {
                         const process = gpuTopProcesses[i];
-                        const processType = matchProcessType(process.name);
-                        const tagHTML = generateTagHTML(processType);
+                        const processTypes = matchProcessType(process.name);
+                        const tagHTML = generateTagHTML(processTypes);
                         
                         // 不再截断进程名，允许完整显示并换行
                         const displayName = process.name;
