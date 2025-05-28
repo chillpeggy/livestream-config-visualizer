@@ -1154,16 +1154,18 @@
                 const [x, y, width, height] = layer.canvasOverlapRect;
                 const color = layerColors[layer.layer] || '#95a5a6';
                 
+                // 创建叠加层元素
+                const overlayDiv = document.createElement('div');
+                overlayDiv.className = 'layer-overlay';
+                // 使用唯一标识符：配置来源-层级
+                const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
+                overlayDiv.setAttribute('data-layer', layer.layer);
+                overlayDiv.setAttribute('data-unique-id', uniqueLayerId);
+                overlayDiv.setAttribute('data-config-source', layer.configSource);
+                
                 // 获取图片元素和容器元素
                 const gameImage = document.getElementById('gameImage');
                 const gameContainer = document.getElementById('gameContainer');
-                
-                // 等待图片加载完成后再计算位置
-                if (gameImage.complete && gameImage.naturalWidth > 0) {
-                    calculateAndSetOverlayPosition();
-                } else {
-                    gameImage.onload = calculateAndSetOverlayPosition;
-                }
                 
                 function calculateAndSetOverlayPosition() {
                     // 获取容器尺寸
@@ -1206,14 +1208,6 @@
                     `;
                 }
                 
-                const overlayDiv = document.createElement('div');
-                overlayDiv.className = 'layer-overlay';
-                // 使用唯一标识符：配置来源-层级
-                const uniqueLayerId = `${layer.configSource}-${layer.layer}`;
-                overlayDiv.setAttribute('data-layer', layer.layer);
-                overlayDiv.setAttribute('data-unique-id', uniqueLayerId);
-                overlayDiv.setAttribute('data-config-source', layer.configSource);
-                
                 // 获取友好的显示名称
                 let displayName = getLayerDisplayName(layer);
                 
@@ -1232,9 +1226,11 @@
                 overlayDiv.appendChild(details);
                 overlaysContainer.appendChild(overlayDiv);
                 
-                // 初始计算位置
+                // 等待图片加载完成后再计算位置
                 if (gameImage.complete && gameImage.naturalWidth > 0) {
                     calculateAndSetOverlayPosition();
+                } else {
+                    gameImage.onload = calculateAndSetOverlayPosition;
                 }
             });
         }
