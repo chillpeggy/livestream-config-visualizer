@@ -550,6 +550,11 @@
             width: 100%; /* 确保占满容器宽度 */
             box-sizing: border-box;
         }
+        
+        /* 隐藏类样式 */
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1001,6 +1006,11 @@
                 label.style.background = 'transparent'; // 透明背景
                 label.textContent = `L${layer.layer}: ${layer.name}`;
                 
+                // 给标签添加标识符，与边框保持一致
+                label.setAttribute('data-layer', layer.layer);
+                label.setAttribute('data-unique-id', uniqueLayerId);
+                label.setAttribute('data-config-source', layer.configSource);
+                
                 // 标签定位：完全基于边框左上角坐标，与图片位置解耦
                 // leftPercent 和 topPercent 是边框在容器中的百分比位置
                 label.style.left = `${leftPercent}%`;
@@ -1177,9 +1187,16 @@
             currentSelectedLayer = 'all';
             updateSelectedItem(element);
             
+            // 显示所有边框
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
                 overlay.classList.remove('hidden');
+            });
+            
+            // 显示所有标签
+            const labels = document.querySelectorAll('.layer-label');
+            labels.forEach(label => {
+                label.classList.remove('hidden');
             });
         }
 
@@ -1188,6 +1205,7 @@
             currentSelectedLayer = layerNumber;
             updateSelectedItem(element);
             
+            // 控制边框的显示/隐藏
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
                 const layerData = parseInt(overlay.getAttribute('data-layer'));
@@ -1195,6 +1213,17 @@
                     overlay.classList.remove('hidden');
                 } else {
                     overlay.classList.add('hidden');
+                }
+            });
+            
+            // 控制标签的显示/隐藏
+            const labels = document.querySelectorAll('.layer-label');
+            labels.forEach(label => {
+                const labelLayerData = parseInt(label.getAttribute('data-layer'));
+                if (labelLayerData === layerNumber) {
+                    label.classList.remove('hidden');
+                } else {
+                    label.classList.add('hidden');
                 }
             });
         }

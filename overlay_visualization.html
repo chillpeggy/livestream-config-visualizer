@@ -634,6 +634,11 @@
         .layer-overlay:hover .layer-details {
             opacity: 1;
         }
+        
+        /* 隐藏类样式 */
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1277,6 +1282,11 @@
                 label.style.background = 'transparent'; // 透明背景
                 label.textContent = `L${layer.layer}: ${displayName}`;
                 
+                // 给标签添加标识符，与边框保持一致
+                label.setAttribute('data-layer', layer.layer);
+                label.setAttribute('data-unique-id', uniqueLayerId);
+                label.setAttribute('data-config-source', layer.configSource);
+                
                 // 创建详细信息
                 const details = document.createElement('div');
                 details.className = 'layer-details';
@@ -1551,9 +1561,16 @@
             currentSelectedLayer = 'all';
             updateSelectedItem(element);
             
+            // 显示所有边框
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
                 overlay.classList.remove('hidden');
+            });
+            
+            // 显示所有标签
+            const labels = document.querySelectorAll('.layer-label');
+            labels.forEach(label => {
+                label.classList.remove('hidden');
             });
         }
 
@@ -1562,6 +1579,7 @@
             currentSelectedLayer = uniqueLayerId;
             updateSelectedItem(element);
             
+            // 控制边框的显示/隐藏
             const overlays = document.querySelectorAll('.layer-overlay');
             overlays.forEach(overlay => {
                 const overlayUniqueId = overlay.getAttribute('data-unique-id');
@@ -1569,6 +1587,17 @@
                     overlay.classList.remove('hidden');
                 } else {
                     overlay.classList.add('hidden');
+                }
+            });
+            
+            // 控制标签的显示/隐藏
+            const labels = document.querySelectorAll('.layer-label');
+            labels.forEach(label => {
+                const labelUniqueId = label.getAttribute('data-unique-id');
+                if (labelUniqueId === uniqueLayerId) {
+                    label.classList.remove('hidden');
+                } else {
+                    label.classList.add('hidden');
                 }
             });
         }
