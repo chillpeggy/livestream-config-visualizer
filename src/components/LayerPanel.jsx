@@ -1,13 +1,66 @@
 import React from 'react'
 
-// 层级颜色映射（与CanvasPreview保持一致）
-const layerColors = {
-  0: '#3498db', // 蓝色 - Camera
-  1: '#2ecc71', // 绿色 - Process  
-  2: '#f39c12', // 橙色 - Text
-  3: '#9b59b6', // 紫色
-  4: '#e74c3c', // 红色
-  5: '#1abc9c', // 青色
+// 层级颜色映射 - 扩展到50种鲜明易分辨的颜色
+const layerColors = [
+  '#FF0080', // 鲜艳的粉红色
+  '#00FF00', // 鲜绿色
+  '#FF4500', // 橙红色
+  '#00BFFF', // 深天蓝色
+  '#FF1493', // 深粉红色
+  '#32CD32', // 酸橙绿
+  '#FFD700', // 金色
+  '#FF6347', // 番茄红
+  '#00CED1', // 深绿松石色
+  '#DA70D6', // 兰花紫
+  '#FF8C00', // 深橙色
+  '#7FFF00', // 查特酒绿
+  '#DC143C', // 深红色
+  '#00FFFF', // 青色
+  '#FF69B4', // 热粉红色
+  '#ADFF2F', // 绿黄色
+  '#FF4444', // 亮红色
+  '#44FF44', // 亮绿色
+  '#4444FF', // 亮蓝色
+  '#FFFF44', // 亮黄色
+  '#FF44FF', // 亮洋红色
+  '#44FFFF', // 亮青色
+  '#FF8844', // 亮橙色
+  '#88FF44', // 亮黄绿色
+  '#4488FF', // 亮蓝紫色
+  '#FF4488', // 亮玫瑰色
+  '#88FF88', // 亮薄荷绿
+  '#8844FF', // 亮紫色
+  '#FFAA44', // 亮桃色
+  '#44FFAA', // 亮春绿色
+  '#AA44FF', // 亮紫罗兰色
+  '#FF44AA', // 亮粉紫色
+  '#AAFF44', // 亮柠檬绿
+  '#44AAFF', // 亮天蓝色
+  '#FF6600', // 深橙色
+  '#6600FF', // 深紫色
+  '#00FF66', // 深春绿色
+  '#FF0066', // 深玫瑰色
+  '#66FF00', // 深黄绿色
+  '#0066FF', // 深蓝色
+  '#FF3366', // 深粉红色
+  '#33FF66', // 深薄荷绿
+  '#6633FF', // 深蓝紫色
+  '#FF6633', // 深珊瑚色
+  '#66FF33', // 深柠檬绿
+  '#3366FF', // 深钴蓝色
+  '#FF9933', // 深金橙色
+  '#33FF99', // 深海绿色
+  '#9933FF', // 深紫罗兰色
+  '#FF3399'  // 深洋红色
+]
+
+// 统一的颜色获取函数
+const getLayerColor = (layerIndex) => {
+  if (layerIndex < layerColors.length) {
+    return layerColors[layerIndex]
+  }
+  // 如果超出预定义颜色数量，使用循环模式
+  return layerColors[layerIndex % layerColors.length]
 }
 
 // 根据源类型获取中文名称
@@ -22,7 +75,7 @@ const getSourceTypeName = (sourceType) => {
 
 // 单个层级信息组件
 function LayerItem({ layer }) {
-  const color = layerColors[layer.layer] || '#95a5a6'
+  const color = getLayerColor(layer.layer)
   const [x, y, width, height] = layer.canvasOverlapRect
   
   return (

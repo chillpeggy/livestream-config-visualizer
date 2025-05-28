@@ -868,25 +868,68 @@
             }).join('');
         }
         
-        // 层级颜色映射 - 使用更鲜亮的颜色
-        const layerColors = {
-            0: '#FF0080', // 鲜艳的粉红色
-            1: '#00FF00', // 鲜绿色
-            2: '#FF4500', // 橙红色
-            3: '#00BFFF', // 深天蓝色
-            4: '#FF1493', // 深粉红色
-            5: '#32CD32', // 酸橙绿
-            6: '#FFD700', // 金色
-            7: '#FF6347', // 番茄红
-            8: '#00CED1', // 深绿松石色
-            9: '#DA70D6', // 兰花紫
-            10: '#FF8C00', // 深橙色
-            11: '#7FFF00', // 查特酒绿
-            12: '#DC143C', // 深红色
-            13: '#00FFFF', // 青色
-            14: '#FF69B4', // 热粉红色
-            15: '#ADFF2F'  // 绿黄色
-        };
+        // 层级颜色映射 - 扩展到50种鲜明易分辨的颜色
+        const layerColors = [
+            '#FF0080', // 鲜艳的粉红色
+            '#00FF00', // 鲜绿色
+            '#FF4500', // 橙红色
+            '#00BFFF', // 深天蓝色
+            '#FF1493', // 深粉红色
+            '#32CD32', // 酸橙绿
+            '#FFD700', // 金色
+            '#FF6347', // 番茄红
+            '#00CED1', // 深绿松石色
+            '#DA70D6', // 兰花紫
+            '#FF8C00', // 深橙色
+            '#7FFF00', // 查特酒绿
+            '#DC143C', // 深红色
+            '#00FFFF', // 青色
+            '#FF69B4', // 热粉红色
+            '#ADFF2F', // 绿黄色
+            '#FF4444', // 亮红色
+            '#44FF44', // 亮绿色
+            '#4444FF', // 亮蓝色
+            '#FFFF44', // 亮黄色
+            '#FF44FF', // 亮洋红色
+            '#44FFFF', // 亮青色
+            '#FF8844', // 亮橙色
+            '#88FF44', // 亮黄绿色
+            '#4488FF', // 亮蓝紫色
+            '#FF4488', // 亮玫瑰色
+            '#88FF88', // 亮薄荷绿
+            '#8844FF', // 亮紫色
+            '#FFAA44', // 亮桃色
+            '#44FFAA', // 亮春绿色
+            '#AA44FF', // 亮紫罗兰色
+            '#FF44AA', // 亮粉紫色
+            '#AAFF44', // 亮柠檬绿
+            '#44AAFF', // 亮天蓝色
+            '#FF6600', // 深橙色
+            '#6600FF', // 深紫色
+            '#00FF66', // 深春绿色
+            '#FF0066', // 深玫瑰色
+            '#66FF00', // 深黄绿色
+            '#0066FF', // 深蓝色
+            '#FF3366', // 深粉红色
+            '#33FF66', // 深薄荷绿
+            '#6633FF', // 深蓝紫色
+            '#FF6633', // 深珊瑚色
+            '#66FF33', // 深柠檬绿
+            '#3366FF', // 深钴蓝色
+            '#FF9933', // 深金橙色
+            '#33FF99', // 深海绿色
+            '#9933FF', // 深紫罗兰色
+            '#FF3399'  // 深洋红色
+        ];
+
+        // 统一的颜色获取函数
+        function getLayerColor(layerIndex) {
+            if (layerIndex < layerColors.length) {
+                return layerColors[layerIndex];
+            }
+            // 如果超出预定义颜色数量，使用循环模式
+            return layerColors[layerIndex % layerColors.length];
+        }
 
         // 源类型中文映射 - 扩展版本
         const sourceTypeNames = {
@@ -1164,7 +1207,7 @@
 
             parsedLayers.forEach((layer, index) => {
                 const [x, y, width, height] = layer.canvasOverlapRect;
-                const color = layerColors[layer.layer] || layerColors[layer.layer % 16] || '#FF0080'; // 使用循环颜色或默认鲜亮颜色
+                const color = getLayerColor(layer.layer);
                 
                 // 创建叠加层元素
                 const overlayDiv = document.createElement('div');
@@ -1543,7 +1586,7 @@
             layerItem.setAttribute('data-config-source', layer.configSource);
             layerItem.onclick = () => showSingleLayer(layerItem, uniqueLayerId);
             
-            const color = layerColors[layer.layer] || '#95a5a6';
+            const color = getLayerColor(layer.layer);
             const desc = generateLayerDescription(layer);
             
             // 添加配置来源标识
