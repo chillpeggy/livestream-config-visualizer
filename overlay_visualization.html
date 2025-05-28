@@ -414,7 +414,7 @@
         .resource-features h2 {
             margin: 0 0 20px 0;
             color: #333;
-            font-size: 20px;
+            font-size: 22px; /* 从20px增加到22px */
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -434,7 +434,7 @@
             padding: 8px 2px; /* 减少左右内边距，减少留白 */
             text-align: center;
             font-weight: bold;
-            font-size: 13px; /* 增大表头字体 */
+            font-size: 15px; /* 从13px增加到15px */
             word-wrap: break-word;
             height: 40px; /* 设置表头高度 */
             vertical-align: middle;
@@ -444,7 +444,7 @@
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
-            font-size: 12px; /* 增大单元格字体 */
+            font-size: 14px; /* 从12px增加到14px */
             word-wrap: break-word;
             overflow: hidden;
             height: 50px; /* 设置双行行高 */
@@ -466,7 +466,7 @@
             overflow: hidden;
             white-space: normal; /* 允许换行 */
             word-break: break-word; /* 长单词可以换行 */
-            font-size: 13px; /* 从11px增加到13px */
+            font-size: 15px; /* 从13px增加到15px */
             padding: 4px 1px; /* 减少左右内边距，减少留白 */
             line-height: 1.2; /* 设置行高 */
         }
@@ -476,13 +476,13 @@
             padding: 0; /* 移除内边距 */
         }
         .resource-table .process-tag .process-tag-badge {
-            font-size: 11px !important; /* 显著增大标签字体 */
+            font-size: 13px !important; /* 从11px增加到13px */
             padding: 3px 5px !important; /* 适当增加标签内边距 */
         }
         .resource-table .process-percentage {
             font-weight: bold;
             color: #e74c3c;
-            font-size: 12px; /* 增大占比字体 */
+            font-size: 14px; /* 从12px增加到14px */
         }
         .resource-table .process-empty {
             color: #adb5bd;
@@ -499,15 +499,15 @@
         .resource-table.five-processes th,
         .resource-table.five-processes td {
             padding: 6px 1px; /* 减少左右内边距，减少留白 */
-            font-size: 11px; /* 5个进程时也保持较大字体 */
+            font-size: 13px; /* 从11px增加到13px */
         }
         
         .resource-table.five-processes .process-name {
-            font-size: 12px; /* 5个进程时进程名字体从10px增加到12px */
+            font-size: 14px; /* 从12px增加到14px */
         }
         
         .resource-table.five-processes .process-tag .process-tag-badge {
-            font-size: 10px !important; /* 5个进程时标签字体 */
+            font-size: 12px !important; /* 从10px增加到12px */
             padding: 2px 4px !important;
         }
         .resource-features .empty-state {
@@ -915,7 +915,7 @@
             
             return tagTypes.map(tagType => {
                 const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
-                return `<span class="process-tag-badge" style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 11px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block; margin-right: 4px;">${tagType}</span>`;
+                return `<span class="process-tag-badge" style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 13px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block; margin-right: 4px;">${tagType}</span>`;
             }).join('');
         }
         

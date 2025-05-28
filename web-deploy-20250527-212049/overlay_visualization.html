@@ -477,7 +477,7 @@
         .resource-features h2 {
             margin: 0 0 20px 0;
             color: #333;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -493,17 +493,24 @@
         .resource-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 12px;
+            padding: 8px 2px;
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 15px;
+            word-wrap: break-word;
+            height: 40px;
+            vertical-align: middle;
         }
         .resource-table td {
-            padding: 12px;
+            padding: 8px 2px;
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
-            font-size: 13px;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow: hidden;
+            height: 50px;
+            vertical-align: middle;
         }
         .resource-table tr:last-child td {
             border-bottom: none;
@@ -515,19 +522,26 @@
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
-            color: #212529;
-            max-width: 200px;
+            color: #000000;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
+            font-size: 15px;
+            padding: 4px 1px;
+            line-height: 1.2;
         }
         .resource-table .process-tag {
             color: #6c757d;
             font-style: italic;
         }
+        .resource-table .process-tag .process-tag-badge {
+            font-size: 13px !important;
+            padding: 3px 5px !important;
+        }
         .resource-table .process-percentage {
             font-weight: bold;
             color: #e74c3c;
+            font-size: 14px;
         }
         .resource-table .process-empty {
             color: #adb5bd;
