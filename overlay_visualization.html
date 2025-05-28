@@ -585,8 +585,7 @@
         }
         .layer-overlay {
             position: absolute;
-            border: 6px solid; /* 增加边框宽度 */
-            border-style: solid; /* 改为实线边框 */
+            border: 6px dashed; /* 改为虚线边框 */
             opacity: 0.9; /* 增加透明度 */
             transition: all 0.3s ease;
             cursor: pointer;
@@ -595,7 +594,7 @@
         }
         .layer-overlay:hover {
             opacity: 1;
-            border-style: solid;
+            border-style: dashed; /* 悬停时也保持虚线 */
             border-width: 8px; /* 悬停时进一步增加边框宽度 */
             z-index: 100;
             box-shadow: 0 0 15px rgba(0,0,0,0.7); /* 悬停时增强阴影 */
@@ -1618,10 +1617,18 @@
 
         // 更新透明度
         function updateOpacity(value) {
+            // 控制边框透明度
             const overlays = document.querySelectorAll('.layer-overlay:not(.hidden)');
             overlays.forEach(overlay => {
                 overlay.style.opacity = value;
             });
+            
+            // 控制标签透明度
+            const labels = document.querySelectorAll('.layer-label:not(.hidden)');
+            labels.forEach(label => {
+                label.style.opacity = value;
+            });
+            
             document.getElementById('opacityValue').textContent = Math.round(value * 100) + '%';
         }
 
