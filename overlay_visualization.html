@@ -1298,11 +1298,25 @@
                     const imageOffsetX = (containerWidth - actualImageWidth) / 2;
                     const imageOffsetY = (containerHeight - actualImageHeight) / 2;
                     
-                    // 将配置坐标转换为相对于实际显示图片的百分比位置（用于边框）
-                    const leftPercent = ((x / canvasResolution.width * actualImageWidth + imageOffsetX) / containerWidth * 100).toFixed(2);
-                    const topPercent = ((y / canvasResolution.height * actualImageHeight + imageOffsetY) / containerHeight * 100).toFixed(2);
-                    const widthPercent = ((width / canvasResolution.width * actualImageWidth) / containerWidth * 100).toFixed(2);
-                    const heightPercent = ((height / canvasResolution.height * actualImageHeight) / containerHeight * 100).toFixed(2);
+                    // 新的坐标计算逻辑：边框坐标系统与图片完全对齐
+                    // 1. 将配置坐标从canvasResolution缩放到实际图片尺寸
+                    const imageScaleX = actualImageWidth / canvasResolution.width;
+                    const imageScaleY = actualImageHeight / canvasResolution.height;
+                    
+                    const scaledX = x * imageScaleX;
+                    const scaledY = y * imageScaleY;
+                    const scaledWidth = width * imageScaleX;
+                    const scaledHeight = height * imageScaleY;
+                    
+                    // 2. 将图片坐标转换为容器坐标（加上图片在容器中的偏移）
+                    const containerX = scaledX + imageOffsetX;
+                    const containerY = scaledY + imageOffsetY;
+                    
+                    // 3. 转换为百分比位置
+                    const leftPercent = (containerX / containerWidth * 100).toFixed(2);
+                    const topPercent = (containerY / containerHeight * 100).toFixed(2);
+                    const widthPercent = (scaledWidth / containerWidth * 100).toFixed(2);
+                    const heightPercent = (scaledHeight / containerHeight * 100).toFixed(2);
                     
                     // 设置叠加层样式
                     overlayDiv.style.cssText = `
@@ -1313,8 +1327,10 @@
                         border-color: ${color};
                     `;
                     
-                    // 标签定位：完全基于边框坐标，与图片位置解耦
+                    // 标签定位：与边框左上角对齐
                     positionLabelAtLayerOrigin(label, parseFloat(leftPercent), parseFloat(topPercent));
+                    
+                    console.log(`图层${layer.layer}坐标计算: 配置坐标(${x}, ${y}, ${width}, ${height}) -> 图片坐标(${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)}) -> 容器百分比(${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
                 }
                 
                 // 获取友好的显示名称
@@ -1354,9 +1370,9 @@
             });
         }
 
-        // 标签定位函数 - 完全基于边框左上角坐标，与图片位置解耦
+        // 标签定位函数 - 与图片坐标系统对齐，边框(0,0)对应图片左上角
         function positionLabelAtLayerOrigin(label, leftPercent, topPercent) {
-            // 标签直接使用边框的左上角坐标，完全解耦于图片位置
+            // 标签使用与边框相同的坐标系统，完全基于图片坐标
             // leftPercent 和 topPercent 是边框在容器中的百分比位置
             label.style.left = `${leftPercent}%`;
             label.style.top = `${topPercent}%`;
@@ -1366,7 +1382,7 @@
             label.style.margin = '0'; // 移除任何边距
             label.style.padding = '4px 6px'; // 保持内边距
             
-            console.log(`标签精确定位到图层边框左上角: (${leftPercent}%, ${topPercent}%)`);
+            console.log(`标签定位到图层边框左上角: (${leftPercent}%, ${topPercent}%)`);
         }
 
         // 获取图层显示名称

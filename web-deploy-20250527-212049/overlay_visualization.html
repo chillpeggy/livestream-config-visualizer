@@ -1019,12 +1019,7 @@
                 const [x, y, width, height] = layer.canvasOverlapRect;
                 const color = getLayerColor(layer.layer);
                 
-                // 计算百分比位置
-                const leftPercent = (x / canvasResolution.width * 100).toFixed(2);
-                const topPercent = (y / canvasResolution.height * 100).toFixed(2);
-                const widthPercent = (width / canvasResolution.width * 100).toFixed(2);
-                const heightPercent = (height / canvasResolution.height * 100).toFixed(2);
-                
+                // 创建叠加层元素
                 const overlayDiv = document.createElement('div');
                 overlayDiv.className = 'layer-overlay';
                 // 使用唯一标识符：配置来源-层级
@@ -1032,14 +1027,76 @@
                 overlayDiv.setAttribute('data-layer', layer.layer);
                 overlayDiv.setAttribute('data-unique-id', uniqueLayerId);
                 overlayDiv.setAttribute('data-config-source', layer.configSource);
-                overlayDiv.style.cssText = `
-                    left: ${leftPercent}%;
-                    top: ${topPercent}%;
-                    width: ${widthPercent}%;
-                    height: ${heightPercent}%;
-                    border-color: ${color};
-                    background: ${color}20;
-                `;
+                
+                // 获取图片元素和容器元素
+                const gameImage = document.getElementById('gameImage');
+                const gameContainer = document.getElementById('gameContainer');
+                
+                function calculateAndSetOverlayPosition() {
+                    // 获取容器尺寸
+                    const containerRect = gameContainer.getBoundingClientRect();
+                    const containerWidth = containerRect.width - 6; // 减去边框宽度
+                    const containerHeight = containerRect.height - 6;
+                    
+                    // 获取图片的自然尺寸和显示尺寸
+                    const naturalWidth = gameImage.naturalWidth;
+                    const naturalHeight = gameImage.naturalHeight;
+                    const displayWidth = gameImage.offsetWidth;
+                    const displayHeight = gameImage.offsetHeight;
+                    
+                    // 计算图片的缩放比例
+                    const scaleX = displayWidth / naturalWidth;
+                    const scaleY = displayHeight / naturalHeight;
+                    const scale = Math.min(scaleX, scaleY); // 使用较小的缩放比例保持宽高比
+                    
+                    // 计算实际显示的图片尺寸
+                    const actualImageWidth = naturalWidth * scale;
+                    const actualImageHeight = naturalHeight * scale;
+                    
+                    // 计算图片在容器中的偏移（居中显示）
+                    const imageOffsetX = (containerWidth - actualImageWidth) / 2;
+                    const imageOffsetY = (containerHeight - actualImageHeight) / 2;
+                    
+                    // 新的坐标计算逻辑：边框坐标系统与图片完全对齐
+                    // 1. 将配置坐标从canvasResolution缩放到实际图片尺寸
+                    const imageScaleX = actualImageWidth / canvasResolution.width;
+                    const imageScaleY = actualImageHeight / canvasResolution.height;
+                    
+                    const scaledX = x * imageScaleX;
+                    const scaledY = y * imageScaleY;
+                    const scaledWidth = width * imageScaleX;
+                    const scaledHeight = height * imageScaleY;
+                    
+                    // 2. 将图片坐标转换为容器坐标（加上图片在容器中的偏移）
+                    const containerX = scaledX + imageOffsetX;
+                    const containerY = scaledY + imageOffsetY;
+                    
+                    // 3. 转换为百分比位置
+                    const leftPercent = (containerX / containerWidth * 100).toFixed(2);
+                    const topPercent = (containerY / containerHeight * 100).toFixed(2);
+                    const widthPercent = (scaledWidth / containerWidth * 100).toFixed(2);
+                    const heightPercent = (scaledHeight / containerHeight * 100).toFixed(2);
+                    
+                    // 设置叠加层样式
+                    overlayDiv.style.cssText = `
+                        left: ${leftPercent}%;
+                        top: ${topPercent}%;
+                        width: ${widthPercent}%;
+                        height: ${heightPercent}%;
+                        border-color: ${color};
+                    `;
+                    
+                    // 标签定位：与边框左上角对齐
+                    label.style.left = `${leftPercent}%`;
+                    label.style.top = `${topPercent}%`;
+                    label.style.position = 'absolute';
+                    label.style.zIndex = '20';
+                    label.style.transform = 'translate(0, 0)';
+                    label.style.margin = '0';
+                    label.style.padding = '4px 6px';
+                    
+                    console.log(`图层${layer.layer}坐标计算: 配置坐标(${x}, ${y}, ${width}, ${height}) -> 图片坐标(${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)}) -> 容器百分比(${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
+                }
                 
                 // 添加鼠标悬停事件来显示全局详细信息
                 overlayDiv.addEventListener('mouseenter', function() {
@@ -1062,18 +1119,15 @@
                 label.setAttribute('data-unique-id', uniqueLayerId);
                 label.setAttribute('data-config-source', layer.configSource);
                 
-                // 标签定位：完全基于边框左上角坐标，与图片位置解耦
-                // leftPercent 和 topPercent 是边框在容器中的百分比位置
-                label.style.left = `${leftPercent}%`;
-                label.style.top = `${topPercent}%`;
-                label.style.position = 'absolute';
-                label.style.zIndex = '20';
-                label.style.transform = 'translate(0, 0)'; // 确保没有额外的偏移
-                label.style.margin = '0'; // 移除任何边距
-                label.style.padding = '4px 6px'; // 保持内边距
-                
                 overlaysContainer.appendChild(overlayDiv);
                 overlaysContainer.appendChild(label); // 将标签直接添加到容器中
+                
+                // 等待图片加载完成后再计算位置
+                if (gameImage.complete && gameImage.naturalWidth > 0) {
+                    calculateAndSetOverlayPosition();
+                } else {
+                    gameImage.onload = calculateAndSetOverlayPosition;
+                }
             });
         }
 
