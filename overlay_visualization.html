@@ -1086,12 +1086,16 @@
                     background: ${color}20;
                 `;
                 
-                // 对于进程类型，使用进程匹配的标签作为显示名称
+                // 获取友好的显示名称
                 let displayName = layer.name;
                 if (layer.sourceType === 'process' && layer.exeName) {
+                    // 进程类型：使用进程匹配的标签
                     const processName = layer.exeName.split(':').pop() || layer.exeName;
                     const processType = matchProcessType(processName);
                     displayName = processType;
+                } else if (sourceTypeNames[layer.sourceType]) {
+                    // 其他源类型：使用友好的中文名称
+                    displayName = sourceTypeNames[layer.sourceType];
                 }
                 
                 // 创建标签
@@ -1113,7 +1117,7 @@
 
         // 生成详细信息HTML
         function generateDetailsHTML(layer) {
-            let html = `<div><strong>类型:</strong> ${sourceTypeNames[layer.sourceType] || layer.sourceType}</div>`;
+            let html = `<div><strong>类型:</strong> ${layer.sourceType}</div>`;
             html += `<div><strong>层级:</strong> 第${layer.layer}层</div>`;
             
             if (layer.exeName) html += `<div><strong>进程:</strong> ${layer.exeName.split(':').pop() || layer.exeName}</div>`;
@@ -1222,12 +1226,16 @@
             // 添加配置来源标识
             const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
             
-            // 对于进程类型，使用进程匹配的标签作为标题
+            // 获取友好的显示名称
             let displayName = layer.name;
             if (layer.sourceType === 'process' && layer.exeName) {
+                // 进程类型：使用进程匹配的标签
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
                 const processType = matchProcessType(processName);
                 displayName = processType;
+            } else if (sourceTypeNames[layer.sourceType]) {
+                // 其他源类型：使用友好的中文名称
+                displayName = sourceTypeNames[layer.sourceType];
             }
             
             layerItem.innerHTML = `
@@ -1243,7 +1251,8 @@
 
         // 生成图层描述
         function generateLayerDescription(layer) {
-            let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            // 描述中保留原始的源类型信息
+            let desc = `${layer.sourceType}`;
             
             // 添加特殊信息
             if (layer.exeName) {
