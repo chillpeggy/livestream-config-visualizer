@@ -825,14 +825,27 @@
             7: '#e67e22'  // 深橙色
         };
 
-        // 源类型中文映射
+        // 源类型中文映射 - 扩展版本
         const sourceTypeNames = {
             'camera': '摄像头',
+            'captureCard': '采集卡',
             'process': '进程',
             'text': '文本',
             'screenshot': '截图',
             'video': '视频',
-            'fullscreen': '显示器投屏'
+            'image': '图片',
+            'fullscreen': '显示器投屏',
+            'audio': '音频',
+            'microphone': '麦克风',
+            'desktop': '桌面',
+            'window': '窗口',
+            'browser': '浏览器',
+            'media': '媒体',
+            'stream': '流媒体',
+            'overlay': '叠加层',
+            'filter': '滤镜',
+            'transition': '转场',
+            'scene': '场景'
         };
 
         // 图片上传处理
@@ -939,157 +952,100 @@
             });
         }
 
-        // 解析obsSourceInfo格式
+        // 解析obsSourceInfo格式 - 通用版本
         function parseObsSourceInfo(obsSourceInfo) {
             let layerIndex = 0;
             
             // 检测分辨率模式
             const detectedResolution = detectResolutionMode(obsSourceInfo);
             
-            // 处理image配置
-            if (obsSourceInfo.image) {
-                obsSourceInfo.image.forEach(imageSource => {
-                    const convertedCoords = convertObsCoordinates(
-                        imageSource.pos.x, 
-                        imageSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
-                        detectedResolution
-                    );
+            // 遍历所有配置类型，通用处理
+            Object.keys(obsSourceInfo).forEach(sourceType => {
+                // 跳过特殊字段
+                if (['otherScenes', 'auxAudioVolumn', 'desktopAudioVolumn'].includes(sourceType)) {
+                    console.log(`跳过特殊字段: ${sourceType}`);
+                    return;
+                }
+                
+                const sourceData = obsSourceInfo[sourceType];
+                
+                // 检查是否为数组格式的源配置
+                if (Array.isArray(sourceData)) {
+                    console.log(`处理源类型: ${sourceType}, 数量: ${sourceData.length}`);
                     
-                    parsedLayers.push({
-                        sourceType: 'image',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: imageSource.name || '图片源',
-                        fileName: imageSource.filepath ? imageSource.filepath.split('/').pop() : '',
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        fileSize: imageSource.fileSize,
-                        pos: imageSource.pos,
-                        filepath: imageSource.filepath
+                    sourceData.forEach(source => {
+                        // 检查是否有位置信息
+                        if (source.pos && typeof source.pos === 'object') {
+                            const convertedCoords = convertObsCoordinates(
+                                source.pos.x || 0, 
+                                source.pos.y || 0, 
+                                detectedResolution.width, 
+                                detectedResolution.height,
+                                detectedResolution
+                            );
+                            
+                            // 通用的图层对象创建
+                            const layerObj = {
+                                sourceType: sourceType, // 保持原始类型名
+                                configSource: 'obs',
+                                name: source.name || `${sourceTypeNames[sourceType] || sourceType}源`,
+                                layer: layerIndex++,
+                                canvasOverlapRect: convertedCoords,
+                                canvasOverlap: calculateOverlap(convertedCoords),
+                                overlap: calculateOverlap(convertedCoords),
+                                pos: source.pos
+                            };
+                            
+                            // 动态添加所有源对象的属性
+                            Object.keys(source).forEach(key => {
+                                if (!['pos'].includes(key)) { // 排除已处理的字段
+                                    layerObj[key] = source[key];
+                                }
+                            });
+                            
+                            // 特殊处理文件路径
+                            if (source.filepath) {
+                                layerObj.fileName = source.filepath.split('/').pop();
+                                layerObj.filepath = source.filepath;
+                            }
+                            
+                            parsedLayers.push(layerObj);
+                            console.log(`添加图层: ${sourceType} - ${layerObj.name}`);
+                        } else {
+                            console.log(`跳过无位置信息的源: ${sourceType} - ${source.name || 'unnamed'}`);
+                        }
                     });
-                });
-            }
-            
-            // 处理process配置
-            if (obsSourceInfo.process) {
-                obsSourceInfo.process.forEach(processSource => {
-                    const convertedCoords = convertObsCoordinates(
-                        processSource.pos.x, 
-                        processSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
-                        detectedResolution
-                    );
-                    
-                    parsedLayers.push({
-                        sourceType: 'process',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: processSource.name || processSource.exeName || '进程源',
-                        exeName: processSource.exeName,
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        pos: processSource.pos
-                    });
-                });
-            }
-            
-            // 处理video配置
-            if (obsSourceInfo.video) {
-                obsSourceInfo.video.forEach(videoSource => {
-                    const convertedCoords = convertObsCoordinates(
-                        videoSource.pos.x, 
-                        videoSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
-                        detectedResolution
-                    );
-                    
-                    parsedLayers.push({
-                        sourceType: 'video',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: videoSource.name || '视频源',
-                        fileName: videoSource.filepath ? videoSource.filepath.split('/').pop() : '',
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        volume: videoSource.volume,
-                        fileSize: videoSource.fileSize,
-                        looping: videoSource.looping,
-                        pos: videoSource.pos
-                    });
-                });
-            }
-            
-            // 处理camera配置
-            if (obsSourceInfo.camera) {
-                obsSourceInfo.camera.forEach(cameraSource => {
-                    const convertedCoords = convertObsCoordinates(
-                        cameraSource.pos.x, 
-                        cameraSource.pos.y, 
-                        detectedResolution.width, 
-                        detectedResolution.height,
-                        detectedResolution
-                    );
-                    
-                    parsedLayers.push({
-                        sourceType: 'captureCard',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: cameraSource.name || '采集卡',
-                        deviceId: cameraSource.deviceId,
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        volume: cameraSource.volume,
-                        pos: cameraSource.pos
-                    });
-                });
-            }
-            
-            // otherScenes 已过滤，不进行解析
+                } else {
+                    console.log(`跳过非数组格式的字段: ${sourceType}`);
+                }
+            });
         }
 
-        // 检测分辨率模式
+        // 检测分辨率模式 - 通用版本
         function detectResolutionMode(obsSourceInfo) {
             let maxX = 0, maxY = 0;
             
-            // 检查image坐标
-            if (obsSourceInfo.image) {
-                obsSourceInfo.image.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
+            // 遍历所有配置类型，通用检查坐标
+            Object.keys(obsSourceInfo).forEach(sourceType => {
+                // 跳过特殊字段
+                if (['otherScenes', 'auxAudioVolumn', 'desktopAudioVolumn'].includes(sourceType)) {
+                    return;
+                }
+                
+                const sourceData = obsSourceInfo[sourceType];
+                
+                // 检查是否为数组格式的源配置
+                if (Array.isArray(sourceData)) {
+                    sourceData.forEach(source => {
+                        if (source.pos && typeof source.pos === 'object') {
+                            maxX = Math.max(maxX, source.pos.x || 0);
+                            maxY = Math.max(maxY, source.pos.y || 0);
+                        }
+                    });
+                }
+            });
             
-            // 检查process坐标
-            if (obsSourceInfo.process) {
-                obsSourceInfo.process.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
-            
-            // 检查video坐标
-            if (obsSourceInfo.video) {
-                obsSourceInfo.video.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
-            
-            // 检查camera坐标
-            if (obsSourceInfo.camera) {
-                obsSourceInfo.camera.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
+            console.log(`检测到最大坐标: (${maxX}, ${maxY})`);
             
             // 根据最大坐标判断分辨率
             if (maxX <= 1280 && maxY <= 720) {
@@ -1193,37 +1149,76 @@
             });
         }
 
-        // 生成详细信息HTML
+        // 生成详细信息HTML - 通用版本
         function generateDetailsHTML(layer) {
-            let html = `<div><strong>类型:</strong> ${layer.sourceType}</div>`;
+            let html = `<div><strong>类型:</strong> ${sourceTypeNames[layer.sourceType] || layer.sourceType}</div>`;
             html += `<div><strong>层级:</strong> 第${layer.layer}层</div>`;
             
-            if (layer.exeName) html += `<div><strong>进程:</strong> ${layer.exeName.split(':').pop() || layer.exeName}</div>`;
-            if (layer.fileName) html += `<div><strong>文件:</strong> ${layer.fileName}</div>`;
-            if (layer.filepath) html += `<div><strong>文件路径:</strong> ${layer.filepath}</div>`;
-            if (layer.deviceId) html += `<div><strong>设备ID:</strong> ${layer.deviceId}</div>`;
-            if (layer.id) html += `<div><strong>ID:</strong> ${layer.id}</div>`;
+            // 动态显示所有属性，按重要性排序
+            const priorityFields = ['exeName', 'fileName', 'filepath', 'deviceId', 'name', 'id'];
+            const skipFields = ['sourceType', 'configSource', 'layer', 'canvasOverlapRect', 'canvasOverlap', 'overlap', 'pos'];
             
+            // 先显示优先级高的字段
+            priorityFields.forEach(field => {
+                if (layer[field] !== undefined && layer[field] !== null && layer[field] !== '') {
+                    const value = field === 'exeName' ? (layer[field].split(':').pop() || layer[field]) : layer[field];
+                    const label = getFieldLabel(field);
+                    html += `<div><strong>${label}:</strong> ${value}</div>`;
+                }
+            });
+            
+            // 显示覆盖率信息
             if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
             if (layer.overlap !== undefined) html += `<div><strong>原始占比:</strong> ${(layer.overlap * 100).toFixed(1)}%</div>`;
             
-            // obsSourceInfo特有字段
-            if (layer.volume !== undefined) {
-                const volumeText = layer.volume === 0 ? '静音' : `${layer.volume * 100}%`;
-                html += `<div><strong>音量:</strong> ${volumeText}</div>`;
-            }
-            if (layer.fileSize !== undefined) {
-                const sizeText = formatFileSize(layer.fileSize);
-                html += `<div><strong>文件大小:</strong> ${sizeText}</div>`;
-            }
-            if (layer.looping !== undefined) {
-                html += `<div><strong>循环播放:</strong> ${layer.looping ? '是' : '否'}</div>`;
-            }
+            // 显示其他所有字段
+            Object.keys(layer).forEach(field => {
+                if (!priorityFields.includes(field) && !skipFields.includes(field) && layer[field] !== undefined && layer[field] !== null && layer[field] !== '') {
+                    const value = formatFieldValue(field, layer[field]);
+                    const label = getFieldLabel(field);
+                    html += `<div><strong>${label}:</strong> ${value}</div>`;
+                }
+            });
             
+            // 显示坐标信息
             const [x, y, width, height] = layer.canvasOverlapRect;
             html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
             
             return html;
+        }
+        
+        // 获取字段标签
+        function getFieldLabel(field) {
+            const fieldLabels = {
+                'exeName': '进程',
+                'fileName': '文件',
+                'filepath': '文件路径',
+                'deviceId': '设备ID',
+                'name': '名称',
+                'id': 'ID',
+                'volume': '音量',
+                'fileSize': '文件大小',
+                'looping': '循环播放',
+                'realDeviceId': '真实设备ID',
+                'isSoftware': '软件设备',
+                'decibel': '音量分贝'
+            };
+            return fieldLabels[field] || field;
+        }
+        
+        // 格式化字段值
+        function formatFieldValue(field, value) {
+            switch (field) {
+                case 'volume':
+                    return value === 0 ? '静音' : `${(value * 100).toFixed(0)}%`;
+                case 'fileSize':
+                    return formatFileSize(value);
+                case 'looping':
+                case 'isSoftware':
+                    return value ? '是' : '否';
+                default:
+                    return value;
+            }
         }
 
         // 格式化文件大小
