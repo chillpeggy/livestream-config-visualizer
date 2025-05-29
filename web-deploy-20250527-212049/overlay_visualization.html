@@ -1440,16 +1440,19 @@
                     let scaledHeight = height * imageScaleY;
                     
                     // 特殊处理：确保(0,0)坐标严格对应图片左上角
-                    if (x === 0 && y === 0) {
+                    const isZeroZeroCoordinate = (x === 0 && y === 0);
+                    if (isZeroZeroCoordinate) {
                         scaledX = 0;
                         scaledY = 0;
                         console.log(`🎯 检测到(0,0)坐标图层，强制设置为图片左上角`);
                     }
                     
                     // 2. 确保图层不超出图片边界（关键修复）
-                    // 限制左上角坐标不能小于0
-                    scaledX = Math.max(0, scaledX);
-                    scaledY = Math.max(0, scaledY);
+                    // 对于非(0,0)坐标，限制左上角坐标不能小于0
+                    if (!isZeroZeroCoordinate) {
+                        scaledX = Math.max(0, scaledX);
+                        scaledY = Math.max(0, scaledY);
+                    }
                     
                     // 限制右下角坐标不能超出图片尺寸
                     const maxRight = actualImageWidth;
@@ -1489,13 +1492,7 @@
                     `;
                     
                     // 标签定位：与边框左上角对齐
-                    label.style.left = `${leftPercent}%`;
-                    label.style.top = `${topPercent}%`;
-                    label.style.position = 'absolute';
-                    label.style.zIndex = '20';
-                    label.style.transform = 'translate(0, 0)';
-                    label.style.margin = '0';
-                    label.style.padding = '4px 6px';
+                    positionLabelAtLayerOrigin(label, parseFloat(leftPercent), parseFloat(topPercent));
                     
                     console.log(`图层${layer.layer}坐标计算详情:`);
                     console.log(`  配置坐标: (${x}, ${y}, ${width}, ${height})`);
@@ -1510,11 +1507,32 @@
                     console.log(`  最终百分比: (${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
                     
                     // 特殊验证：(0,0)坐标应该对应图片左上角
-                    if (x === 0 && y === 0) {
+                    if (isZeroZeroCoordinate) {
+                        const alignmentErrorX = Math.abs(containerX - imageOffsetX);
+                        const alignmentErrorY = Math.abs(containerY - imageOffsetY);
+                        const isAligned = alignmentErrorX < 0.1 && alignmentErrorY < 0.1;
+                        
                         console.log(`🔍 (0,0)坐标验证:`);
                         console.log(`  图片左上角在容器中的位置: (${imageOffsetX.toFixed(1)}, ${imageOffsetY.toFixed(1)})`);
                         console.log(`  图层左上角在容器中的位置: (${containerX.toFixed(1)}, ${containerY.toFixed(1)})`);
-                        console.log(`  是否完全对齐: ${Math.abs(containerX - imageOffsetX) < 0.1 && Math.abs(containerY - imageOffsetY) < 0.1 ? '✅ 是' : '❌ 否'}`);
+                        console.log(`  X轴对齐误差: ${alignmentErrorX.toFixed(3)}px`);
+                        console.log(`  Y轴对齐误差: ${alignmentErrorY.toFixed(3)}px`);
+                        console.log(`  是否完全对齐: ${isAligned ? '✅ 是' : '❌ 否'}`);
+                        
+                        // 如果对齐误差过大，强制修正
+                        if (!isAligned) {
+                            console.log(`🔧 检测到对齐误差过大，强制修正到图片左上角`);
+                            const correctedLeftPercent = (imageOffsetX / containerWidth * 100).toFixed(2);
+                            const correctedTopPercent = (imageOffsetY / containerHeight * 100).toFixed(2);
+                            
+                            overlayDiv.style.left = `${correctedLeftPercent}%`;
+                            overlayDiv.style.top = `${correctedTopPercent}%`;
+                            
+                            // 同时修正标签位置
+                            positionLabelAtLayerOrigin(label, parseFloat(correctedLeftPercent), parseFloat(correctedTopPercent));
+                            
+                            console.log(`🔧 强制修正后的位置: (${correctedLeftPercent}%, ${correctedTopPercent}%)`);
+                        }
                     }
                 }
                 
