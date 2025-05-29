@@ -2449,11 +2449,54 @@
                 </table>
             `;
             
-            container.innerHTML = tableHTML;
+            // 检测特定软件类型
+            const softwareDetectionHTML = generateSoftwareDetection(cpuTopProcesses);
+            
+            container.innerHTML = tableHTML + softwareDetectionHTML;
             
             // 添加调试信息
             console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
             console.log(`进程库状态: 共${processLibrary.length}条记录`);
+        }
+        
+        // 生成软件类型检测结果
+        function generateSoftwareDetection(cpuTopProcesses) {
+            if (cpuTopProcesses.length === 0) {
+                return ''; // 没有CPU进程数据时不显示检测结果
+            }
+            
+            // 收集所有CPU进程的标签
+            let allCpuTags = [];
+            cpuTopProcesses.forEach(process => {
+                const processTypes = matchProcessType(process.name);
+                allCpuTags = allCpuTags.concat(processTypes);
+            });
+            
+            // 检测各种软件类型
+            const hasHumanVerification = allCpuTags.includes('人机校验作弊进程');
+            const hasAIAudio = allCpuTags.includes('音频录制AI互动进程');
+            const hasAutoScript = allCpuTags.includes('自动操作脚本');
+            const hasDanmuCrawler = allCpuTags.includes('弹幕爬取进程');
+            
+            console.log('软件检测结果:', {
+                '人机校验软件': hasHumanVerification,
+                'AI音频软件': hasAIAudio,
+                '自动操作脚本': hasAutoScript,
+                '弹幕爬取软件': hasDanmuCrawler,
+                '检测到的标签': allCpuTags
+            });
+            
+            return `
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; border-left: 4px solid #667eea;">
+                    <div style="font-weight: bold; font-size: 16px; color: #343a40; margin-bottom: 10px;">🔍 软件类型检测</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; font-size: 14px; color: #495057;">
+                        <div><strong>人机校验软件:</strong> <span style="color: ${hasHumanVerification ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasHumanVerification ? '是' : '否'}</span></div>
+                        <div><strong>AI音频软件:</strong> <span style="color: ${hasAIAudio ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAIAudio ? '是' : '否'}</span></div>
+                        <div><strong>自动操作脚本:</strong> <span style="color: ${hasAutoScript ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAutoScript ? '是' : '否'}</span></div>
+                        <div><strong>弹幕爬取软件:</strong> <span style="color: ${hasDanmuCrawler ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasDanmuCrawler ? '是' : '否'}</span></div>
+                    </div>
+                </div>
+            `;
         }
         
         // 窗口大小变化时重新计算叠加层位置
