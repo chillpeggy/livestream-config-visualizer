@@ -818,24 +818,48 @@
                 return;
             }
 
+            console.log('🔍 开始解析JSON，输入长度:', jsonInput.length);
+            console.log('🔍 输入的前100个字符:', jsonInput.substring(0, 100));
+
             try {
-                // 尝试直接解析
-                const data = JSON.parse(jsonInput);
+                let data;
+                
+                // 检查是否为转义的JSON字符串格式
+                if (jsonInput.startsWith('"{') && jsonInput.endsWith('}"')) {
+                    console.log('🔍 检测到转义JSON格式，进行双重解析');
+                    try {
+                        // 先解析外层字符串
+                        const unescapedJson = JSON.parse(jsonInput);
+                        console.log('🔍 第一次解析结果:', unescapedJson.substring(0, 100));
+                        // 再解析内层JSON
+                        data = JSON.parse(unescapedJson);
+                        console.log('🔍 转义JSON解析成功');
+                    } catch (escapeErr) {
+                        console.log('🔍 转义JSON解析失败，尝试标准解析:', escapeErr.message);
+                        data = JSON.parse(jsonInput);
+                    }
+                } else {
+                    // 尝试直接解析
+                    data = JSON.parse(jsonInput);
+                    console.log('🔍 标准JSON解析成功');
+                }
+                
                 await parseSuccessfulData(data);
                 
             } catch (err) {
-                console.log('直接解析失败，尝试容错修复:', err.message);
+                console.log('🔍 直接解析失败，尝试容错修复:', err.message);
                 
                 // 尝试容错解析
                 try {
                     const fixedJson = fixJsonErrors(jsonInput);
+                    console.log('🔍 容错修复后的JSON:', fixedJson.substring(0, 200));
                     const data = JSON.parse(fixedJson);
                     
-                    showMessage(`⚠️ JSON格式有误，已自动修复并成功解析！发现 ${parsedLayers.length} 个图层`, 'success');
+                    showMessage(`⚠️ JSON格式有误，已自动修复并成功解析！`, 'success');
                     await parseSuccessfulData(data);
                     
                 } catch (fixErr) {
-                    console.error('容错解析也失败:', fixErr.message);
+                    console.error('🔍 容错解析也失败:', fixErr.message);
                     showMessage(`❌ JSON解析失败: ${err.message}。尝试自动修复后仍然失败: ${fixErr.message}`, 'error');
                     clearVisualization();
                     // 隐藏资源特征模块
@@ -885,6 +909,9 @@
 
         // 解析成功后的数据处理
         async function parseSuccessfulData(data) {
+            console.log('🔍 开始解析数据，原始数据结构:', data);
+            console.log('🔍 数据的所有键:', Object.keys(data));
+            
             // 字段名标准化：将cpuTopProcess转换为cpuTopProcessList，gpuTopProcess转换为gpuTopProcessList
             if (data.cpuTopProcess && !data.cpuTopProcessList) {
                 console.log('检测到cpuTopProcess字段，转换为cpuTopProcessList');
@@ -900,7 +927,11 @@
             
             // 解析resolution
             if (data.resolution) {
+                console.log('🔍 找到resolution字段:', data.resolution);
                 canvasResolution = JSON.parse(data.resolution);
+                console.log('🔍 解析后的分辨率:', canvasResolution);
+            } else {
+                console.log('⚠️ 未找到resolution字段，使用默认分辨率');
             }
             
             // 收集所有图层
@@ -908,19 +939,44 @@
             
             // 处理sourceInfo格式
             if (data.sourceInfo) {
-                parseSourceInfo(JSON.parse(data.sourceInfo));
+                console.log('🔍 找到sourceInfo字段:', data.sourceInfo);
+                try {
+                    const sourceInfoData = JSON.parse(data.sourceInfo);
+                    console.log('🔍 解析后的sourceInfo:', sourceInfoData);
+                    parseSourceInfo(sourceInfoData);
+                    console.log('🔍 sourceInfo解析完成，当前图层数:', parsedLayers.length);
+                } catch (e) {
+                    console.error('❌ sourceInfo解析失败:', e);
+                }
+            } else {
+                console.log('⚠️ 未找到sourceInfo字段');
             }
             
             // 处理obsSourceInfo格式
             if (data.obsSourceInfo) {
-                parseObsSourceInfo(JSON.parse(data.obsSourceInfo));
+                console.log('🔍 找到obsSourceInfo字段:', data.obsSourceInfo);
+                try {
+                    const obsSourceInfoData = JSON.parse(data.obsSourceInfo);
+                    console.log('🔍 解析后的obsSourceInfo:', obsSourceInfoData);
+                    parseObsSourceInfo(obsSourceInfoData);
+                    console.log('🔍 obsSourceInfo解析完成，当前图层数:', parsedLayers.length);
+                } catch (e) {
+                    console.error('❌ obsSourceInfo解析失败:', e);
+                }
+            } else {
+                console.log('⚠️ 未找到obsSourceInfo字段');
             }
             
             // 处理资源特征数据 - 现在只需要检查List格式
             let hasResourceData = false;
             if (data.cpuTopProcessList || data.gpuTopProcessList) {
+                console.log('🔍 找到资源特征数据');
+                console.log('🔍 cpuTopProcessList:', data.cpuTopProcessList ? '存在' : '不存在');
+                console.log('🔍 gpuTopProcessList:', data.gpuTopProcessList ? '存在' : '不存在');
                 await generateResourceFeatures(data);
                 hasResourceData = true;
+            } else {
+                console.log('⚠️ 未找到资源特征数据 (cpuTopProcessList 或 gpuTopProcessList)');
             }
             
             // 显示或隐藏资源特征模块
@@ -931,8 +987,19 @@
                 resourceFeatures.style.display = 'none';
             }
             
+            console.log('🔍 最终解析结果:');
+            console.log('🔍 图层数量:', parsedLayers.length);
+            console.log('🔍 资源特征数据:', hasResourceData ? '有' : '无');
+            console.log('🔍 解析的图层:', parsedLayers);
+            
             if (parsedLayers.length === 0 && !hasResourceData) {
-                throw new Error('未找到可解析的图层信息或资源特征数据，请检查JSON格式');
+                console.error('❌ 解析失败详情:');
+                console.error('❌ 输入数据的所有字段:', Object.keys(data));
+                console.error('❌ 期望的字段: sourceInfo, obsSourceInfo, cpuTopProcessList, gpuTopProcessList');
+                console.error('❌ 实际找到的字段:', Object.keys(data).filter(key => 
+                    ['sourceInfo', 'obsSourceInfo', 'cpuTopProcessList', 'gpuTopProcessList'].includes(key)
+                ));
+                throw new Error('未找到可解析的图层信息或资源特征数据，请检查JSON格式。期望的字段: sourceInfo, obsSourceInfo, cpuTopProcessList, gpuTopProcessList');
             }
             
             // 按layer排序
