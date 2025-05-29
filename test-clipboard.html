@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剪贴板粘贴功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .file-upload {
+            padding: 20px;
+            border: 2px dashed #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .file-upload:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f2ff 0%, #e8ebff 100%);
+        }
+        
+        .file-upload.paste-ready {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+        }
+        
+        .file-upload .paste-hint {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .file-upload.paste-ready .paste-hint {
+            opacity: 1;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            max-height: 400px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .instructions {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🖼️ 剪贴板粘贴功能测试</h1>
+        
+        <div class="instructions">
+            <h3>测试步骤：</h3>
+            <ol>
+                <li>复制一张图片到剪贴板（截图、复制图片文件等）</li>
+                <li>鼠标悬停到下方的上传区域</li>
+                <li>看到绿色边框和"Ctrl+V 粘贴"提示后，按 Ctrl+V</li>
+                <li>图片应该立即显示在下方</li>
+            </ol>
+        </div>
+        
+        <div class="file-upload" id="fileUploadArea">
+            <div class="paste-hint">Ctrl+V 粘贴</div>
+            <p><strong>📋 剪贴板粘贴测试区域</strong></p>
+            <p>鼠标悬停此区域，然后按 Ctrl+V 粘贴图片</p>
+        </div>
+        
+        <div id="messages"></div>
+        
+        <div>
+            <img id="resultImage" class="result-image" style="display: none;" alt="粘贴的图片">
+        </div>
+        
+        <div class="log" id="logArea">
+            <strong>调试日志：</strong><br>
+        </div>
+    </div>
+
+    <script>
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const resultImage = document.getElementById('resultImage');
+        const messagesDiv = document.getElementById('messages');
+        const logArea = document.getElementById('logArea');
+        let isHoveringUploadArea = false;
+
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.innerHTML += `[${timestamp}] ${message}<br>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            messagesDiv.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // 鼠标悬停状态管理
+        fileUploadArea.addEventListener('mouseenter', function() {
+            isHoveringUploadArea = true;
+            fileUploadArea.classList.add('paste-ready');
+            addLog('🖱️ 鼠标进入上传区域，剪贴板粘贴已激活');
+        });
+
+        fileUploadArea.addEventListener('mouseleave', function() {
+            isHoveringUploadArea = false;
+            fileUploadArea.classList.remove('paste-ready');
+            addLog('🖱️ 鼠标离开上传区域，剪贴板粘贴已禁用');
+        });
+
+        // 全局粘贴事件监听
+        document.addEventListener('paste', function(e) {
+            addLog(`📋 检测到粘贴事件，悬停状态: ${isHoveringUploadArea}`);
+            
+            // 只有在悬停上传区域时才处理粘贴
+            if (!isHoveringUploadArea) {
+                addLog('❌ 未在上传区域悬停，忽略粘贴事件');
+                return;
+            }
+
+            const items = e.clipboardData.items;
+            addLog(`📋 剪贴板项目数量: ${items.length}`);
+            
+            let imageFile = null;
+
+            // 查找剪贴板中的图片
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                addLog(`📋 项目 ${i}: 类型=${item.type}, 种类=${item.kind}`);
+                if (item.type.indexOf('image') !== -1) {
+                    imageFile = item.getAsFile();
+                    addLog(`✅ 找到图片文件: ${imageFile.name || '未命名'}, 大小=${imageFile.size} bytes`);
+                    break;
+                }
+            }
+
+            if (imageFile) {
+                e.preventDefault(); // 阻止默认粘贴行为
+                addLog('🚫 阻止默认粘贴行为');
+                
+                // 显示粘贴成功的视觉反馈
+                fileUploadArea.style.borderColor = '#28a745';
+                fileUploadArea.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
+                addLog('🎨 应用成功视觉反馈');
+                
+                // 读取并显示图片
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    resultImage.src = e.target.result;
+                    resultImage.style.display = 'block';
+                    addLog('📸 图片读取完成，开始显示');
+                    
+                    // 显示成功消息
+                    showMessage('✅ 成功从剪贴板粘贴图片！', 'success');
+                    
+                    // 恢复原始样式
+                    setTimeout(() => {
+                        if (isHoveringUploadArea) {
+                            fileUploadArea.style.borderColor = '#28a745';
+                            fileUploadArea.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%)';
+                        } else {
+                            fileUploadArea.style.borderColor = '';
+                            fileUploadArea.style.background = '';
+                        }
+                        addLog('🎨 恢复原始样式');
+                    }, 500);
+                };
+                
+                reader.onerror = function() {
+                    addLog('❌ 图片读取失败');
+                    showMessage('❌ 图片读取失败', 'error');
+                };
+                
+                reader.readAsDataURL(imageFile);
+                addLog('📖 开始读取图片文件');
+                
+            } else {
+                // 剪贴板中没有图片时的提示
+                if (e.clipboardData.items.length > 0) {
+                    addLog('⚠️ 剪贴板中没有图片文件');
+                    showMessage('⚠️ 剪贴板中没有图片，请先复制图片后再粘贴', 'error');
+                } else {
+                    addLog('⚠️ 剪贴板为空');
+                    showMessage('⚠️ 剪贴板为空', 'error');
+                }
+            }
+        });
+
+        // 键盘快捷键提示
+        document.addEventListener('keydown', function(e) {
+            if (isHoveringUploadArea && e.ctrlKey && e.key === 'v') {
+                addLog('⌨️ 检测到 Ctrl+V 快捷键');
+                // 显示粘贴动画效果
+                fileUploadArea.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    fileUploadArea.style.transform = '';
+                }, 150);
+            }
+        });
+
+        // 页面加载完成提示
+        window.addEventListener('load', function() {
+            addLog('🎉 页面加载完成，剪贴板功能已准备就绪');
+            showMessage('页面加载完成，可以开始测试剪贴板粘贴功能', 'success');
+        });
+    </script>
+</body>
+</html> 
