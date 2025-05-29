@@ -1592,7 +1592,7 @@
             // 显示坐标信息
             if (layer.configSource === 'obs' && layer.pos) {
                 // OBS配置：显示原始坐标，宽高用"/"表示（因为缺失右下角坐标信息）
-                html += `<div><strong>坐标:</strong> (${layer.pos.x || 0}, ${layer.pos.y || 0}, "/", "/")</div>`;
+                html += `<div><strong>坐标:</strong> (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)</div>`;
             } else {
                 // 其他配置：显示完整的转换后坐标
                 const [x, y, width, height] = layer.canvasOverlapRect;
@@ -1757,7 +1757,7 @@
             // 坐标显示逻辑：OBS配置显示原始坐标，其他配置显示完整坐标
             if (layer.configSource === 'obs' && layer.pos) {
                 // OBS配置：显示原始坐标，宽高用"/"表示（因为缺失右下角坐标信息）
-                desc += ` | 坐标: (${layer.pos.x || 0}, ${layer.pos.y || 0}, "/", "/")`;
+                desc += ` | 坐标: (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)`;
             } else {
                 // 其他配置：显示完整的转换后坐标
                 const [x, y, width, height] = layer.canvasOverlapRect;
