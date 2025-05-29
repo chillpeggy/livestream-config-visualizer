@@ -1689,6 +1689,28 @@
                     const maxRight = actualImageWidth;
                     const maxBottom = actualImageHeight;
                     
+                    // 检查图层右下角是否接近画布右下角（在配置坐标系统中）
+                    const configRightX = x + width;
+                    const configBottomY = y + height;
+                    const isNearRightEdge = (canvasResolution.width - configRightX) <= 10;
+                    const isNearBottomEdge = (canvasResolution.height - configBottomY) <= 10;
+                    const needsBorderAdjustment = isNearRightEdge || isNearBottomEdge;
+                    
+                    // 边框宽度（6px虚线边框）需要的内边距
+                    const borderWidth = 6;
+                    const borderPadding = borderWidth + 2; // 额外2px确保边框完全可见
+                    
+                    // 只在需要调整时显示详细日志
+                    if (needsBorderAdjustment) {
+                        console.log(`🔍 图层${layer.layer}接近边界，需要边界收缩:`);
+                        console.log(`  配置右下角坐标: (${configRightX}, ${configBottomY})`);
+                        console.log(`  画布尺寸: ${canvasResolution.width}x${canvasResolution.height}`);
+                        console.log(`  与右边距离: ${canvasResolution.width - configRightX}px`);
+                        console.log(`  与底边距离: ${canvasResolution.height - configBottomY}px`);
+                        console.log(`  是否接近右边: ${isNearRightEdge}`);
+                        console.log(`  是否接近底边: ${isNearBottomEdge}`);
+                    }
+                    
                     // 如果图层右边界超出图片右边界，调整宽度
                     if (scaledX + scaledWidth > maxRight) {
                         scaledWidth = maxRight - scaledX;
@@ -1697,6 +1719,37 @@
                     // 如果图层下边界超出图片下边界，调整高度
                     if (scaledY + scaledHeight > maxBottom) {
                         scaledHeight = maxBottom - scaledY;
+                    }
+                    
+                    // 特殊处理：如果图层右下角接近画布边界，向内收缩确保边框可见
+                    if (needsBorderAdjustment) {
+                        console.log(`📐 应用边界收缩处理`);
+                        
+                        // 计算需要收缩的像素值（转换到图片坐标系统）
+                        const shrinkPixelsX = borderPadding;
+                        const shrinkPixelsY = borderPadding;
+                        
+                        // 从右边收缩：如果接近右边界且当前宽度会导致边框超出
+                        if (isNearRightEdge && scaledX + scaledWidth + shrinkPixelsX > maxRight) {
+                            const newWidth = maxRight - scaledX - shrinkPixelsX;
+                            if (newWidth > 0) {
+                                scaledWidth = newWidth;
+                                console.log(`  🔧 右边界收缩: 宽度从 ${(scaledX + scaledWidth + shrinkPixelsX).toFixed(1)}px 调整为 ${scaledWidth.toFixed(1)}px`);
+                            }
+                        }
+                        
+                        // 从下边收缩：如果接近下边界且当前高度会导致边框超出
+                        if (isNearBottomEdge && scaledY + scaledHeight + shrinkPixelsY > maxBottom) {
+                            const newHeight = maxBottom - scaledY - shrinkPixelsY;
+                            if (newHeight > 0) {
+                                scaledHeight = newHeight;
+                                console.log(`  🔧 下边界收缩: 高度从 ${(scaledY + scaledHeight + shrinkPixelsY).toFixed(1)}px 调整为 ${scaledHeight.toFixed(1)}px`);
+                            }
+                        }
+                        
+                        console.log(`  ✅ 边界收缩完成，确保边框在图片内可见`);
+                        console.log(`  📏 最终图层尺寸: ${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)}px`);
+                        console.log(`  📍 最终图层范围: (${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}) 到 (${(scaledX + scaledWidth).toFixed(1)}, ${(scaledY + scaledHeight).toFixed(1)})`);
                     }
                     
                     // 确保宽度和高度为正值
