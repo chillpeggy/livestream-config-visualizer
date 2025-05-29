@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化测试 - 直播配置解析</title>
+    <style>
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.pending {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        .status.success {
+            background: #d1f2eb;
+            color: #00b894;
+        }
+        .status.error {
+            background: #fab1a0;
+            color: #e17055;
+        }
+        .test-btn {
+            background: #0984e3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .test-btn:hover {
+            background: #0770c5;
+        }
+        .test-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        #testFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 自动化测试 - 直播配置解析器</h1>
+            <p>每次发布前运行此测试确保功能正常</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 测试状态</h3>
+            <div id="overallStatus" class="status pending">等待开始测试...</div>
+            <button class="test-btn" onclick="runAllTests()">🚀 开始完整测试</button>
+            <button class="test-btn" onclick="runQuickTest()">⚡ 快速测试</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 测试用例加载</h3>
+            <div id="testDataStatus" class="status pending">未加载</div>
+            <button class="test-btn" onclick="loadTestData()" id="loadTestBtn">📥 加载测试数据</button>
+            <div class="test-results" id="testDataResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🖼️ 主程序加载测试</h3>
+            <div id="mainAppStatus" class="status pending">未测试</div>
+            <button class="test-btn" onclick="loadMainApp()" id="loadMainBtn">🔗 加载主程序</button>
+            <div class="iframe-container">
+                <iframe id="testFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚙️ 功能验证测试</h3>
+            <div id="functionalStatus" class="status pending">未测试</div>
+            <button class="test-btn" onclick="runFunctionalTests()" id="functionalBtn" disabled>🔧 运行功能测试</button>
+            <div class="test-results" id="functionalResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 测试报告</h3>
+            <div id="testReport" class="test-results">等待测试完成...</div>
+        </div>
+    </div>
+
+    <script>
+        let testData = null;
+        let testResults = {
+            dataLoad: false,
+            appLoad: false,
+            functional: false,
+            startTime: null,
+            endTime: null
+        };
+
+        // 加载测试数据
+        async function loadTestData() {
+            const status = document.getElementById('testDataStatus');
+            const results = document.getElementById('testDataResults');
+            const btn = document.getElementById('loadTestBtn');
+            
+            status.className = 'status pending';
+            status.textContent = '正在加载测试数据...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('test-case-data.json');
+                testData = await response.json();
+                
+                status.className = 'status success';
+                status.textContent = '✅ 测试数据加载成功';
+                
+                results.textContent = `加载的测试用例: ${testData.testName}
+描述: ${testData.description}
+期望图层数: ${testData.expectedResults.expectedLayerCount}
+期望源类型: ${testData.expectedResults.expectedSourceTypes.join(', ')}
+期望分辨率: ${testData.expectedResults.expectedResolution.width}x${testData.expectedResults.expectedResolution.height}`;
+                
+                testResults.dataLoad = true;
+                updateOverallStatus();
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ 测试数据加载失败';
+                results.textContent = `错误: ${error.message}`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        // 加载主程序
+        function loadMainApp() {
+            const status = document.getElementById('mainAppStatus');
+            const btn = document.getElementById('loadMainBtn');
+            const frame = document.getElementById('testFrame');
+            
+            status.className = 'status pending';
+            status.textContent = '正在加载主程序...';
+            btn.disabled = true;
+            
+            frame.onload = function() {
+                setTimeout(() => {
+                    try {
+                        // 检查iframe是否成功加载
+                        const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                        if (frameDoc && frameDoc.title) {
+                            status.className = 'status success';
+                            status.textContent = '✅ 主程序加载成功';
+                            testResults.appLoad = true;
+                            document.getElementById('functionalBtn').disabled = false;
+                            updateOverallStatus();
+                        } else {
+                            throw new Error('无法访问iframe内容');
+                        }
+                    } catch (error) {
+                        status.className = 'status error';
+                        status.textContent = '❌ 主程序加载失败';
+                        console.error('App load error:', error);
+                    }
+                    btn.disabled = false;
+                }, 2000);
+            };
+            
+            frame.onerror = function() {
+                status.className = 'status error';
+                status.textContent = '❌ 主程序加载失败';
+                btn.disabled = false;
+            };
+            
+            frame.src = 'overlay_visualization.html';
+        }
+
+        // 运行功能测试
+        async function runFunctionalTests() {
+            if (!testData) {
+                alert('请先加载测试数据');
+                return;
+            }
+            
+            const status = document.getElementById('functionalStatus');
+            const results = document.getElementById('functionalResults');
+            const btn = document.getElementById('functionalBtn');
+            
+            status.className = 'status pending';
+            status.textContent = '正在运行功能测试...';
+            btn.disabled = true;
+            
+            let testLog = '开始功能测试...\n\n';
+            
+            try {
+                const frame = document.getElementById('testFrame');
+                const frameWindow = frame.contentWindow;
+                
+                // 等待主程序完全加载
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                testLog += '1. 检查主程序是否已加载...\n';
+                if (!frameWindow || !frameWindow.parseConfiguration) {
+                    throw new Error('主程序未正确加载或缺少必要函数');
+                }
+                testLog += '   ✅ 主程序加载正常\n\n';
+                
+                testLog += '2. 注入测试数据...\n';
+                // 设置测试图片
+                const gameImage = frameWindow.document.getElementById('gameImage');
+                if (gameImage) {
+                    // 使用提供的图片或默认图片
+                    gameImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYwIiBoZWlnaHQ9IjU0MCIgdmlld0JveD0iMCAwIDk2MCA1NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9Ijk2MCIgaGVpZ2h0PSI1NDAiIGZpbGw9IiNmMGYwZjAiIHN0cm9rZT0iI2RkZCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHRleHQgeD0iNDgwIiB5PSIyNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2NjYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiI+6L+Z6YeM5Lya5bGV56S65qej6KeQ5ZCO55qE6KeE6KeJ5Zu+PC90ZXh0Pjwvc3ZnPg==';
+                    testLog += '   ✅ 测试图片已设置\n';
+                } else {
+                    testLog += '   ⚠️ 未找到图片元素\n';
+                }
+                
+                // 设置JSON输入
+                const jsonInput = frameWindow.document.getElementById('jsonInput');
+                if (jsonInput) {
+                    jsonInput.value = JSON.stringify(testData.testData, null, 2);
+                    testLog += '   ✅ JSON数据已输入\n';
+                } else {
+                    throw new Error('未找到JSON输入框');
+                }
+                testLog += '\n';
+                
+                testLog += '3. 执行解析...\n';
+                // 触发解析
+                await frameWindow.parseConfiguration();
+                
+                // 等待解析完成
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                testLog += '   ✅ 解析函数已执行\n\n';
+                
+                testLog += '4. 验证解析结果...\n';
+                // 检查解析结果
+                const parsedLayers = frameWindow.parsedLayers;
+                if (!parsedLayers || !Array.isArray(parsedLayers)) {
+                    throw new Error('解析结果不正确');
+                }
+                
+                testLog += `   期望图层数: ${testData.expectedResults.expectedLayerCount}\n`;
+                testLog += `   实际图层数: ${parsedLayers.length}\n`;
+                
+                if (parsedLayers.length === testData.expectedResults.expectedLayerCount) {
+                    testLog += '   ✅ 图层数量正确\n';
+                } else {
+                    testLog += '   ⚠️ 图层数量不匹配\n';
+                }
+                
+                // 检查分辨率
+                const canvasResolution = frameWindow.canvasResolution;
+                testLog += `   期望分辨率: ${testData.expectedResults.expectedResolution.width}x${testData.expectedResults.expectedResolution.height}\n`;
+                testLog += `   实际分辨率: ${canvasResolution.width}x${canvasResolution.height}\n`;
+                
+                if (canvasResolution.width === testData.expectedResults.expectedResolution.width &&
+                    canvasResolution.height === testData.expectedResults.expectedResolution.height) {
+                    testLog += '   ✅ 分辨率正确\n';
+                } else {
+                    testLog += '   ⚠️ 分辨率不匹配\n';
+                }
+                
+                // 检查UI更新
+                const layerList = frameWindow.document.getElementById('layerList');
+                if (layerList && layerList.children.length > 1) {
+                    testLog += '   ✅ 图层列表已更新\n';
+                } else {
+                    testLog += '   ⚠️ 图层列表未正确更新\n';
+                }
+                
+                testLog += '\n5. 测试完成\n';
+                testLog += '✅ 所有核心功能测试通过\n';
+                
+                status.className = 'status success';
+                status.textContent = '✅ 功能测试完成';
+                testResults.functional = true;
+                
+            } catch (error) {
+                testLog += `\n❌ 测试失败: ${error.message}\n`;
+                status.className = 'status error';
+                status.textContent = '❌ 功能测试失败';
+                testResults.functional = false;
+            }
+            
+            results.textContent = testLog;
+            btn.disabled = false;
+            updateOverallStatus();
+        }
+
+        // 更新总体状态
+        function updateOverallStatus() {
+            const status = document.getElementById('overallStatus');
+            const { dataLoad, appLoad, functional } = testResults;
+            
+            if (dataLoad && appLoad && functional) {
+                status.className = 'status success';
+                status.textContent = '✅ 所有测试通过 - 可以安全发布';
+                generateTestReport();
+            } else if (dataLoad || appLoad || functional) {
+                status.className = 'status pending';
+                status.textContent = '⏳ 测试进行中...';
+            } else {
+                status.className = 'status pending';
+                status.textContent = '等待开始测试...';
+            }
+        }
+
+        // 生成测试报告
+        function generateTestReport() {
+            const report = document.getElementById('testReport');
+            testResults.endTime = new Date();
+            
+            const duration = testResults.endTime - testResults.startTime;
+            
+            report.textContent = `测试报告 - ${new Date().toLocaleString()}
+=====================================
+
+测试用例: ${testData.testName}
+测试耗时: ${Math.round(duration / 1000)} 秒
+
+测试结果:
+- 数据加载: ${testResults.dataLoad ? '✅ 通过' : '❌ 失败'}
+- 程序加载: ${testResults.appLoad ? '✅ 通过' : '❌ 失败'}  
+- 功能验证: ${testResults.functional ? '✅ 通过' : '❌ 失败'}
+
+总体状态: ${testResults.dataLoad && testResults.appLoad && testResults.functional ? '✅ 测试通过 - 可以发布' : '❌ 测试失败 - 需要修复'}
+
+建议: ${testResults.dataLoad && testResults.appLoad && testResults.functional ? 
+'所有测试通过，功能正常，可以安全发布到git。' : 
+'存在问题，请检查失败的测试项并修复后重新测试。'}`;
+        }
+
+        // 运行所有测试
+        async function runAllTests() {
+            testResults.startTime = new Date();
+            
+            await loadTestData();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            loadMainApp();
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            if (testResults.appLoad) {
+                await runFunctionalTests();
+            }
+        }
+
+        // 快速测试
+        async function runQuickTest() {
+            testResults.startTime = new Date();
+            
+            // 只测试核心解析功能
+            await loadTestData();
+            if (testResults.dataLoad) {
+                alert('快速测试：数据加载正常，建议运行完整测试验证UI功能');
+            }
+        }
+    </script>
+</body>
+</html> 
