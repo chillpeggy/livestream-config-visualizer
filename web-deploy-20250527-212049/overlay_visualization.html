@@ -860,7 +860,7 @@
             fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
             
             // 4. 修复缺少逗号的问题
-            fixed = fixed.replace(/("\s*})(\s*)(")/g, '$1,$2$3');
+            fixed = fixed.replace(/("\s*})\s*(")/g, '$1,$2');
             
             // 5. 修复多余逗号的问题
             fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
