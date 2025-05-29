@@ -809,7 +809,7 @@
         });
 
         // 解析JSON配置
-        function parseConfiguration() {
+        async function parseConfiguration() {
             const jsonInput = document.getElementById('jsonInput').value.trim();
             const messageDiv = document.getElementById('parseMessage');
             
@@ -821,7 +821,7 @@
             try {
                 // 尝试直接解析
                 const data = JSON.parse(jsonInput);
-                parseSuccessfulData(data);
+                await parseSuccessfulData(data);
                 
             } catch (err) {
                 console.log('直接解析失败，尝试容错修复:', err.message);
@@ -831,8 +831,8 @@
                     const fixedJson = fixJsonErrors(jsonInput);
                     const data = JSON.parse(fixedJson);
                     
-                    showMessage(`⚠️ JSON格式有误，已自动修复并成功解析！`, 'success');
-                    parseSuccessfulData(data);
+                    showMessage(`⚠️ JSON格式有误，已自动修复并成功解析！发现 ${parsedLayers.length} 个图层`, 'success');
+                    await parseSuccessfulData(data);
                     
                 } catch (fixErr) {
                     console.error('容错解析也失败:', fixErr.message);
@@ -884,7 +884,20 @@
         }
 
         // 解析成功后的数据处理
-        function parseSuccessfulData(data) {
+        async function parseSuccessfulData(data) {
+            // 字段名标准化：将cpuTopProcess转换为cpuTopProcessList，gpuTopProcess转换为gpuTopProcessList
+            if (data.cpuTopProcess && !data.cpuTopProcessList) {
+                console.log('检测到cpuTopProcess字段，转换为cpuTopProcessList');
+                data.cpuTopProcessList = data.cpuTopProcess;
+                delete data.cpuTopProcess; // 删除原字段避免重复处理
+            }
+            
+            if (data.gpuTopProcess && !data.gpuTopProcessList) {
+                console.log('检测到gpuTopProcess字段，转换为gpuTopProcessList');
+                data.gpuTopProcessList = data.gpuTopProcess;
+                delete data.gpuTopProcess; // 删除原字段避免重复处理
+            }
+            
             // 解析resolution
             if (data.resolution) {
                 canvasResolution = JSON.parse(data.resolution);
@@ -903,10 +916,10 @@
                 parseObsSourceInfo(JSON.parse(data.obsSourceInfo));
             }
             
-            // 处理资源特征数据
+            // 处理资源特征数据 - 现在只需要检查List格式
             let hasResourceData = false;
-            if (data.cpuTopProcess || data.cpuTopProcessList || data.gpuTopProcess || data.gpuTopProcessList) {
-                generateResourceFeatures(data);
+            if (data.cpuTopProcessList || data.gpuTopProcessList) {
+                await generateResourceFeatures(data);
                 hasResourceData = true;
             }
             
@@ -957,16 +970,29 @@
         function parseObsSourceInfo(obsSourceInfo) {
             let layerIndex = 0;
             
-            // 检测分辨率模式
+            // 检测分辨率模式 - 支持超出画布范围的等比缩放
             const detectedResolution = detectResolutionMode(obsSourceInfo);
             
             // 处理process配置
             if (obsSourceInfo.process) {
                 obsSourceInfo.process.forEach(processSource => {
-                    // 对于OBS配置，所有图层的右下角都对齐到图片右下角
-                    // 计算从左上角到图片右下角的宽度和高度
-                    const obsLayerWidth = canvasResolution.width - processSource.pos.x;
-                    const obsLayerHeight = canvasResolution.height - processSource.pos.y;
+                    // 计算图层的宽度和高度
+                    let obsLayerWidth, obsLayerHeight;
+                    
+                    if (detectedResolution.needsScaling) {
+                        // 超出范围的情况，使用推断的原始分辨率计算
+                        obsLayerWidth = detectedResolution.width - processSource.pos.x;
+                        obsLayerHeight = detectedResolution.height - processSource.pos.y;
+                        console.log(`使用推断分辨率计算尺寸: 原始分辨率${detectedResolution.width}x${detectedResolution.height}, 坐标(${processSource.pos.x}, ${processSource.pos.y}), 计算尺寸(${obsLayerWidth}, ${obsLayerHeight})`);
+                    } else {
+                        // 标准情况，使用当前画布分辨率计算
+                        obsLayerWidth = canvasResolution.width - processSource.pos.x;
+                        obsLayerHeight = canvasResolution.height - processSource.pos.y;
+                    }
+                    
+                    // 确保宽度和高度为正值
+                    obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
+                    obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
                     
                     const convertedCoords = convertObsCoordinates(
                         processSource.pos.x, 
@@ -987,16 +1013,31 @@
                         overlap: calculateOverlap(convertedCoords),
                         pos: processSource.pos
                     });
+                    
+                    console.log(`添加进程图层: ${processSource.name}, 最终坐标: (${convertedCoords[0].toFixed(2)}, ${convertedCoords[1].toFixed(2)}, ${convertedCoords[2].toFixed(2)}, ${convertedCoords[3].toFixed(2)})`);
                 });
             }
             
             // 处理video配置
             if (obsSourceInfo.video) {
                 obsSourceInfo.video.forEach(videoSource => {
-                    // 对于OBS配置，所有图层的右下角都对齐到图片右下角
-                    // 计算从左上角到图片右下角的宽度和高度
-                    const obsLayerWidth = canvasResolution.width - videoSource.pos.x;
-                    const obsLayerHeight = canvasResolution.height - videoSource.pos.y;
+                    // 计算图层的宽度和高度
+                    let obsLayerWidth, obsLayerHeight;
+                    
+                    if (detectedResolution.needsScaling) {
+                        // 超出范围的情况，使用推断的原始分辨率计算
+                        obsLayerWidth = detectedResolution.width - videoSource.pos.x;
+                        obsLayerHeight = detectedResolution.height - videoSource.pos.y;
+                        console.log(`使用推断分辨率计算尺寸: 原始分辨率${detectedResolution.width}x${detectedResolution.height}, 坐标(${videoSource.pos.x}, ${videoSource.pos.y}), 计算尺寸(${obsLayerWidth}, ${obsLayerHeight})`);
+                    } else {
+                        // 标准情况，使用当前画布分辨率计算
+                        obsLayerWidth = canvasResolution.width - videoSource.pos.x;
+                        obsLayerHeight = canvasResolution.height - videoSource.pos.y;
+                    }
+                    
+                    // 确保宽度和高度为正值
+                    obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
+                    obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
                     
                     const convertedCoords = convertObsCoordinates(
                         videoSource.pos.x, 
@@ -1020,61 +1061,137 @@
                         looping: videoSource.looping,
                         pos: videoSource.pos
                     });
+                    
+                    console.log(`添加视频图层: ${videoSource.name}, 最终坐标: (${convertedCoords[0].toFixed(2)}, ${convertedCoords[1].toFixed(2)}, ${convertedCoords[2].toFixed(2)}, ${convertedCoords[3].toFixed(2)})`);
                 });
             }
             
             // otherScenes 已过滤，不进行解析
         }
 
-        // 检测分辨率模式
+        // 检测分辨率模式 - 支持超出画布范围的等比缩放
         function detectResolutionMode(obsSourceInfo) {
             let maxX = 0, maxY = 0;
             
-            // 检查process坐标
-            if (obsSourceInfo.process) {
-                obsSourceInfo.process.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
+            // 遍历所有配置类型，通用检查坐标
+            Object.keys(obsSourceInfo).forEach(sourceType => {
+                // 跳过特殊字段
+                if (['otherScenes', 'auxAudioVolumn', 'desktopAudioVolumn'].includes(sourceType)) {
+                    return;
+                }
+                
+                const sourceData = obsSourceInfo[sourceType];
+                
+                // 检查是否为数组格式的源配置
+                if (Array.isArray(sourceData)) {
+                    sourceData.forEach(source => {
+                        if (source.pos && typeof source.pos === 'object') {
+                            maxX = Math.max(maxX, source.pos.x || 0);
+                            maxY = Math.max(maxY, source.pos.y || 0);
+                        }
+                    });
+                }
+            });
             
-            // 检查video坐标
-            if (obsSourceInfo.video) {
-                obsSourceInfo.video.forEach(item => {
-                    maxX = Math.max(maxX, item.pos.x);
-                    maxY = Math.max(maxY, item.pos.y);
-                });
-            }
+            console.log(`检测到最大坐标: (${maxX}, ${maxY})`);
+            console.log(`当前画布分辨率: ${canvasResolution.width}x${canvasResolution.height}`);
             
-            // 根据最大坐标判断分辨率
-            if (maxX <= 1280 && maxY <= 720) {
-                return { width: 1280, height: 720, name: '720p' };
-            } else if (maxX <= 1920 && maxY <= 1080) {
-                return { width: 1920, height: 1080, name: '1080p' };
-            } else if (maxX <= 2560 && maxY <= 1440) {
-                return { width: 2560, height: 1440, name: '2K' };
+            // 检查是否超出当前画布范围
+            if (maxX > canvasResolution.width || maxY > canvasResolution.height) {
+                // 超出范围，推断原始分辨率并计算缩放比例
+                let detectedWidth, detectedHeight, detectedName;
+                
+                // 根据最大坐标推断可能的原始分辨率
+                if (maxX <= 1280 && maxY <= 720) {
+                    detectedWidth = 1280; detectedHeight = 720; detectedName = '720p';
+                } else if (maxX <= 1920 && maxY <= 1080) {
+                    detectedWidth = 1920; detectedHeight = 1080; detectedName = '1080p';
+                } else if (maxX <= 2560 && maxY <= 1440) {
+                    detectedWidth = 2560; detectedHeight = 1440; detectedName = '2K';
+                } else if (maxX <= 3840 && maxY <= 2160) {
+                    detectedWidth = 3840; detectedHeight = 2160; detectedName = '4K';
+                } else {
+                    // 如果超出4K，使用动态计算
+                    detectedWidth = Math.ceil(maxX / 100) * 100; // 向上取整到百位
+                    detectedHeight = Math.ceil(maxY / 100) * 100;
+                    detectedName = `${detectedWidth}x${detectedHeight}`;
+                }
+                
+                console.log(`检测到坐标超出画布范围，推断原始分辨率: ${detectedWidth}x${detectedHeight} (${detectedName})`);
+                
+                // 计算缩放比例
+                const scaleX = canvasResolution.width / detectedWidth;
+                const scaleY = canvasResolution.height / detectedHeight;
+                const scale = Math.min(scaleX, scaleY); // 使用较小的缩放比例保持宽高比
+                
+                console.log(`计算缩放比例: X轴=${scaleX.toFixed(4)}, Y轴=${scaleY.toFixed(4)}, 最终使用=${scale.toFixed(4)}`);
+                
+                return { 
+                    width: detectedWidth, 
+                    height: detectedHeight, 
+                    name: detectedName,
+                    scale: scale,
+                    needsScaling: true
+                };
             } else {
-                return { width: 3840, height: 2160, name: '4K' };
+                // 未超出范围，使用标准检测逻辑
+                let detectedWidth, detectedHeight, detectedName;
+                
+                if (maxX <= 1280 && maxY <= 720) {
+                    detectedWidth = 1280; detectedHeight = 720; detectedName = '720p';
+                } else if (maxX <= 1920 && maxY <= 1080) {
+                    detectedWidth = 1920; detectedHeight = 1080; detectedName = '1080p';
+                } else if (maxX <= 2560 && maxY <= 1440) {
+                    detectedWidth = 2560; detectedHeight = 1440; detectedName = '2K';
+                } else {
+                    detectedWidth = 3840; detectedHeight = 2160; detectedName = '4K';
+                }
+                
+                console.log(`坐标在画布范围内，检测分辨率: ${detectedWidth}x${detectedHeight} (${detectedName})`);
+                
+                return { 
+                    width: detectedWidth, 
+                    height: detectedHeight, 
+                    name: detectedName,
+                    scale: 1.0,
+                    needsScaling: false
+                };
             }
         }
 
-        // 转换OBS坐标到720p基准
+        // 转换OBS坐标 - 支持等比缩放
         function convertObsCoordinates(x, y, sourceWidth, sourceHeight, detectedResolution) {
-            // 先转换到720p基准
-            const scale720p = 720 / detectedResolution.height;
-            const converted720pX = x * scale720p;
-            const converted720pY = y * scale720p;
-            const converted720pWidth = sourceWidth * scale720p;
-            const converted720pHeight = sourceHeight * scale720p;
-            
-            // 再转换到当前画布分辨率
-            const scaleToCanvas = canvasResolution.height / 720;
-            const finalX = converted720pX * scaleToCanvas;
-            const finalY = converted720pY * scaleToCanvas;
-            const finalWidth = converted720pWidth * scaleToCanvas;
-            const finalHeight = converted720pHeight * scaleToCanvas;
-            
-            return [finalX, finalY, finalWidth, finalHeight];
+            if (detectedResolution.needsScaling) {
+                // 需要等比缩放的情况
+                console.log(`应用等比缩放: 原始坐标(${x}, ${y}), 缩放比例=${detectedResolution.scale.toFixed(4)}`);
+                
+                // 直接应用缩放比例到坐标
+                const scaledX = x * detectedResolution.scale;
+                const scaledY = y * detectedResolution.scale;
+                const scaledWidth = sourceWidth * detectedResolution.scale;
+                const scaledHeight = sourceHeight * detectedResolution.scale;
+                
+                console.log(`缩放后坐标: (${scaledX.toFixed(2)}, ${scaledY.toFixed(2)}, ${scaledWidth.toFixed(2)}, ${scaledHeight.toFixed(2)})`);
+                
+                return [scaledX, scaledY, scaledWidth, scaledHeight];
+            } else {
+                // 标准转换逻辑（通过720p基准）
+                // 先转换到720p基准
+                const scale720p = 720 / detectedResolution.height;
+                const converted720pX = x * scale720p;
+                const converted720pY = y * scale720p;
+                const converted720pWidth = sourceWidth * scale720p;
+                const converted720pHeight = sourceHeight * scale720p;
+                
+                // 再转换到当前画布分辨率
+                const scaleToCanvas = canvasResolution.height / 720;
+                const finalX = converted720pX * scaleToCanvas;
+                const finalY = converted720pY * scaleToCanvas;
+                const finalWidth = converted720pWidth * scaleToCanvas;
+                const finalHeight = converted720pHeight * scaleToCanvas;
+                
+                return [finalX, finalY, finalWidth, finalHeight];
+            }
         }
 
         // 计算覆盖率
@@ -1482,13 +1599,21 @@
         });
 
         // 生成资源特征表格
-        function generateResourceFeatures(data) {
+        async function generateResourceFeatures(data) {
             const container = document.getElementById('resourceTableContainer');
+            
+            // 确保进程库已加载
+            if (processLibrary.length === 0) {
+                console.log('进程库未加载，正在加载...');
+                // 部署版本没有进程库，保持空数组
+                processLibrary = [];
+                console.log('部署版本：进程库为空，所有进程将显示为"未知进程"');
+            }
             
             let cpuTopProcesses = [];
             let gpuTopProcesses = [];
             
-            // 解析CPU进程列表 - 支持多种字段名
+            // 解析CPU进程列表 - 字段已标准化为List格式
             if (data.cpuTopProcessList) {
                 try {
                     const allCpuProcesses = JSON.parse(data.cpuTopProcessList);
@@ -1496,29 +1621,15 @@
                 } catch (e) {
                     console.warn('无法解析cpuTopProcessList:', e);
                 }
-            } else if (data.cpuTopProcess) {
-                try {
-                    const allCpuProcesses = JSON.parse(data.cpuTopProcess);
-                    cpuTopProcesses = allCpuProcesses.slice(0, 5); // 只保留前5个
-                } catch (e) {
-                    console.warn('无法解析cpuTopProcess:', e);
-                }
             }
             
-            // 解析GPU进程列表 - 支持多种字段名
+            // 解析GPU进程列表 - 字段已标准化为List格式
             if (data.gpuTopProcessList) {
                 try {
                     const allGpuProcesses = JSON.parse(data.gpuTopProcessList);
                     gpuTopProcesses = allGpuProcesses.slice(0, 5); // 只保留前5个
                 } catch (e) {
                     console.warn('无法解析gpuTopProcessList:', e);
-                }
-            } else if (data.gpuTopProcess) {
-                try {
-                    const allGpuProcesses = JSON.parse(data.gpuTopProcess);
-                    gpuTopProcesses = allGpuProcesses.slice(0, 5); // 只保留前5个
-                } catch (e) {
-                    console.warn('无法解析gpuTopProcess:', e);
                 }
             }
             
@@ -1529,7 +1640,6 @@
             
             // 计算最大进程数，决定表格列数（最多5个进程）
             const maxProcessCount = Math.max(cpuTopProcesses.length, gpuTopProcesses.length);
-            const totalColumns = maxProcessCount * 3; // 每个进程3列：进程名、标签、占比
             
             let tableHTML = `
                 <table class="resource-table">
@@ -1560,6 +1670,11 @@
                 for (let i = 0; i < maxProcessCount; i++) {
                     if (i < cpuTopProcesses.length) {
                         const process = cpuTopProcesses[i];
+                        console.log(`正在匹配CPU进程: ${process.name}`);
+                        // 部署版本直接显示"未知进程"
+                        const processTypes = ['未知进程'];
+                        console.log(`CPU进程 ${process.name} 匹配结果: ${processTypes.join(', ')}`);
+                        
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${process.name}</td>
                             <td class="process-tag">-</td>
@@ -1585,6 +1700,11 @@
                 for (let i = 0; i < maxProcessCount; i++) {
                     if (i < gpuTopProcesses.length) {
                         const process = gpuTopProcesses[i];
+                        console.log(`正在匹配GPU进程: ${process.name}`);
+                        // 部署版本直接显示"未知进程"
+                        const processTypes = ['未知进程'];
+                        console.log(`GPU进程 ${process.name} 匹配结果: ${processTypes.join(', ')}`);
+                        
                         tableHTML += `
                             <td class="process-name" title="${process.name}">${process.name}</td>
                             <td class="process-tag">-</td>
@@ -1612,6 +1732,7 @@
             
             // 添加调试信息
             console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
+            console.log(`部署版本：进程库状态为空`);
         }
         
         // 显示全局详细信息
