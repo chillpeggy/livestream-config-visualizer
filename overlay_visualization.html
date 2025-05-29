@@ -1623,6 +1623,10 @@
             if (layer.configSource === 'obs') {
                 // OBS配置：优先显示name字段
                 if (layer.name && layer.name.trim()) {
+                    // 对于摄像头类型，如果有deviceId，使用deviceId作为设备描述
+                    if (layer.sourceType === 'camera' && layer.deviceId) {
+                        return `${layer.name} | ${layer.deviceId}`;
+                    }
                     return layer.name;
                 }
             }
@@ -1649,7 +1653,7 @@
             
             // 动态显示所有属性，按重要性排序
             const priorityFields = ['exeName', 'fileName', 'filepath', 'deviceId', 'name', 'id'];
-            const skipFields = ['sourceType', 'configSource', 'layer', 'canvasOverlapRect', 'canvasOverlap', 'overlap', 'pos'];
+            const skipFields = ['sourceType', 'configSource', 'layer', 'canvasOverlapRect', 'canvasOverlap', 'overlap', 'pos', 'realDeviceId'];
             
             // 先显示优先级高的字段
             priorityFields.forEach(field => {
@@ -1659,6 +1663,11 @@
                     html += `<div><strong>${label}:</strong> ${value}</div>`;
                 }
             });
+            
+            // 特殊处理：对于摄像头设备，显示设备ID而不是真实设备ID
+            if (layer.sourceType === 'camera' && layer.realDeviceId) {
+                html += `<div><strong>设备ID:</strong> ${layer.deviceId || layer.realDeviceId}</div>`;
+            }
             
             // 显示覆盖率信息
             if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
@@ -1820,6 +1829,11 @@
             if (layer.exeName) {
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
                 desc += ` | ${processName}`;
+            }
+            
+            // 对于摄像头设备，优先显示deviceId
+            if (layer.sourceType === 'camera' && layer.deviceId) {
+                desc += ` | ${layer.deviceId}`;
             }
             
             // 对于OBS配置，优先显示文件名而不是完整路径
