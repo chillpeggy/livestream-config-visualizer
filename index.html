@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直播配置层级可视化工具</title>
+    <title>💻 直播配置解析</title>
+    <!-- 使用自定义图标 -->
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icon-32.png" type="image/png" sizes="32x32">
+    <link rel="shortcut icon" href="assets/icon-32.png" type="image/png">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -28,6 +32,14 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .header h1 img {
+            width: 40px;
+            height: 40px;
         }
         .header p {
             color: #666;
@@ -103,8 +115,8 @@
   <body>
     <div class="container">
         <div class="header">
-            <h1>📊 直播配置层级可视化工具</h1>
-            <p>支持进程库匹配功能 | 1500+进程识别 | 16种进程类型标签</p>
+            <h1><img src="assets/icon.svg" alt="icon"> 直播配置解析</h1>
+            <p>智能解析直播配置JSON，可视化显示各个源的位置和覆盖范围，让配置一目了然</p>
         </div>
         
         <div class="demo-grid">
@@ -120,11 +132,7 @@
                 <a href="demo-complete.html" class="demo-btn">进程匹配测试</a>
             </div>
             
-            <div class="demo-card">
-                <h3>🔧 调试工具</h3>
-                <p>提供详细的调试信息和日志输出，帮助开发者了解进程匹配的具体过程和排查问题。</p>
-                <a href="test-inline.html" class="demo-btn">调试工具</a>
-            </div>
+            <!-- 调试工具卡片已隐藏 -->
         </div>
         
         <div class="features">
