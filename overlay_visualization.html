@@ -2489,7 +2489,7 @@
             return `
                 <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; border-left: 4px solid #667eea;">
                     <div style="font-weight: bold; font-size: 16px; color: #343a40; margin-bottom: 10px;">🔍 软件类型检测</div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; font-size: 14px; color: #495057;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 30px; font-size: 14px; color: #495057;">
                         <div><strong>人机校验软件:</strong> <span style="color: ${hasHumanVerification ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasHumanVerification ? '是' : '否'}</span></div>
                         <div><strong>AI音频软件:</strong> <span style="color: ${hasAIAudio ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAIAudio ? '是' : '否'}</span></div>
                         <div><strong>自动操作脚本:</strong> <span style="color: ${hasAutoScript ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAutoScript ? '是' : '否'}</span></div>
