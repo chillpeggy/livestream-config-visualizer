@@ -1429,7 +1429,7 @@
                     const imageOffsetX = (containerWidth - actualImageWidth) / 2;
                     const imageOffsetY = (containerHeight - actualImageHeight) / 2;
                     
-                    // 新的坐标计算逻辑：边框坐标系统与图片完全对齐
+                    // 修复坐标计算逻辑：确保边框坐标系统与图片完全对齐
                     // 1. 将配置坐标从canvasResolution缩放到实际图片尺寸
                     const imageScaleX = actualImageWidth / canvasResolution.width;
                     const imageScaleY = actualImageHeight / canvasResolution.height;
@@ -1443,7 +1443,7 @@
                     const containerX = scaledX + imageOffsetX;
                     const containerY = scaledY + imageOffsetY;
                     
-                    // 3. 转换为百分比位置
+                    // 3. 转换为百分比位置（基于容器尺寸）
                     const leftPercent = (containerX / containerWidth * 100).toFixed(2);
                     const topPercent = (containerY / containerHeight * 100).toFixed(2);
                     const widthPercent = (scaledWidth / containerWidth * 100).toFixed(2);
@@ -1467,7 +1467,16 @@
                     label.style.margin = '0';
                     label.style.padding = '4px 6px';
                     
-                    console.log(`图层${layer.layer}坐标计算: 配置坐标(${x}, ${y}, ${width}, ${height}) -> 图片坐标(${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)}) -> 容器百分比(${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
+                    console.log(`图层${layer.layer}坐标计算详情:`);
+                    console.log(`  配置坐标: (${x}, ${y}, ${width}, ${height})`);
+                    console.log(`  画布分辨率: ${canvasResolution.width}x${canvasResolution.height}`);
+                    console.log(`  图片自然尺寸: ${naturalWidth}x${naturalHeight}`);
+                    console.log(`  图片显示尺寸: ${displayWidth}x${displayHeight}`);
+                    console.log(`  图片实际尺寸: ${actualImageWidth.toFixed(1)}x${actualImageHeight.toFixed(1)}`);
+                    console.log(`  图片偏移: (${imageOffsetX.toFixed(1)}, ${imageOffsetY.toFixed(1)})`);
+                    console.log(`  缩放后图片坐标: (${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)})`);
+                    console.log(`  最终容器坐标: (${containerX.toFixed(1)}, ${containerY.toFixed(1)})`);
+                    console.log(`  最终百分比: (${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
                 }
                 
                 // 添加鼠标悬停事件来显示全局详细信息
