@@ -1746,7 +1746,24 @@
                 // 进程类型：使用进程匹配的标签
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
                 const processTypes = matchProcessType(processName);
-                return processTypes.join(' + '); // 多个标签用 + 连接
+                // 如果匹配到的不是"未知进程"，则显示标签
+                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
+                    return processTypes.join(' + '); // 多个标签用 + 连接
+                } else {
+                    // 如果是未知进程，显示进程名
+                    return processName;
+                }
+            } else if (layer.sourceType === 'window' && layer.exeName) {
+                // 窗口类型：显示"窗口 | 进程标签"格式
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                const processTypes = matchProcessType(processName);
+                // 如果匹配到的不是"未知进程"，则显示标签
+                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
+                    return `${sourceTypeNames[layer.sourceType]} | ${processTypes.join(' + ')}`;
+                } else {
+                    // 如果是未知进程，显示进程名
+                    return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
+                }
             } else if (sourceTypeNames[layer.sourceType]) {
                 // 其他源类型：使用友好的中文名称
                 return sourceTypeNames[layer.sourceType];
@@ -1938,7 +1955,21 @@
             // 添加特殊信息
             if (layer.exeName) {
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                desc += ` | ${processName}`;
+                
+                // 对于window层和process层，如果有进程匹配，显示进程标签
+                if ((layer.sourceType === 'window' || layer.sourceType === 'process') && processLibrary.length > 0) {
+                    const processTypes = matchProcessType(processName);
+                    // 如果匹配到的不是"未知进程"，则显示标签
+                    if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
+                        desc += ` | ${processTypes.join(' + ')}`;
+                    } else {
+                        // 如果是未知进程，显示进程名
+                        desc += ` | ${processName}`;
+                    }
+                } else {
+                    // 其他情况或进程库未加载时，显示进程名
+                    desc += ` | ${processName}`;
+                }
             }
             
             // 对于摄像头设备，优先显示deviceId
