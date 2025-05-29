@@ -80,9 +80,12 @@
             padding: 25px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12);
             border: 1px solid #e9ecef;
-            height: 800px; /* 固定高度 */
-            overflow-y: auto; /* 内容超出时滚动 */
+            min-height: 500px; /* 与右侧面板保持一致 */
+            max-height: 90vh; /* 最大高度不超过视窗高度的90% */
+            overflow: hidden; /* 隐藏滚动条 */
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
         .visualization-container h2 {
             margin: 0 0 20px 0;
@@ -91,119 +94,51 @@
             font-weight: bold;
             display: flex;
             align-items: center;
+            justify-content: space-between; /* 标题和控制区分布在两端 */
             gap: 8px;
         }
-        .layer-panel {
-            width: 780px;
-            background: #fff;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-            border: 1px solid #e9ecef;
-            height: 800px; /* 与预览图保持一致的高度 */
-            overflow-y: auto; /* 内容超出时滚动 */
-            box-sizing: border-box;
-        }
-        .layer-panel h2 {
-            margin: 0 0 15px 0;
-            font-size: 22px;
-            color: #343a40;
-        }
-        .layer-panel p {
-            margin: 0 0 20px 0;
-            font-size: 16px;
-            color: #6c757d;
-        }
-        .game-image-container {
-            position: relative;
-            display: inline-block;
-            border: 3px solid #667eea;
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 15px 0;
-            background: #000;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
-        }
-        .game-image {
-            display: block;
-            width: 100%;
-            max-width: 1300px;
-            height: auto;
-            opacity: 0.9;
-        }
-        .layer-overlay {
-            position: absolute;
-            border: 6px dashed; /* 改为虚线边框 */
-            opacity: 0.6;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            pointer-events: auto;
-        }
-        .layer-overlay:hover {
-            opacity: 1;
-            border-style: dashed; /* 悬停时也保持虚线 */
-            border-width: 8px;
-            z-index: 100;
-        }
-        .layer-overlay.hidden {
-            display: none;
-        }
-        .layer-label {
-            position: absolute;
-            color: white; /* 默认白色，会被JavaScript动态设置 */
-            font-size: 16px; /* 增加字体大小提高可见性 */
-            font-weight: bold;
-            padding: 4px 6px; /* 减少内边距 */
-            white-space: nowrap;
-            text-shadow: 
-                2px 2px 4px rgba(0,0,0,1), 
-                -1px -1px 2px rgba(0,0,0,1),
-                1px -1px 2px rgba(0,0,0,1),
-                -1px 1px 2px rgba(0,0,0,1); /* 增强文字阴影，四个方向都有阴影 */
-            z-index: 10;
-            /* 移除背景色、边框和模糊效果，保持透明 */
-        }
-        .layer-details {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 8px 12px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 0 0 4px 4px;
-        }
-        .layer-overlay:hover .layer-details {
-            opacity: 1;
+        .visualization-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .controls {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 8px 12px; /* 减小内边距 */
+            border-radius: 8px; /* 减小圆角 */
+            margin: 0; /* 移除外边距 */
             display: flex;
-            gap: 15px;
+            gap: 10px; /* 减小间距 */
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap; /* 不换行 */
             border: 1px solid rgba(255,255,255,0.3);
+            font-size: 12px; /* 减小字体 */
         }
         .control-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* 减小间距 */
+        }
+        .control-group label {
+            font-size: 11px; /* 减小标签字体 */
+            color: #495057;
+            white-space: nowrap;
+        }
+        #opacityValue {
+            font-size: 11px;
+            color: #495057;
+            min-width: 30px;
         }
         .toggle-btn {
             background: #007bff;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 10px; /* 减小按钮尺寸 */
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 11px; /* 减小字体 */
             transition: background 0.3s;
+            white-space: nowrap; /* 防止文字换行 */
         }
         .toggle-btn:hover {
             background: #0056b3;
@@ -212,8 +147,8 @@
             background: #28a745;
         }
         .opacity-slider {
-            width: 100px;
-            margin: 0 10px;
+            width: 80px; /* 减小滑块宽度 */
+            margin: 0 6px; /* 减小边距 */
         }
         .file-upload {
             padding: 15px;
@@ -336,9 +271,11 @@
             background: #f8f9fa;
             border: 1px solid #dee2e6;
             border-radius: 12px;
-            margin: 15px 0;
+            margin: 15px 0 0 0; /* 移除底部边距 */
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            flex: 1; /* 占用剩余空间 */
+            overflow-y: auto; /* 列表内容可滚动 */
         }
         .config-group-header {
             background: #f8f9fa;
@@ -499,7 +436,7 @@
         .resource-features h2 {
             margin: 0 0 20px 0;
             color: #333;
-            font-size: 22px;
+            font-size: 22px; /* 从20px增加到22px */
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -511,27 +448,28 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            table-layout: fixed; /* 固定表格布局，确保列宽均匀分布 */
         }
         .resource-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 8px 2px;
+            padding: 8px 2px; /* 减少左右内边距，减少留白 */
             text-align: center;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 15px; /* 从13px增加到15px */
             word-wrap: break-word;
-            height: 40px;
+            height: 40px; /* 设置表头高度 */
             vertical-align: middle;
         }
         .resource-table td {
-            padding: 8px 2px;
+            padding: 8px 2px; /* 减少左右内边距，减少留白 */
             text-align: center;
             border-bottom: 1px solid #e9ecef;
             background: #fff;
-            font-size: 14px;
+            font-size: 14px; /* 从12px增加到14px */
             word-wrap: break-word;
             overflow: hidden;
-            height: 50px;
+            height: 50px; /* 设置双行行高 */
             vertical-align: middle;
         }
         .resource-table tr:last-child td {
@@ -541,34 +479,58 @@
             font-weight: bold;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             color: #495057;
+            width: 8%; /* 改为百分比，确保一致性 */
+            min-width: 80px; /* 设置最小宽度 */
         }
         .resource-table .process-name {
             font-family: 'Courier New', monospace;
-            color: #000000;
+            color: #000000; /* 改为更深的黑色 */
             overflow: hidden;
-            white-space: normal;
-            word-break: break-word;
-            font-size: 15px;
-            padding: 4px 1px;
-            line-height: 1.2;
+            white-space: normal; /* 允许换行 */
+            word-break: break-word; /* 长单词可以换行 */
+            font-size: 15px; /* 从13px增加到15px */
+            padding: 4px 1px; /* 减少左右内边距，减少留白 */
+            line-height: 1.2; /* 设置行高 */
         }
         .resource-table .process-tag {
             color: #6c757d;
-            font-style: italic;
+            font-style: normal; /* 移除斜体 */
+            padding: 0; /* 移除内边距 */
         }
         .resource-table .process-tag .process-tag-badge {
-            font-size: 13px !important;
-            padding: 3px 5px !important;
+            font-size: 13px !important; /* 从11px增加到13px */
+            padding: 3px 5px !important; /* 适当增加标签内边距 */
         }
         .resource-table .process-percentage {
             font-weight: bold;
             color: #e74c3c;
-            font-size: 14px;
+            font-size: 14px; /* 从12px增加到14px */
         }
         .resource-table .process-empty {
             color: #adb5bd;
             font-style: italic;
             background: #f8f9fa;
+        }
+        
+        /* 响应式设计：当屏幕较小时，使用水平滚动 */
+        .resource-features {
+            overflow-x: auto;
+        }
+        
+        /* 当有5个进程时的特殊样式 */
+        .resource-table.five-processes th,
+        .resource-table.five-processes td {
+            padding: 6px 1px; /* 减少左右内边距，减少留白 */
+            font-size: 13px; /* 从11px增加到13px */
+        }
+        
+        .resource-table.five-processes .process-name {
+            font-size: 14px; /* 从12px增加到14px */
+        }
+        
+        .resource-table.five-processes .process-tag .process-tag-badge {
+            font-size: 12px !important; /* 从10px增加到12px */
+            padding: 2px 4px !important;
         }
         .resource-features .empty-state {
             text-align: center;
@@ -578,10 +540,125 @@
         }
         .layer-panel-container {
             display: grid;
-            grid-template-columns: 1fr 780px;
+            grid-template-columns: 3fr 2fr; /* 改为固定的3:2比例 */
             gap: 20px;
             width: 100%; /* 确保占满容器宽度 */
             box-sizing: border-box;
+            align-items: stretch; /* 改为拉伸对齐，确保等高 */
+            min-height: 500px; /* 增加最小高度 */
+            max-height: 90vh; /* 最大高度 */
+        }
+        .layer-panel {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            min-height: 500px; /* 与左侧面板保持一致 */
+            max-height: 90vh; /* 最大高度不超过视窗高度的90% */
+            overflow-y: auto; /* 内容超出时滚动 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .layer-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            color: #343a40;
+        }
+        .layer-panel p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #6c757d;
+        }
+        .game-image-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0 0 0; /* 移除底部边距 */
+            background: transparent; /* 改为透明背景 */
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+            flex: 1; /* 占用剩余空间 */
+            min-height: 300px; /* 最小高度 */
+            width: 100%;
+            height: 100%;
+        }
+        .game-image {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* 保持宽高比，完整显示 */
+            object-position: center; /* 居中显示 */
+            opacity: 0.9;
+        }
+        .layer-overlays {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 允许点击穿透到图片 */
+        }
+        .layer-overlay {
+            position: absolute;
+            border: 6px dashed; /* 改为虚线边框 */
+            opacity: 0.7; /* 增加透明度 */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            pointer-events: auto; /* 恢复叠加层的点击事件 */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); /* 添加阴影增强可见性 */
+        }
+        .layer-overlay:hover {
+            opacity: 1;
+            border-style: dashed; /* 悬停时也保持虚线 */
+            border-width: 8px; /* 悬停时进一步增加边框宽度 */
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(0,0,0,0.7); /* 悬停时增强阴影 */
+        }
+        .layer-overlay.hidden {
+            display: none;
+        }
+        .layer-label {
+            position: absolute;
+            color: white; /* 默认白色，会被JavaScript动态设置 */
+            font-size: 16px; /* 增加字体大小提高可见性 */
+            font-weight: bold;
+            padding: 4px 6px; /* 减少内边距 */
+            white-space: nowrap;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,1), 
+                -1px -1px 2px rgba(0,0,0,1),
+                1px -1px 2px rgba(0,0,0,1),
+                -1px 1px 2px rgba(0,0,0,1); /* 增强文字阴影，四个方向都有阴影 */
+            z-index: 10;
+            /* 移除背景色、边框和模糊效果，保持透明 */
+        }
+        .layer-details {
+            position: fixed; /* 改为固定定位 */
+            top: 50%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 精确居中 */
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 20px; /* 增加内边距 */
+            font-size: 14px; /* 增大字体 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px; /* 增加圆角 */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /* 添加阴影 */
+            z-index: 1000; /* 确保在最上层 */
+            max-width: 400px; /* 限制最大宽度 */
+            min-width: 250px; /* 设置最小宽度 */
+            pointer-events: none; /* 防止阻挡鼠标事件 */
+        }
+        .layer-overlay:hover .layer-details {
+            opacity: 1;
         }
         
         /* 隐藏类样式 */
@@ -604,13 +681,13 @@
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             z-index: 1000;
-            max-width: 400px;
-            min-width: auto;
-            width: auto;
+            max-width: 400px; /* 设置合理的最大宽度 */
+            min-width: auto; /* 移除最小宽度限制 */
+            width: auto; /* 自适应宽度 */
             pointer-events: none;
             display: none;
-            white-space: normal;
-            line-height: 1.4;
+            white-space: normal; /* 允许文本换行 */
+            line-height: 1.4; /* 设置行高提高可读性 */
         }
         
         .global-layer-details.show {
@@ -620,11 +697,11 @@
         
         /* 详细信息内部样式 */
         .global-layer-details div {
-            margin-bottom: 4px;
+            margin-bottom: 4px; /* 行间距 */
         }
         
         .global-layer-details div:last-child {
-            margin-bottom: 0;
+            margin-bottom: 0; /* 最后一行不需要底部间距 */
         }
     </style>
 </head>
@@ -702,21 +779,25 @@
             
             <div class="layer-panel-container">
                 <div class="visualization-container">
-                    <h2>🖼️ 解析预览图</h2>
-                    <div class="controls">
-                        <div class="control-group">
-                            <label>🎛️ 叠加层透明度:</label>
-                            <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.7" onchange="updateOpacity(this.value)">
-                            <span id="opacityValue">70%</span>
+                    <h2>
+                        <div class="visualization-title">
+                            🖼️ 解析预览图
                         </div>
-                        <div class="control-group">
-                            <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
-                            <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                        <div class="controls">
+                            <div class="control-group">
+                                <label>🎛️ 叠加层透明度:</label>
+                                <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.7" onchange="updateOpacity(this.value)">
+                                <span id="opacityValue">70%</span>
+                            </div>
+                            <div class="control-group">
+                                <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
+                                <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                            </div>
                         </div>
-                    </div>
+                    </h2>
                     
                     <div class="game-image-container" id="gameContainer">
-                        <img class="game-image" id="gameImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTkyMCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiBmaWxsPSIjZjhmOWZhIi8+Cjx0ZXh0IHg9Ijk2MCIgeT0iNTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LXNpemU9IjM2IiBmb250LWZhbWlseT0iQXJpYWwiPuivt+S4iuS8oOW6lembs+WSjOWkhOWtmemFjee9rjwvdGV4dD4KPHR4dCB4PSI5NjAiIHk9IjU2MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIj7miJjlsIbnjqnlrr3lj6/op4blhpnlm77lsYI8L3RleHQ+Cjwvc3ZnPg==" alt="等待上传底图">
+                        <img class="game-image" id="gameImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTkyMCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9InRyYW5zcGFyZW50IiBzdHJva2U9IiNkZWUyZTYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWRhc2hhcnJheT0iMjAgMTAiLz48dGV4dCB4PSI5NjAiIHk9IjU0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzZjNzU3ZCIgZm9udC1zaXplPSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBNaWNyb3NvZnQgWWFIZWksIHNhbnMtc2VyaWYiPui/memHjOS8muWxleekuuino+aekOWQjueahOekuuaEj+WbvjwvdGV4dD48L3N2Zz4K" alt="等待上传底图">
                         
                         <!-- 动态生成的层级叠加覆盖层 -->
                         <div class="layer-overlays" id="layerOverlays">
@@ -746,6 +827,120 @@
         let currentSelectedLayer = 'all';
         let parsedLayers = [];
         let canvasResolution = { width: 1920, height: 1080 };
+        let processLibrary = []; // 进程库数据
+        
+        // 标签颜色样式配置
+        const tagStyles = {
+            '游戏进程': { background: '#40c057', color: '#000000' }, // 调浅绿色底色
+            '浏览器进程': { background: '#007bff', color: '#ffffff' }, // 蓝色
+            '视频播放器进程': { background: '#6f42c1', color: '#ffffff' }, // 紫色
+            '手机投屏进程': { background: '#fd7e14', color: '#ffffff' }, // 橙色
+            '安卓模拟器': { background: '#20c997', color: '#ffffff' }, // 青色
+            '串流作弊进程': { background: '#dc3545', color: '#ffffff' }, // 红色
+            '弹幕爬取进程': { background: '#ffc107', color: '#000000' }, // 黄色，黑字
+            '人机校验作弊进程': { background: '#6c757d', color: '#ffffff' }, // 灰色
+            '音频录制AI互动进程': { background: '#e83e8c', color: '#ffffff' }, // 粉色
+            '自动操作脚本': { background: '#795548', color: '#ffffff' }, // 棕色
+            '游戏外挂作弊': { background: '#8b0000', color: '#ffffff' }, // 深红色
+            '伴侣进程': { background: '#17a2b8', color: '#ffffff' }, // 蓝绿色
+            '私服进程': { background: '#ff5722', color: '#ffffff' }, // 深橙色
+            '盗号进程': { background: '#9c27b0', color: '#ffffff' }, // 深紫色
+            '黑产进程': { background: '#212529', color: '#ffffff' }, // 深黑色
+            '非脚本进程': { background: '#607d8b', color: '#ffffff' }, // 蓝灰色
+            '未知进程': { background: '#adb5bd', color: '#000000' } // 浅灰色，黑字
+        };
+        
+        // 页面加载时加载进程库
+        window.addEventListener('load', function() {
+            loadProcessLibrary();
+        });
+        
+        // 加载进程库CSV文件
+        async function loadProcessLibrary() {
+            try {
+                const response = await fetch('process-library.csv');
+                const csvText = await response.text();
+                parseCSV(csvText);
+                console.log(`进程库加载成功，共 ${processLibrary.length} 条记录`);
+            } catch (error) {
+                console.warn('进程库加载失败:', error);
+                // 即使加载失败也不影响主要功能
+            }
+        }
+        
+        // 解析CSV数据
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            
+            processLibrary = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // 跳过空行
+                
+                const values = line.split(',');
+                if (values.length >= 2 && values[0].trim() && values[1].trim()) {
+                    processLibrary.push({
+                        exe: values[0].trim(),
+                        type: values[1].trim()
+                    });
+                }
+            }
+        }
+        
+        // 进程名模糊匹配 - 返回所有匹配的标签
+        function matchProcessType(processName) {
+            if (!processName || processLibrary.length === 0) {
+                console.log('匹配失败: processName =', processName, ', processLibrary.length =', processLibrary.length);
+                return ['未知进程'];
+            }
+            
+            // 移除.exe后缀进行匹配
+            const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
+            console.log('匹配进程:', processName, '→', cleanProcessName);
+            
+            let matchedTypes = [];
+            
+            // 精确匹配 - 收集所有匹配项
+            const exactMatches = processLibrary.filter(item => 
+                item.exe.toLowerCase() === processName.toLowerCase() ||
+                item.exe.toLowerCase() === cleanProcessName
+            );
+            
+            if (exactMatches.length > 0) {
+                matchedTypes = exactMatches.map(match => match.type);
+                console.log('精确匹配成功:', exactMatches);
+            } else {
+                // 模糊匹配（包含关系） - 收集所有匹配项
+                const fuzzyMatches = processLibrary.filter(item => 
+                    cleanProcessName.includes(item.exe.toLowerCase()) ||
+                    item.exe.toLowerCase().includes(cleanProcessName)
+                );
+                
+                if (fuzzyMatches.length > 0) {
+                    matchedTypes = fuzzyMatches.map(match => match.type);
+                    console.log('模糊匹配成功:', fuzzyMatches);
+                } else {
+                    console.log('匹配失败，进程库前5条:', processLibrary.slice(0, 5));
+                    matchedTypes = ['未知进程'];
+                }
+            }
+            
+            // 去重
+            return [...new Set(matchedTypes)];
+        }
+        
+        // 生成标签HTML - 支持多个标签
+        function generateTagHTML(tagTypes) {
+            // 如果是字符串，转换为数组
+            if (typeof tagTypes === 'string') {
+                tagTypes = [tagTypes];
+            }
+            
+            return tagTypes.map(tagType => {
+                const style = tagStyles[tagType] || { background: '#6c757d', color: '#ffffff' };
+                return `<span class="process-tag-badge" style="background: ${style.background}; color: ${style.color}; padding: 3px 5px; border-radius: 12px; font-size: 13px; font-family: 'Microsoft YaHei', sans-serif; font-weight: 500; white-space: nowrap; display: inline-block; margin-right: 4px;">${tagType}</span>`;
+            }).join('');
+        }
         
         // 层级颜色映射 - 扩展到50种鲜明易分辨的颜色
         const layerColors = [
@@ -810,13 +1005,27 @@
             return layerColors[layerIndex % layerColors.length];
         }
 
-        // 源类型中文映射
+        // 源类型中文映射 - 扩展版本
         const sourceTypeNames = {
             'camera': '摄像头',
+            'captureCard': '采集卡',
             'process': '进程',
             'text': '文本',
             'screenshot': '截图',
-            'video': '视频'
+            'video': '视频',
+            'image': '图片',
+            'fullscreen': '显示器投屏',
+            'audio': '音频',
+            'microphone': '麦克风',
+            'desktop': '桌面',
+            'window': '窗口',
+            'browser': '浏览器',
+            'media': '媒体',
+            'stream': '流媒体',
+            'overlay': '叠加层',
+            'filter': '滤镜',
+            'transition': '转场',
+            'scene': '场景'
         };
 
         // 图片上传处理
@@ -980,21 +1189,29 @@
             console.log('开始JSON容错修复...');
             
             // 1. 修复开头缺少双引号的问题
+            // 匹配 {字母 而不是 {"字母
             fixed = fixed.replace(/^(\s*\{)([a-zA-Z_][a-zA-Z0-9_]*")/g, '$1"$2');
             
             // 2. 修复属性名缺少双引号的问题
+            // 匹配 ,字母: 或 {字母: 而不是 ,"字母": 或 {"字母":
             fixed = fixed.replace(/([,{]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
             
             // 3. 修复多余的反斜杠问题
+            // 将 \\\\\\\\替换为 \\\\
             fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
             
             // 4. 修复缺少逗号的问题
+            // 在 }" 和 "字母 之间添加逗号
             fixed = fixed.replace(/("\s*})\s*(")/g, '$1,$2');
             
             // 5. 修复多余逗号的问题
+            // 移除 ,} 和 ,] 中的多余逗号
             fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
             
-            // 6. 修复缺少结束括号的问题
+            // 6. 修复未闭合的引号
+            // 这个比较复杂，先处理简单情况
+            
+            // 7. 修复缺少结束括号的问题
             const openBraces = (fixed.match(/\{/g) || []).length;
             const closeBraces = (fixed.match(/\}/g) || []).length;
             if (openBraces > closeBraces) {
@@ -1002,7 +1219,7 @@
                 console.log('添加了缺少的结束括号');
             }
             
-            // 7. 修复缺少开始括号的问题
+            // 8. 修复缺少开始括号的问题
             if (closeBraces > openBraces) {
                 fixed = '{' + fixed;
                 console.log('添加了缺少的开始括号');
@@ -1124,6 +1341,12 @@
         // 解析sourceInfo格式
         function parseSourceInfo(sourceInfo) {
             Object.keys(sourceInfo).forEach(sourceType => {
+                // 过滤掉pipe源，不进行解析
+                if (sourceType === 'pipe') {
+                    console.log('过滤掉pipe源，不进行展示');
+                    return;
+                }
+                
                 const sourceData = sourceInfo[sourceType];
                 if (sourceData.sourceList) {
                     sourceData.sourceList.forEach(source => {
@@ -1138,107 +1361,91 @@
             });
         }
 
-        // 解析obsSourceInfo格式
+        // 解析obsSourceInfo格式 - 通用版本
         function parseObsSourceInfo(obsSourceInfo) {
             let layerIndex = 0;
             
-            // 检测分辨率模式 - 支持超出画布范围的等比缩放
+            // 检测分辨率模式
             const detectedResolution = detectResolutionMode(obsSourceInfo);
             
-            // 处理process配置
-            if (obsSourceInfo.process) {
-                obsSourceInfo.process.forEach(processSource => {
-                    // 计算图层的宽度和高度
-                    let obsLayerWidth, obsLayerHeight;
+            // 遍历所有配置类型，通用处理
+            Object.keys(obsSourceInfo).forEach(sourceType => {
+                // 跳过特殊字段
+                if (['otherScenes', 'auxAudioVolumn', 'desktopAudioVolumn'].includes(sourceType)) {
+                    console.log(`跳过特殊字段: ${sourceType}`);
+                    return;
+                }
+                
+                const sourceData = obsSourceInfo[sourceType];
+                
+                // 检查是否为数组格式的源配置
+                if (Array.isArray(sourceData)) {
+                    console.log(`处理源类型: ${sourceType}, 数量: ${sourceData.length}`);
                     
-                    if (detectedResolution.needsScaling) {
-                        // 超出范围的情况，使用推断的原始分辨率计算
-                        obsLayerWidth = detectedResolution.width - processSource.pos.x;
-                        obsLayerHeight = detectedResolution.height - processSource.pos.y;
-                        console.log(`使用推断分辨率计算尺寸: 原始分辨率${detectedResolution.width}x${detectedResolution.height}, 坐标(${processSource.pos.x}, ${processSource.pos.y}), 计算尺寸(${obsLayerWidth}, ${obsLayerHeight})`);
-                    } else {
-                        // 标准情况，使用当前画布分辨率计算
-                        obsLayerWidth = canvasResolution.width - processSource.pos.x;
-                        obsLayerHeight = canvasResolution.height - processSource.pos.y;
-                    }
-                    
-                    // 确保宽度和高度为正值
-                    obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
-                    obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
-                    
-                    const convertedCoords = convertObsCoordinates(
-                        processSource.pos.x, 
-                        processSource.pos.y, 
-                        obsLayerWidth, 
-                        obsLayerHeight,
-                        detectedResolution
-                    );
-                    
-                    parsedLayers.push({
-                        sourceType: 'process',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: processSource.name || processSource.exeName || '进程源',
-                        exeName: processSource.exeName,
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        pos: processSource.pos
+                    sourceData.forEach(source => {
+                        // 检查是否有位置信息
+                        if (source.pos && typeof source.pos === 'object') {
+                            // 计算图层的宽度和高度
+                            let obsLayerWidth, obsLayerHeight;
+                            
+                            if (detectedResolution.needsScaling) {
+                                // 超出范围的情况，使用推断的原始分辨率计算
+                                obsLayerWidth = detectedResolution.width - (source.pos.x || 0);
+                                obsLayerHeight = detectedResolution.height - (source.pos.y || 0);
+                                console.log(`使用推断分辨率计算尺寸: 原始分辨率${detectedResolution.width}x${detectedResolution.height}, 坐标(${source.pos.x}, ${source.pos.y}), 计算尺寸(${obsLayerWidth}, ${obsLayerHeight})`);
+                            } else {
+                                // 标准情况，使用当前画布分辨率计算
+                                obsLayerWidth = canvasResolution.width - (source.pos.x || 0);
+                                obsLayerHeight = canvasResolution.height - (source.pos.y || 0);
+                            }
+                            
+                            // 确保宽度和高度为正值
+                            obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
+                            obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
+                            
+                            const convertedCoords = convertObsCoordinates(
+                                source.pos.x || 0, 
+                                source.pos.y || 0, 
+                                obsLayerWidth, 
+                                obsLayerHeight,
+                                detectedResolution
+                            );
+                            
+                            // 通用的图层对象创建
+                            const layerObj = {
+                                sourceType: sourceType, // 保持原始类型名
+                                configSource: 'obs',
+                                name: source.name || `${sourceTypeNames[sourceType] || sourceType}源`,
+                                layer: layerIndex++,
+                                canvasOverlapRect: convertedCoords,
+                                canvasOverlap: calculateOverlap(convertedCoords),
+                                overlap: calculateOverlap(convertedCoords),
+                                pos: source.pos
+                            };
+                            
+                            // 动态添加所有源对象的属性
+                            Object.keys(source).forEach(key => {
+                                if (!['pos'].includes(key)) { // 排除已处理的字段
+                                    layerObj[key] = source[key];
+                                }
+                            });
+                            
+                            // 特殊处理文件路径
+                            if (source.filepath) {
+                                layerObj.fileName = source.filepath.split('/').pop();
+                                layerObj.filepath = source.filepath;
+                            }
+                            
+                            parsedLayers.push(layerObj);
+                            console.log(`添加图层: ${sourceType} - ${layerObj.name}, 最终坐标: (${convertedCoords[0].toFixed(2)}, ${convertedCoords[1].toFixed(2)}, ${convertedCoords[2].toFixed(2)}, ${convertedCoords[3].toFixed(2)})`);
+                        } else {
+                            console.log(`跳过无位置信息的源: ${sourceType} - ${source.name || 'unnamed'}`);
+                        }
                     });
-                    
-                    console.log(`添加进程图层: ${processSource.name}, 最终坐标: (${convertedCoords[0].toFixed(2)}, ${convertedCoords[1].toFixed(2)}, ${convertedCoords[2].toFixed(2)}, ${convertedCoords[3].toFixed(2)})`);
-                });
-            }
-            
-            // 处理video配置
-            if (obsSourceInfo.video) {
-                obsSourceInfo.video.forEach(videoSource => {
-                    // 计算图层的宽度和高度
-                    let obsLayerWidth, obsLayerHeight;
-                    
-                    if (detectedResolution.needsScaling) {
-                        // 超出范围的情况，使用推断的原始分辨率计算
-                        obsLayerWidth = detectedResolution.width - videoSource.pos.x;
-                        obsLayerHeight = detectedResolution.height - videoSource.pos.y;
-                        console.log(`使用推断分辨率计算尺寸: 原始分辨率${detectedResolution.width}x${detectedResolution.height}, 坐标(${videoSource.pos.x}, ${videoSource.pos.y}), 计算尺寸(${obsLayerWidth}, ${obsLayerHeight})`);
-                    } else {
-                        // 标准情况，使用当前画布分辨率计算
-                        obsLayerWidth = canvasResolution.width - videoSource.pos.x;
-                        obsLayerHeight = canvasResolution.height - videoSource.pos.y;
-                    }
-                    
-                    // 确保宽度和高度为正值
-                    obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
-                    obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
-                    
-                    const convertedCoords = convertObsCoordinates(
-                        videoSource.pos.x, 
-                        videoSource.pos.y, 
-                        obsLayerWidth, 
-                        obsLayerHeight,
-                        detectedResolution
-                    );
-                    
-                    parsedLayers.push({
-                        sourceType: 'video',
-                        configSource: 'obs', // 标识来源为OBS
-                        name: videoSource.name || '视频源',
-                        fileName: videoSource.filepath ? videoSource.filepath.split('/').pop() : '',
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
-                        volume: videoSource.volume,
-                        fileSize: videoSource.fileSize,
-                        looping: videoSource.looping,
-                        pos: videoSource.pos
-                    });
-                    
-                    console.log(`添加视频图层: ${videoSource.name}, 最终坐标: (${convertedCoords[0].toFixed(2)}, ${convertedCoords[1].toFixed(2)}, ${convertedCoords[2].toFixed(2)}, ${convertedCoords[3].toFixed(2)})`);
-                });
-            }
-            
-            // otherScenes 已过滤，不进行解析
+                } else {
+                    console.log(`跳过非数组格式的字段: ${sourceType}`);
+                }
+            });
         }
 
         // 检测分辨率模式 - 支持超出画布范围的等比缩放
@@ -1405,6 +1612,30 @@
                 const gameContainer = document.getElementById('gameContainer');
                 
                 function calculateAndSetOverlayPosition() {
+                    // 预检查：确保DOM完全稳定
+                    const preCheck = {
+                        containerWidth: gameContainer.offsetWidth,
+                        containerHeight: gameContainer.offsetHeight,
+                        imageWidth: gameImage.offsetWidth,
+                        imageHeight: gameImage.offsetHeight,
+                        naturalWidth: gameImage.naturalWidth,
+                        naturalHeight: gameImage.naturalHeight
+                    };
+                    
+                    console.log(`🔍 坐标计算预检查 - 图层${layer.layer}:`);
+                    console.log(`  容器尺寸: ${preCheck.containerWidth}x${preCheck.containerHeight}`);
+                    console.log(`  图片显示尺寸: ${preCheck.imageWidth}x${preCheck.imageHeight}`);
+                    console.log(`  图片自然尺寸: ${preCheck.naturalWidth}x${preCheck.naturalHeight}`);
+                    
+                    // 如果任何关键尺寸为0，延迟重试
+                    if (preCheck.containerWidth === 0 || preCheck.containerHeight === 0 || 
+                        preCheck.imageWidth === 0 || preCheck.imageHeight === 0 ||
+                        preCheck.naturalWidth === 0 || preCheck.naturalHeight === 0) {
+                        console.log(`⚠️ DOM尺寸不稳定，延迟50ms重试`);
+                        setTimeout(calculateAndSetOverlayPosition, 50);
+                        return;
+                    }
+                    
                     // 获取容器尺寸
                     const containerRect = gameContainer.getBoundingClientRect();
                     const containerWidth = containerRect.width - 6; // 减去边框宽度
@@ -1536,6 +1767,21 @@
                     }
                 }
                 
+                // 获取友好的显示名称
+                let displayName = getLayerDisplayName(layer);
+                
+                // 创建标签
+                const label = document.createElement('div');
+                label.className = 'layer-label';
+                label.style.color = color; // 设置文字颜色为边框颜色
+                label.style.background = 'transparent'; // 透明背景
+                label.textContent = `L${layer.layer}: ${displayName}`;
+                
+                // 给标签添加标识符，与边框保持一致
+                label.setAttribute('data-layer', layer.layer);
+                label.setAttribute('data-unique-id', uniqueLayerId);
+                label.setAttribute('data-config-source', layer.configSource);
+                
                 // 添加鼠标悬停事件来显示全局详细信息
                 overlayDiv.addEventListener('mouseenter', function() {
                     showGlobalLayerDetails(layer);
@@ -1545,49 +1791,138 @@
                     hideGlobalLayerDetails();
                 });
                 
-                // 创建标签
-                const label = document.createElement('div');
-                label.className = 'layer-label';
-                label.style.color = color; // 设置文字颜色为边框颜色
-                label.style.background = 'transparent'; // 透明背景
-                label.textContent = `L${layer.layer}: ${layer.name}`;
-                
-                // 给标签添加标识符，与边框保持一致
-                label.setAttribute('data-layer', layer.layer);
-                label.setAttribute('data-unique-id', uniqueLayerId);
-                label.setAttribute('data-config-source', layer.configSource);
-                
+                // 不再创建和添加layer-details元素，只使用全局详细信息
                 overlaysContainer.appendChild(overlayDiv);
                 overlaysContainer.appendChild(label); // 将标签直接添加到容器中
                 
                 // 等待图片加载完成后再计算位置
-                if (gameImage.complete && gameImage.naturalWidth > 0) {
-                    calculateAndSetOverlayPosition();
-                } else {
-                    gameImage.onload = calculateAndSetOverlayPosition;
+                function ensureCalculatePosition() {
+                    // 增强的稳定性检查
+                    const isImageReady = gameImage.complete && gameImage.naturalWidth > 0;
+                    const isDOMReady = gameImage.offsetWidth > 0 && gameImage.offsetHeight > 0;
+                    const isContainerReady = gameContainer.offsetWidth > 0 && gameContainer.offsetHeight > 0;
+                    
+                    console.log(`🔍 DOM稳定性检查:`);
+                    console.log(`  图片加载完成: ${isImageReady}`);
+                    console.log(`  图片尺寸可用: ${isDOMReady} (${gameImage.offsetWidth}x${gameImage.offsetHeight})`);
+                    console.log(`  容器尺寸可用: ${isContainerReady} (${gameContainer.offsetWidth}x${gameContainer.offsetHeight})`);
+                    
+                    if (isImageReady && isDOMReady && isContainerReady) {
+                        // 所有条件满足，但仍然延迟一小段时间确保CSS完全应用
+                        setTimeout(() => {
+                            console.log(`🎯 开始计算图层${layer.layer}的坐标位置`);
+                            calculateAndSetOverlayPosition();
+                        }, 50); // 50ms延迟确保CSS稳定
+                    } else {
+                        // 如果还没准备好，再次检查
+                        setTimeout(ensureCalculatePosition, 20);
+                    }
                 }
-            });
+                
+                // 无论图片状态如何，都使用增强的检查逻辑
+                ensureCalculatePosition();
+                
+                // 同时保留原有的load事件作为备用
+                if (!gameImage.complete) {
+                    gameImage.onload = function() {
+                        console.log(`📸 图片load事件触发，准备重新计算`);
+                        setTimeout(ensureCalculatePosition, 30);
+                    };
+                }
+            }
         }
 
-        // 生成详细信息HTML
+        // 标签定位函数 - 与图片坐标系统对齐，边框(0,0)对应图片左上角
+        function positionLabelAtLayerOrigin(label, leftPercent, topPercent) {
+            // 标签使用与边框相同的坐标系统，完全基于图片坐标
+            // leftPercent 和 topPercent 是边框在容器中的百分比位置
+            label.style.left = `${leftPercent}%`;
+            label.style.top = `${topPercent}%`;
+            label.style.position = 'absolute';
+            label.style.zIndex = '20'; // 确保标签在最上层
+            label.style.transform = 'translate(0, 0)'; // 确保没有额外的偏移
+            label.style.margin = '0'; // 移除任何边距
+            label.style.padding = '4px 6px'; // 保持内边距
+            
+            console.log(`标签定位到图层边框左上角: (${leftPercent}%, ${topPercent}%)`);
+        }
+
+        // 获取图层显示名称
+        function getLayerDisplayName(layer) {
+            if (layer.configSource === 'obs') {
+                // OBS配置：优先显示name字段，保持原名称不变
+                if (layer.name && layer.name.trim()) {
+                    return layer.name;
+                }
+            }
+            
+            // 其他情况的处理逻辑
+            if (layer.sourceType === 'process' && layer.exeName) {
+                // 进程类型：使用进程匹配的标签
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                const processTypes = matchProcessType(processName);
+                // 如果匹配到的不是"未知进程"，则显示标签
+                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
+                    return processTypes.join(' + '); // 多个标签用 + 连接
+                } else {
+                    // 如果是未知进程，显示进程名
+                    return processName;
+                }
+            } else if (layer.sourceType === 'window' && layer.exeName) {
+                // 窗口类型：显示"窗口 | 进程标签"格式
+                const processName = layer.exeName.split(':').pop() || layer.exeName;
+                const processTypes = matchProcessType(processName);
+                // 如果匹配到的不是"未知进程"，则显示标签
+                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
+                    return `${sourceTypeNames[layer.sourceType]} | ${processTypes.join(' + ')}`;
+                } else {
+                    // 如果是未知进程，显示进程名
+                    return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
+                }
+            } else if (sourceTypeNames[layer.sourceType]) {
+                // 其他源类型：使用友好的中文名称
+                return sourceTypeNames[layer.sourceType];
+            }
+            
+            // 默认返回原始名称或类型
+            return layer.name || `${sourceTypeNames[layer.sourceType] || layer.sourceType}源`;
+        }
+
+        // 生成详细信息HTML - 通用版本
         function generateDetailsHTML(layer) {
             let html = `<div><strong>类型:</strong> ${sourceTypeNames[layer.sourceType] || layer.sourceType}</div>`;
             html += `<div><strong>层级:</strong> 第${layer.layer}层</div>`;
             
-            if (layer.exeName) {
-                const processName = layer.exeName.split(':').pop() || layer.exeName;
-                html += `<div><strong>进程:</strong> ${processName}</div>`;
-            }
-            if (layer.fileName) html += `<div><strong>文件:</strong> ${layer.fileName}</div>`;
-            if (layer.name && layer.name !== layer.fileName) html += `<div><strong>名称:</strong> ${layer.name}</div>`;
+            // 动态显示所有属性，按重要性排序
+            const priorityFields = ['exeName', 'fileName', 'filepath', 'deviceId', 'name', 'id'];
+            const skipFields = ['sourceType', 'configSource', 'layer', 'canvasOverlapRect', 'canvasOverlap', 'overlap', 'pos', 'realDeviceId'];
             
-            // 特殊处理：对于摄像头设备，显示设备ID
-            if (layer.sourceType === 'camera') {
-                if (layer.deviceId) html += `<div><strong>设备ID:</strong> ${layer.deviceId}</div>`;
-                if (layer.realDeviceId) html += `<div><strong>设备ID:</strong> ${layer.deviceId || layer.realDeviceId}</div>`;
+            // 先显示优先级高的字段
+            priorityFields.forEach(field => {
+                if (layer[field] !== undefined && layer[field] !== null && layer[field] !== '') {
+                    const value = field === 'exeName' ? (layer[field].split(':').pop() || layer[field]) : layer[field];
+                    const label = getFieldLabel(field);
+                    html += `<div><strong>${label}:</strong> ${value}</div>`;
+                }
+            });
+            
+            // 特殊处理：对于摄像头设备，显示设备ID而不是真实设备ID
+            if (layer.sourceType === 'camera' && layer.realDeviceId) {
+                html += `<div><strong>设备ID:</strong> ${layer.deviceId || layer.realDeviceId}</div>`;
             }
             
+            // 显示覆盖率信息
             if (layer.canvasOverlap !== undefined) html += `<div><strong>画面占比:</strong> ${(layer.canvasOverlap * 100).toFixed(1)}%</div>`;
+            if (layer.overlap !== undefined) html += `<div><strong>原始占比:</strong> ${(layer.overlap * 100).toFixed(1)}%</div>`;
+            
+            // 显示其他所有字段
+            Object.keys(layer).forEach(field => {
+                if (!priorityFields.includes(field) && !skipFields.includes(field) && layer[field] !== undefined && layer[field] !== null && layer[field] !== '') {
+                    const value = formatFieldValue(field, layer[field]);
+                    const label = getFieldLabel(field);
+                    html += `<div><strong>${label}:</strong> ${value}</div>`;
+                }
+            });
             
             // 显示坐标信息
             if (layer.configSource === 'obs' && layer.pos) {
@@ -1600,6 +1935,40 @@
             }
             
             return html;
+        }
+        
+        // 获取字段标签
+        function getFieldLabel(field) {
+            const fieldLabels = {
+                'exeName': '进程',
+                'fileName': '文件',
+                'filepath': '文件路径',
+                'deviceId': '设备ID',
+                'name': '名称',
+                'id': 'ID',
+                'volume': '音量',
+                'fileSize': '文件大小',
+                'looping': '循环播放',
+                'realDeviceId': '真实设备ID',
+                'isSoftware': '软件设备',
+                'decibel': '音量分贝'
+            };
+            return fieldLabels[field] || field;
+        }
+        
+        // 格式化字段值
+        function formatFieldValue(field, value) {
+            switch (field) {
+                case 'volume':
+                    return value === 0 ? '静音' : `${(value * 100).toFixed(0)}%`;
+                case 'fileSize':
+                    return formatFileSize(value);
+                case 'looping':
+                case 'isSoftware':
+                    return value ? '是' : '否';
+                default:
+                    return value;
+            }
         }
 
         // 格式化文件大小
@@ -1685,10 +2054,13 @@
             // 添加配置来源标识
             const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
             
+            // 获取友好的显示名称
+            const displayName = getLayerDisplayName(layer);
+            
             layerItem.innerHTML = `
                 <div class="layer-color-dot" style="background: ${color};"></div>
                 <div class="layer-text">
-                    <div class="layer-title" style="color: ${color};">第${layer.layer}层 - ${layer.name}</div>
+                    <div class="layer-title" style="color: ${color};">第${layer.layer}层 - ${displayName}</div>
                     <div class="layer-desc">[${sourceLabel}] ${desc}</div>
                 </div>
             `;
@@ -1900,9 +2272,7 @@
             // 确保进程库已加载
             if (processLibrary.length === 0) {
                 console.log('进程库未加载，正在加载...');
-                // 部署版本没有进程库，保持空数组
-                processLibrary = [];
-                console.log('部署版本：进程库为空，所有进程将显示为"未知进程"');
+                await loadProcessLibrary();
             }
             
             let cpuTopProcesses = [];
@@ -1935,20 +2305,28 @@
             
             // 计算最大进程数，决定表格列数（最多5个进程）
             const maxProcessCount = Math.max(cpuTopProcesses.length, gpuTopProcesses.length);
+            const totalColumns = maxProcessCount * 3; // 每个进程3列：进程名、标签、占比
+            
+            // 根据进程数量决定表格样式类
+            const tableClass = maxProcessCount >= 5 ? 'resource-table five-processes' : 'resource-table';
             
             let tableHTML = `
-                <table class="resource-table">
+                <table class="${tableClass}" style="table-layout: fixed;">
                     <thead>
                         <tr>
-                            <th>资源类型</th>
+                            <th style="width: 8%;">资源类型</th>
             `;
             
-            // 动态生成表头
+            // 重新设计列宽分配：进程名占更多空间，标签和占比占较少空间
+            const processNameWidth = `${92 / maxProcessCount * 0.5}%`; // 每个进程名占50%的进程空间
+            const tagWidth = `${92 / maxProcessCount * 0.3}%`; // 每个标签占30%的进程空间
+            const percentageWidth = `${92 / maxProcessCount * 0.2}%`; // 每个占比占20%的进程空间
+            
             for (let i = 0; i < maxProcessCount; i++) {
                 tableHTML += `
-                            <th>进程名${i + 1}</th>
-                            <th>标签${i + 1}</th>
-                            <th>占比${i + 1}</th>
+                            <th style="width: ${processNameWidth};">进程名${i + 1}</th>
+                            <th style="width: ${tagWidth};">标签${i + 1}</th>
+                            <th style="width: ${percentageWidth};">占比${i + 1}</th>
                 `;
             }
             
@@ -1966,13 +2344,16 @@
                     if (i < cpuTopProcesses.length) {
                         const process = cpuTopProcesses[i];
                         console.log(`正在匹配CPU进程: ${process.name}`);
-                        // 部署版本直接显示"未知进程"
-                        const processTypes = ['未知进程'];
+                        const processTypes = matchProcessType(process.name);
                         console.log(`CPU进程 ${process.name} 匹配结果: ${processTypes.join(', ')}`);
+                        const tagHTML = generateTagHTML(processTypes);
+                        
+                        // 不再截断进程名，允许完整显示并换行
+                        const displayName = process.name;
                         
                         tableHTML += `
-                            <td class="process-name" title="${process.name}">${process.name}</td>
-                            <td class="process-tag">-</td>
+                            <td class="process-name" title="${process.name}">${displayName}</td>
+                            <td class="process-tag">${tagHTML}</td>
                             <td class="process-percentage">${process.percentage}%</td>
                         `;
                     } else {
@@ -1996,13 +2377,16 @@
                     if (i < gpuTopProcesses.length) {
                         const process = gpuTopProcesses[i];
                         console.log(`正在匹配GPU进程: ${process.name}`);
-                        // 部署版本直接显示"未知进程"
-                        const processTypes = ['未知进程'];
+                        const processTypes = matchProcessType(process.name);
                         console.log(`GPU进程 ${process.name} 匹配结果: ${processTypes.join(', ')}`);
+                        const tagHTML = generateTagHTML(processTypes);
+                        
+                        // 不再截断进程名，允许完整显示并换行
+                        const displayName = process.name;
                         
                         tableHTML += `
-                            <td class="process-name" title="${process.name}">${process.name}</td>
-                            <td class="process-tag">-</td>
+                            <td class="process-name" title="${process.name}">${displayName}</td>
+                            <td class="process-tag">${tagHTML}</td>
                             <td class="process-percentage">${process.percentage}%</td>
                         `;
                     } else {
@@ -2027,9 +2411,31 @@
             
             // 添加调试信息
             console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
-            console.log(`部署版本：进程库状态为空`);
+            console.log(`进程库状态: 共${processLibrary.length}条记录`);
         }
         
+        // 窗口大小变化时重新计算叠加层位置
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (parsedLayers.length > 0) {
+                    console.log('窗口大小变化，重新计算叠加层位置');
+                    generateVisualization();
+                }
+            }, 250); // 防抖，250ms后执行
+        });
+        
+        // 图片加载完成时重新计算叠加层位置
+        document.getElementById('gameImage').addEventListener('load', function() {
+            if (parsedLayers.length > 0) {
+                console.log('图片加载完成，重新计算叠加层位置');
+                setTimeout(() => {
+                    generateVisualization();
+                }, 100); // 稍微延迟确保图片完全渲染
+            }
+        });
+
         // 显示全局详细信息
         function showGlobalLayerDetails(layer) {
             // 只有在选择单个图层时才显示详细信息，显示全部图层时不显示
@@ -2053,47 +2459,6 @@
             const globalDetails = document.getElementById('globalLayerDetails');
             globalDetails.classList.remove('show');
         }
-
-        // 获取图层显示名称
-        function getLayerDisplayName(layer) {
-            if (layer.configSource === 'obs') {
-                // OBS配置：优先显示name字段，保持原名称不变
-                if (layer.name && layer.name.trim()) {
-                    return layer.name;
-                }
-            }
-            
-            // 其他情况的处理逻辑
-            if (layer.sourceType === 'process' && layer.exeName) {
-                // 进程类型：使用进程匹配的标签
-                const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                    return processTypes.join(' + '); // 多个标签用 + 连接
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return processName;
-                }
-            } else if (layer.sourceType === 'window' && layer.exeName) {
-                // 窗口类型：显示"窗口 | 进程标签"格式
-                const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                    return `${sourceTypeNames[layer.sourceType]} | ${processTypes.join(' + ')}`;
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
-                }
-            } else if (sourceTypeNames[layer.sourceType]) {
-                // 其他源类型：使用友好的中文名称
-                return sourceTypeNames[layer.sourceType];
-            }
-            
-            // 默认返回原始名称或类型
-            return layer.name || `${sourceTypeNames[layer.sourceType] || layer.sourceType}源`;
-        }
     </script>
 </body>
-</html> 
+</html>

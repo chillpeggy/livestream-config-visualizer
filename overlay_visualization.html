@@ -1612,6 +1612,30 @@
                 const gameContainer = document.getElementById('gameContainer');
                 
                 function calculateAndSetOverlayPosition() {
+                    // 预检查：确保DOM完全稳定
+                    const preCheck = {
+                        containerWidth: gameContainer.offsetWidth,
+                        containerHeight: gameContainer.offsetHeight,
+                        imageWidth: gameImage.offsetWidth,
+                        imageHeight: gameImage.offsetHeight,
+                        naturalWidth: gameImage.naturalWidth,
+                        naturalHeight: gameImage.naturalHeight
+                    };
+                    
+                    console.log(`🔍 坐标计算预检查 - 图层${layer.layer}:`);
+                    console.log(`  容器尺寸: ${preCheck.containerWidth}x${preCheck.containerHeight}`);
+                    console.log(`  图片显示尺寸: ${preCheck.imageWidth}x${preCheck.imageHeight}`);
+                    console.log(`  图片自然尺寸: ${preCheck.naturalWidth}x${preCheck.naturalHeight}`);
+                    
+                    // 如果任何关键尺寸为0，延迟重试
+                    if (preCheck.containerWidth === 0 || preCheck.containerHeight === 0 || 
+                        preCheck.imageWidth === 0 || preCheck.imageHeight === 0 ||
+                        preCheck.naturalWidth === 0 || preCheck.naturalHeight === 0) {
+                        console.log(`⚠️ DOM尺寸不稳定，延迟50ms重试`);
+                        setTimeout(calculateAndSetOverlayPosition, 50);
+                        return;
+                    }
+                    
                     // 获取容器尺寸
                     const containerRect = gameContainer.getBoundingClientRect();
                     const containerWidth = containerRect.width - 6; // 减去边框宽度
@@ -1772,12 +1796,40 @@
                 overlaysContainer.appendChild(label); // 将标签直接添加到容器中
                 
                 // 等待图片加载完成后再计算位置
-                if (gameImage.complete && gameImage.naturalWidth > 0) {
-                    calculateAndSetOverlayPosition();
-                } else {
-                    gameImage.onload = calculateAndSetOverlayPosition;
+                function ensureCalculatePosition() {
+                    // 增强的稳定性检查
+                    const isImageReady = gameImage.complete && gameImage.naturalWidth > 0;
+                    const isDOMReady = gameImage.offsetWidth > 0 && gameImage.offsetHeight > 0;
+                    const isContainerReady = gameContainer.offsetWidth > 0 && gameContainer.offsetHeight > 0;
+                    
+                    console.log(`🔍 DOM稳定性检查:`);
+                    console.log(`  图片加载完成: ${isImageReady}`);
+                    console.log(`  图片尺寸可用: ${isDOMReady} (${gameImage.offsetWidth}x${gameImage.offsetHeight})`);
+                    console.log(`  容器尺寸可用: ${isContainerReady} (${gameContainer.offsetWidth}x${gameContainer.offsetHeight})`);
+                    
+                    if (isImageReady && isDOMReady && isContainerReady) {
+                        // 所有条件满足，但仍然延迟一小段时间确保CSS完全应用
+                        setTimeout(() => {
+                            console.log(`🎯 开始计算图层${layer.layer}的坐标位置`);
+                            calculateAndSetOverlayPosition();
+                        }, 50); // 50ms延迟确保CSS稳定
+                    } else {
+                        // 如果还没准备好，再次检查
+                        setTimeout(ensureCalculatePosition, 20);
+                    }
                 }
-            });
+                
+                // 无论图片状态如何，都使用增强的检查逻辑
+                ensureCalculatePosition();
+                
+                // 同时保留原有的load事件作为备用
+                if (!gameImage.complete) {
+                    gameImage.onload = function() {
+                        console.log(`📸 图片load事件触发，准备重新计算`);
+                        setTimeout(ensureCalculatePosition, 30);
+                    };
+                }
+            }
         }
 
         // 标签定位函数 - 与图片坐标系统对齐，边框(0,0)对应图片左上角
