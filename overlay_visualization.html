@@ -1918,29 +1918,15 @@
                 }
             }
             
-            // 其他情况的处理逻辑
+            // 其他情况的处理逻辑 - 保持原始信息不变
             if (layer.sourceType === 'process' && layer.exeName) {
-                // 进程类型：使用进程匹配的标签
+                // 进程类型：直接显示原始进程名，不进行进程匹配替换
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                return processTypes.join(' + '); // 多个标签用 + 连接
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return processName;
-                }
+                return processName;
             } else if (layer.sourceType === 'window' && layer.exeName) {
-                // 窗口类型：显示"窗口 | 进程标签"格式
+                // 窗口类型：显示"窗口 | 原始进程名"格式
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                    return `${sourceTypeNames[layer.sourceType]} | ${processTypes.join(' + ')}`;
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
-                }
+                return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
             } else if (sourceTypeNames[layer.sourceType]) {
                 // 其他源类型：使用友好的中文名称
                 return sourceTypeNames[layer.sourceType];
@@ -2135,24 +2121,11 @@
             // 描述中保留原始的源类型信息
             let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
             
-            // 添加特殊信息
+            // 添加特殊信息 - 保持原始进程信息不变
             if (layer.exeName) {
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                
-                // 对于window层和process层，如果有进程匹配，显示进程标签
-                if ((layer.sourceType === 'window' || layer.sourceType === 'process') && processLibrary.length > 0) {
-                    const processTypes = matchProcessType(processName);
-                    // 如果匹配到的不是"未知进程"，则显示标签
-                    if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                        desc += ` | ${processTypes.join(' + ')}`;
-                    } else {
-                        // 如果是未知进程，显示进程名
+                // 直接显示原始进程名，不进行进程匹配替换
                 desc += ` | ${processName}`;
-                    }
-                } else {
-                    // 其他情况或进程库未加载时，显示进程名
-                    desc += ` | ${processName}`;
-                }
             }
             
             // 对于摄像头设备，优先显示deviceId
