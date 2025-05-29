@@ -2118,8 +2118,15 @@
 
         // 生成图层描述
         function generateLayerDescription(layer) {
-            // 描述中保留原始的源类型信息
-            let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            // 描述中保留原始的源类型信息 - 对于iosWirelessProjection保持原始名称
+            let desc;
+            if (layer.sourceType === 'iosWirelessProjection') {
+                // 特殊处理：iosWirelessProjection在描述中保持原始名称
+                desc = layer.sourceType;
+            } else {
+                // 其他源类型使用中文映射
+                desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            }
             
             // 添加特殊信息 - 保持原始进程信息不变
             if (layer.exeName) {
