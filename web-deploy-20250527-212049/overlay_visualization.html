@@ -1429,21 +1429,44 @@
                     const imageOffsetX = (containerWidth - actualImageWidth) / 2;
                     const imageOffsetY = (containerHeight - actualImageHeight) / 2;
                     
-                    // 修复坐标计算逻辑：确保边框坐标系统与图片完全对齐
+                    // 修复坐标计算逻辑：确保图层边界严格限制在图片范围内
                     // 1. 将配置坐标从canvasResolution缩放到实际图片尺寸
                     const imageScaleX = actualImageWidth / canvasResolution.width;
                     const imageScaleY = actualImageHeight / canvasResolution.height;
                     
-                    const scaledX = x * imageScaleX;
-                    const scaledY = y * imageScaleY;
-                    const scaledWidth = width * imageScaleX;
-                    const scaledHeight = height * imageScaleY;
+                    let scaledX = x * imageScaleX;
+                    let scaledY = y * imageScaleY;
+                    let scaledWidth = width * imageScaleX;
+                    let scaledHeight = height * imageScaleY;
                     
-                    // 2. 将图片坐标转换为容器坐标（加上图片在容器中的偏移）
+                    // 2. 确保图层不超出图片边界（关键修复）
+                    // 限制左上角坐标不能小于0
+                    scaledX = Math.max(0, scaledX);
+                    scaledY = Math.max(0, scaledY);
+                    
+                    // 限制右下角坐标不能超出图片尺寸
+                    const maxRight = actualImageWidth;
+                    const maxBottom = actualImageHeight;
+                    
+                    // 如果图层右边界超出图片右边界，调整宽度
+                    if (scaledX + scaledWidth > maxRight) {
+                        scaledWidth = maxRight - scaledX;
+                    }
+                    
+                    // 如果图层下边界超出图片下边界，调整高度
+                    if (scaledY + scaledHeight > maxBottom) {
+                        scaledHeight = maxBottom - scaledY;
+                    }
+                    
+                    // 确保宽度和高度为正值
+                    scaledWidth = Math.max(1, scaledWidth);
+                    scaledHeight = Math.max(1, scaledHeight);
+                    
+                    // 3. 将图片坐标转换为容器坐标（加上图片在容器中的偏移）
                     const containerX = scaledX + imageOffsetX;
                     const containerY = scaledY + imageOffsetY;
                     
-                    // 3. 转换为百分比位置（基于容器尺寸）
+                    // 4. 转换为百分比位置（基于容器尺寸）
                     const leftPercent = (containerX / containerWidth * 100).toFixed(2);
                     const topPercent = (containerY / containerHeight * 100).toFixed(2);
                     const widthPercent = (scaledWidth / containerWidth * 100).toFixed(2);
@@ -1474,7 +1497,8 @@
                     console.log(`  图片显示尺寸: ${displayWidth}x${displayHeight}`);
                     console.log(`  图片实际尺寸: ${actualImageWidth.toFixed(1)}x${actualImageHeight.toFixed(1)}`);
                     console.log(`  图片偏移: (${imageOffsetX.toFixed(1)}, ${imageOffsetY.toFixed(1)})`);
-                    console.log(`  缩放后图片坐标: (${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)})`);
+                    console.log(`  原始缩放坐标: (${(x * imageScaleX).toFixed(1)}, ${(y * imageScaleY).toFixed(1)}, ${(width * imageScaleX).toFixed(1)}, ${(height * imageScaleY).toFixed(1)})`);
+                    console.log(`  边界限制后坐标: (${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)})`);
                     console.log(`  最终容器坐标: (${containerX.toFixed(1)}, ${containerY.toFixed(1)})`);
                     console.log(`  最终百分比: (${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
                 }
