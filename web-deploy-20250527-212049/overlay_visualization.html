@@ -819,62 +819,121 @@
             }
 
             try {
-                // 解析主JSON
+                // 尝试直接解析
                 const data = JSON.parse(jsonInput);
-                
-                // 解析resolution
-                if (data.resolution) {
-                    canvasResolution = JSON.parse(data.resolution);
-                }
-                
-                // 收集所有图层
-                parsedLayers = [];
-                
-                // 处理sourceInfo格式
-                if (data.sourceInfo) {
-                    parseSourceInfo(JSON.parse(data.sourceInfo));
-                }
-                
-                // 处理obsSourceInfo格式
-                if (data.obsSourceInfo) {
-                    parseObsSourceInfo(JSON.parse(data.obsSourceInfo));
-                }
-                
-                // 处理资源特征数据
-                let hasResourceData = false;
-                if (data.cpuTopProcessList || data.gpuTopProcessList) {
-                    generateResourceFeatures(data);
-                    hasResourceData = true;
-                }
-                
-                // 显示或隐藏资源特征模块
-                const resourceFeatures = document.getElementById('resourceFeatures');
-                if (hasResourceData) {
-                    resourceFeatures.style.display = 'block';
-                } else {
-                    resourceFeatures.style.display = 'none';
-                }
-                
-                if (parsedLayers.length === 0) {
-                    throw new Error('未找到可解析的图层信息，请检查JSON格式');
-                }
-                
-                // 按layer排序
-                parsedLayers.sort((a, b) => a.layer - b.layer);
-                
-                showMessage(`✅ 成功解析配置！发现 ${parsedLayers.length} 个图层${hasResourceData ? '和资源特征数据' : ''}`, 'success');
-                
-                // 生成可视化
-                generateVisualization();
-                generateLayerList();
+                parseSuccessfulData(data);
                 
             } catch (err) {
-                console.error('JSON解析错误:', err);
-                showMessage(`❌ JSON解析失败: ${err.message}`, 'error');
-                clearVisualization();
-                // 隐藏资源特征模块
-                document.getElementById('resourceFeatures').style.display = 'none';
+                console.log('直接解析失败，尝试容错修复:', err.message);
+                
+                // 尝试容错解析
+                try {
+                    const fixedJson = fixJsonErrors(jsonInput);
+                    const data = JSON.parse(fixedJson);
+                    
+                    showMessage(`⚠️ JSON格式有误，已自动修复并成功解析！`, 'success');
+                    parseSuccessfulData(data);
+                    
+                } catch (fixErr) {
+                    console.error('容错解析也失败:', fixErr.message);
+                    showMessage(`❌ JSON解析失败: ${err.message}。尝试自动修复后仍然失败: ${fixErr.message}`, 'error');
+                    clearVisualization();
+                    // 隐藏资源特征模块
+                    document.getElementById('resourceFeatures').style.display = 'none';
+                }
             }
+        }
+
+        // JSON容错修复函数
+        function fixJsonErrors(jsonStr) {
+            let fixed = jsonStr;
+            
+            console.log('开始JSON容错修复...');
+            
+            // 1. 修复开头缺少双引号的问题
+            fixed = fixed.replace(/^(\s*\{)([a-zA-Z_][a-zA-Z0-9_]*")/g, '$1"$2');
+            
+            // 2. 修复属性名缺少双引号的问题
+            fixed = fixed.replace(/([,{]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
+            
+            // 3. 修复多余的反斜杠问题
+            fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
+            
+            // 4. 修复缺少逗号的问题
+            fixed = fixed.replace(/("\s*})(\s*)(")/g, '$1,$2$3');
+            
+            // 5. 修复多余逗号的问题
+            fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+            
+            // 6. 修复缺少结束括号的问题
+            const openBraces = (fixed.match(/\{/g) || []).length;
+            const closeBraces = (fixed.match(/\}/g) || []).length;
+            if (openBraces > closeBraces) {
+                fixed += '}';
+                console.log('添加了缺少的结束括号');
+            }
+            
+            // 7. 修复缺少开始括号的问题
+            if (closeBraces > openBraces) {
+                fixed = '{' + fixed;
+                console.log('添加了缺少的开始括号');
+            }
+            
+            console.log('JSON修复完成');
+            return fixed;
+        }
+
+        // 解析成功后的数据处理
+        function parseSuccessfulData(data) {
+            // 解析resolution
+            if (data.resolution) {
+                canvasResolution = JSON.parse(data.resolution);
+            }
+            
+            // 收集所有图层
+            parsedLayers = [];
+            
+            // 处理sourceInfo格式
+            if (data.sourceInfo) {
+                parseSourceInfo(JSON.parse(data.sourceInfo));
+            }
+            
+            // 处理obsSourceInfo格式
+            if (data.obsSourceInfo) {
+                parseObsSourceInfo(JSON.parse(data.obsSourceInfo));
+            }
+            
+            // 处理资源特征数据
+            let hasResourceData = false;
+            if (data.cpuTopProcess || data.cpuTopProcessList || data.gpuTopProcess || data.gpuTopProcessList) {
+                generateResourceFeatures(data);
+                hasResourceData = true;
+            }
+            
+            // 显示或隐藏资源特征模块
+            const resourceFeatures = document.getElementById('resourceFeatures');
+            if (hasResourceData) {
+                resourceFeatures.style.display = 'block';
+            } else {
+                resourceFeatures.style.display = 'none';
+            }
+            
+            if (parsedLayers.length === 0 && !hasResourceData) {
+                throw new Error('未找到可解析的图层信息或资源特征数据，请检查JSON格式');
+            }
+            
+            // 按layer排序
+            parsedLayers.sort((a, b) => a.layer - b.layer);
+            
+            if (parsedLayers.length === 0) {
+                showMessage(`✅ 成功解析配置！发现资源特征数据`, 'success');
+            } else {
+                showMessage(`✅ 成功解析配置！发现 ${parsedLayers.length} 个图层${hasResourceData ? '和资源特征数据' : ''}`, 'success');
+            }
+            
+            // 生成可视化
+            generateVisualization();
+            generateLayerList();
         }
 
         // 解析sourceInfo格式
@@ -1429,7 +1488,7 @@
             let cpuTopProcesses = [];
             let gpuTopProcesses = [];
             
-            // 解析CPU进程列表
+            // 解析CPU进程列表 - 支持多种字段名
             if (data.cpuTopProcessList) {
                 try {
                     const allCpuProcesses = JSON.parse(data.cpuTopProcessList);
@@ -1437,9 +1496,16 @@
                 } catch (e) {
                     console.warn('无法解析cpuTopProcessList:', e);
                 }
+            } else if (data.cpuTopProcess) {
+                try {
+                    const allCpuProcesses = JSON.parse(data.cpuTopProcess);
+                    cpuTopProcesses = allCpuProcesses.slice(0, 5); // 只保留前5个
+                } catch (e) {
+                    console.warn('无法解析cpuTopProcess:', e);
+                }
             }
             
-            // 解析GPU进程列表
+            // 解析GPU进程列表 - 支持多种字段名
             if (data.gpuTopProcessList) {
                 try {
                     const allGpuProcesses = JSON.parse(data.gpuTopProcessList);
@@ -1447,10 +1513,17 @@
                 } catch (e) {
                     console.warn('无法解析gpuTopProcessList:', e);
                 }
+            } else if (data.gpuTopProcess) {
+                try {
+                    const allGpuProcesses = JSON.parse(data.gpuTopProcess);
+                    gpuTopProcesses = allGpuProcesses.slice(0, 5); // 只保留前5个
+                } catch (e) {
+                    console.warn('无法解析gpuTopProcess:', e);
+                }
             }
             
             if (cpuTopProcesses.length === 0 && gpuTopProcesses.length === 0) {
-                container.innerHTML = '<div class="empty-state">暂无资源信息，请解析包含 cpuTopProcessList 或 gpuTopProcessList 的配置</div>';
+                container.innerHTML = '<div class="empty-state">暂无资源信息，请解析包含进程数据的配置</div>';
                 return;
             }
             
@@ -1536,6 +1609,9 @@
             `;
             
             container.innerHTML = tableHTML;
+            
+            // 添加调试信息
+            console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
         }
         
         // 显示全局详细信息
