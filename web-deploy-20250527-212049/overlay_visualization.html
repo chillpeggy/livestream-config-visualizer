@@ -1842,21 +1842,18 @@
         // 获取图层显示名称
         function getLayerDisplayName(layer) {
             if (layer.configSource === 'obs') {
-                // OBS配置：优先显示name字段
+                // OBS配置：优先显示name字段，保持原名称不变
                 if (layer.name && layer.name.trim()) {
-                    // 对于摄像头类型，如果有deviceId，使用deviceId作为设备描述
-                    if (layer.sourceType === 'camera' && layer.deviceId) {
-                        return `${layer.name} | ${layer.deviceId}`;
-                    }
                     return layer.name;
                 }
             }
             
             // 其他情况的处理逻辑
             if (layer.sourceType === 'process' && layer.exeName) {
-                // 进程类型：部署版本简化处理
+                // 进程类型：使用进程匹配的标签
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                return processName;
+                const processTypes = matchProcessType(processName);
+                return processTypes.join(' + '); // 多个标签用 + 连接
             } else if (sourceTypeNames[layer.sourceType]) {
                 // 其他源类型：使用友好的中文名称
                 return sourceTypeNames[layer.sourceType];

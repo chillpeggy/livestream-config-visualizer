@@ -1621,12 +1621,8 @@
         // 获取图层显示名称
         function getLayerDisplayName(layer) {
             if (layer.configSource === 'obs') {
-                // OBS配置：优先显示name字段
+                // OBS配置：优先显示name字段，保持原名称不变
                 if (layer.name && layer.name.trim()) {
-                    // 对于摄像头类型，如果有deviceId，使用deviceId作为设备描述
-                    if (layer.sourceType === 'camera' && layer.deviceId) {
-                        return `${layer.name} | ${layer.deviceId}`;
-                    }
                     return layer.name;
                 }
             }
