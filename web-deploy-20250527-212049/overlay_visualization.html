@@ -1429,7 +1429,7 @@
                     const imageOffsetX = (containerWidth - actualImageWidth) / 2;
                     const imageOffsetY = (containerHeight - actualImageHeight) / 2;
                     
-                    // 修复坐标计算逻辑：确保图层边界严格限制在图片范围内
+                    // 修复坐标计算逻辑：确保(0,0)坐标严格对应图片左上角
                     // 1. 将配置坐标从canvasResolution缩放到实际图片尺寸
                     const imageScaleX = actualImageWidth / canvasResolution.width;
                     const imageScaleY = actualImageHeight / canvasResolution.height;
@@ -1438,6 +1438,13 @@
                     let scaledY = y * imageScaleY;
                     let scaledWidth = width * imageScaleX;
                     let scaledHeight = height * imageScaleY;
+                    
+                    // 特殊处理：确保(0,0)坐标严格对应图片左上角
+                    if (x === 0 && y === 0) {
+                        scaledX = 0;
+                        scaledY = 0;
+                        console.log(`🎯 检测到(0,0)坐标图层，强制设置为图片左上角`);
+                    }
                     
                     // 2. 确保图层不超出图片边界（关键修复）
                     // 限制左上角坐标不能小于0
@@ -1501,6 +1508,14 @@
                     console.log(`  边界限制后坐标: (${scaledX.toFixed(1)}, ${scaledY.toFixed(1)}, ${scaledWidth.toFixed(1)}, ${scaledHeight.toFixed(1)})`);
                     console.log(`  最终容器坐标: (${containerX.toFixed(1)}, ${containerY.toFixed(1)})`);
                     console.log(`  最终百分比: (${leftPercent}%, ${topPercent}%, ${widthPercent}%, ${heightPercent}%)`);
+                    
+                    // 特殊验证：(0,0)坐标应该对应图片左上角
+                    if (x === 0 && y === 0) {
+                        console.log(`🔍 (0,0)坐标验证:`);
+                        console.log(`  图片左上角在容器中的位置: (${imageOffsetX.toFixed(1)}, ${imageOffsetY.toFixed(1)})`);
+                        console.log(`  图层左上角在容器中的位置: (${containerX.toFixed(1)}, ${containerY.toFixed(1)})`);
+                        console.log(`  是否完全对齐: ${Math.abs(containerX - imageOffsetX) < 0.1 && Math.abs(containerY - imageOffsetY) < 0.1 ? '✅ 是' : '❌ 否'}`);
+                    }
                 }
                 
                 // 添加鼠标悬停事件来显示全局详细信息
