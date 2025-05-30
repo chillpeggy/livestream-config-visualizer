@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动解析</title>
+    <!-- 网页标签页图标设置 -->
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icon-32.png" type="image/png" sizes="32x32">
+    <link rel="shortcut icon" href="assets/icon-32.png" type="image/png">
+    <style>
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .header {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 15px;
+        }
+        .input-section {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .input-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            color: #343a40;
+        }
+        .input-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #495057;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 0;
+        }
+        .text-input {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            background: #f8f9fa;
+            transition: border-color 0.3s ease;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .parse-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        .parse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+        .parse-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #f5c6cb;
+            font-size: 13px;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #c3e6cb;
+            font-size: 13px;
+        }
+        .instructions {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        .instructions h3 {
+            margin: 0 0 10px 0;
+            color: #155724;
+            font-size: 16px;
+        }
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #155724;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .output-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .analysis-panel, .display-panel {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e9ecef;
+            min-height: 400px;
+            box-sizing: border-box;
+        }
+        .analysis-panel h2, .display-panel h2 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            color: #343a40;
+        }
+        .correlation-result {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .correlation-result.positive {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+        .correlation-result.negative {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        .text-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .asr-display {
+            border-left: 4px solid #007bff;
+        }
+        .comment-display {
+            border-left: 4px solid #6f42c1;
+        }
+        .comment-line {
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        .comment-time {
+            color: #6c757d;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .comment-text {
+            color: #333;
+        }
+        .placeholder-message {
+            text-align: center;
+            color: #6c757d;
+            padding: 30px;
+            font-style: italic;
+            font-size: 14px;
+        }
+        .highlight-0 { background-color: rgba(255, 193, 7, 0.3); }
+        .highlight-1 { background-color: rgba(40, 167, 69, 0.3); }
+        .highlight-2 { background-color: rgba(0, 123, 255, 0.3); }
+        .highlight-3 { background-color: rgba(220, 53, 69, 0.3); }
+        .highlight-4 { background-color: rgba(111, 66, 193, 0.3); }
+        .highlight-5 { background-color: rgba(255, 193, 7, 0.3); }
+        .highlight-6 { background-color: rgba(23, 162, 184, 0.3); }
+        .highlight-7 { background-color: rgba(255, 99, 132, 0.3); }
+        .highlight-8 { background-color: rgba(54, 162, 235, 0.3); }
+        .highlight-9 { background-color: rgba(255, 159, 64, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题模块 -->
+        <div class="header">
+            <h1><img src="assets/icon.svg" alt="icon" style="width: 32px; height: 32px; margin-right: 8px; vertical-align: middle;" onerror="this.src='assets/icon-32.png'"> 互动解析</h1>
+            <p>智能分析ASR文本与评论文本的相关性，识别互动内容的重复性和逻辑关系</p>
+        </div>
+        
+        <!-- 输入模块 -->
+        <div class="input-section">
+            <h2>📥 输入互动内容</h2>
+            <div class="input-grid">
+                <!-- ASR文本输入 -->
+                <div>
+                    <h3>🎤 输入ASR文本</h3>
+                    <textarea 
+                        id="asrInput" 
+                        class="text-input" 
+                        placeholder='请输入ASR文本，支持格式：
+"第一句话","第二句话","第三句话"
+
+示例：
+"欢迎大家来到我的车展","今天给大家介绍一下这款车衣","3M的车衣确实不容易发黄"'></textarea>
+                </div>
+                
+                <!-- 评论文本输入 -->
+                <div>
+                    <h3>💬 输入评论文本</h3>
+                    <textarea 
+                        id="commentInput" 
+                        class="text-input" 
+                        placeholder='请输入评论文本，支持格式：
+\"评论内容1,？,时间戳\"
+\"评论内容2,？,时间戳\"
+
+示例：
+\"3M的车衣不容易发黄,？,1748397004\"
+\"什么牌子的车衣最好,？,1748397010\"
+\"这个车衣多少钱,？,1748397020\"'></textarea>
+                </div>
+                
+                <!-- 使用说明 -->
+                <div>
+                    <h3>💡 使用说明</h3>
+                    <div class="instructions">
+                        <h3>✨ 快速上手</h3>
+                        <ul>
+                            <li>在左侧输入ASR语音识别文本</li>
+                            <li>在中间输入评论文本</li>
+                            <li>点击"解析互动内容"分析相关性</li>
+                            <li>系统会自动检测重复内容和逻辑关系</li>
+                            <li>重复词会用不同颜色高亮显示</li>
+                        </ul>
+                    </div>
+                    <button class="parse-btn" id="parseBtn" onclick="parseInteraction()">🔍 解析互动内容</button>
+                    <div id="parseMessage"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 输出模块 -->
+        <div class="output-section">
+            <!-- 分析预测面板 -->
+            <div class="analysis-panel">
+                <h2>🧠 分析预测</h2>
+                <div id="analysisResult">
+                    <div class="placeholder-message">
+                        请先输入ASR文本和评论文本，然后点击"解析互动内容"按钮
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 重复文本展示面板 -->
+            <div class="display-panel">
+                <h2>📋 重复文本展示</h2>
+                <div id="textDisplay">
+                    <div class="placeholder-message">
+                        解析完成后，将显示格式化的文本内容和重复词高亮
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 解析互动内容的主函数
+        function parseInteraction() {
+            const asrInput = document.getElementById('asrInput').value.trim();
+            const commentInput = document.getElementById('commentInput').value.trim();
+            const messageDiv = document.getElementById('parseMessage');
+            
+            if (!asrInput && !commentInput) {
+                showMessage('请输入ASR文本或评论文本', 'error');
+                return;
+            }
+
+            console.log('🔍 开始解析互动内容');
+            console.log('ASR输入:', asrInput);
+            console.log('评论输入:', commentInput);
+
+            try {
+                // 解析ASR文本
+                const asrTexts = parseAsrText(asrInput);
+                console.log('解析的ASR文本:', asrTexts);
+                
+                // 解析评论文本
+                const commentTexts = parseCommentText(commentInput);
+                console.log('解析的评论文本:', commentTexts);
+                
+                // 分析相关性
+                const correlationAnalysis = analyzeCorrelation(asrTexts, commentTexts);
+                console.log('相关性分析结果:', correlationAnalysis);
+                
+                // 检测重复词
+                const duplicateWords = findDuplicateWords(asrTexts, commentTexts);
+                console.log('重复词检测结果:', duplicateWords);
+                
+                // 显示分析结果
+                displayAnalysisResult(correlationAnalysis);
+                
+                // 显示格式化文本
+                displayFormattedTexts(asrTexts, commentTexts, duplicateWords);
+                
+                showMessage('✅ 互动内容解析完成！', 'success');
+                
+            } catch (error) {
+                console.error('解析失败:', error);
+                showMessage(`❌ 解析失败: ${error.message}`, 'error');
+                clearResults();
+            }
+        }
+
+        // 解析ASR文本 - 提取双引号内的内容
+        function parseAsrText(input) {
+            if (!input) return [];
+            
+            const regex = /"([^"]+)"/g;
+            const matches = [];
+            let match;
+            
+            while ((match = regex.exec(input)) !== null) {
+                matches.push(match[1].trim());
+            }
+            
+            return matches;
+        }
+
+        // 解析评论文本 - 提取评论内容和时间戳
+        function parseCommentText(input) {
+            if (!input) return [];
+            
+            const lines = input.split('\n').filter(line => line.trim());
+            const comments = [];
+            
+            lines.forEach(line => {
+                const regex = /\\"([^"]+),？,(\d+)\\"/;
+                const match = line.match(regex);
+                
+                if (match) {
+                    const content = match[1].trim();
+                    const timestamp = parseInt(match[2]);
+                    const time = new Date(timestamp * 1000);
+                    
+                    // 转换为北京时间
+                    const beijingTime = new Date(time.getTime() + (8 * 60 * 60 * 1000));
+                    const timeString = beijingTime.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    
+                    comments.push({
+                        content: content,
+                        timestamp: timestamp,
+                        timeString: timeString
+                    });
+                }
+            });
+            
+            return comments;
+        }
+
+        // 分析相关性
+        function analyzeCorrelation(asrTexts, commentTexts) {
+            const result = {
+                hasCorrelation: false,
+                reasons: [],
+                details: []
+            };
+            
+            if (asrTexts.length === 0 || commentTexts.length === 0) {
+                return result;
+            }
+            
+            // 检查每个ASR文本与每个评论的关系
+            asrTexts.forEach((asrText, asrIndex) => {
+                commentTexts.forEach((comment, commentIndex) => {
+                    // 检查是否在读评论（高度重复）
+                    const readingResult = checkReadingComment(asrText, comment.content);
+                    if (readingResult.isReading) {
+                        result.hasCorrelation = true;
+                        result.reasons.push('ASR文本在读评论');
+                        result.details.push({
+                            type: 'reading',
+                            asrText: asrText,
+                            commentText: comment.content,
+                            reason: readingResult.reason,
+                            asrIndex: asrIndex,
+                            commentIndex: commentIndex
+                        });
+                    }
+                    
+                    // 检查是否在回答评论（问答关系或逻辑关系）
+                    const answeringResult = checkAnsweringComment(asrText, comment.content);
+                    if (answeringResult.isAnswering) {
+                        result.hasCorrelation = true;
+                        result.reasons.push('ASR文本在回答评论');
+                        result.details.push({
+                            type: 'answering',
+                            asrText: asrText,
+                            commentText: comment.content,
+                            reason: answeringResult.reason,
+                            asrIndex: asrIndex,
+                            commentIndex: commentIndex
+                        });
+                    }
+                });
+            });
+            
+            // 去重原因
+            result.reasons = [...new Set(result.reasons)];
+            
+            return result;
+        }
+
+        // 检查是否在读评论
+        function checkReadingComment(asrText, commentText) {
+            // 计算文本相似度（基于字符重复）
+            const similarity = calculateTextSimilarity(asrText, commentText);
+            
+            // 检查拼音相似度
+            const pinyinSimilarity = calculatePinyinSimilarity(asrText, commentText);
+            
+            const isReading = similarity > 0.6 || pinyinSimilarity > 0.7;
+            
+            return {
+                isReading: isReading,
+                reason: isReading ? `文本相似度${(Math.max(similarity, pinyinSimilarity) * 100).toFixed(1)}%，判断为在读评论` : ''
+            };
+        }
+
+        // 检查是否在回答评论
+        function checkAnsweringComment(asrText, commentText) {
+            // 检查问答关系
+            const qaResult = checkQuestionAnswer(commentText, asrText);
+            if (qaResult.isQA) {
+                return {
+                    isAnswering: true,
+                    reason: qaResult.reason
+                };
+            }
+            
+            // 检查逻辑关系
+            const logicResult = checkLogicalRelation(commentText, asrText);
+            if (logicResult.hasLogic) {
+                return {
+                    isAnswering: true,
+                    reason: logicResult.reason
+                };
+            }
+            
+            return {
+                isAnswering: false,
+                reason: ''
+            };
+        }
+
+        // 计算文本相似度
+        function calculateTextSimilarity(text1, text2) {
+            // 移除标点符号和空格
+            const clean1 = text1.replace(/[，。！？、,.!?]/g, '').replace(/\s/g, '');
+            const clean2 = text2.replace(/[，。！？、,.!?]/g, '').replace(/\s/g, '');
+            
+            if (clean1.length === 0 || clean2.length === 0) return 0;
+            
+            // 计算最长公共子序列长度
+            const lcs = longestCommonSubsequence(clean1, clean2);
+            const similarity = (lcs * 2) / (clean1.length + clean2.length);
+            
+            return similarity;
+        }
+
+        // 计算拼音相似度（简化版本）
+        function calculatePinyinSimilarity(text1, text2) {
+            // 这里简化处理，实际应该使用拼音库
+            // 先进行字符级别的模糊匹配
+            const similar = findSimilarCharacters(text1, text2);
+            const totalChars = Math.max(text1.length, text2.length);
+            
+            return totalChars > 0 ? similar / totalChars : 0;
+        }
+
+        // 查找相似字符
+        function findSimilarCharacters(text1, text2) {
+            let similarCount = 0;
+            const used = new Set();
+            
+            for (let i = 0; i < text1.length; i++) {
+                const char1 = text1[i];
+                for (let j = 0; j < text2.length; j++) {
+                    if (used.has(j)) continue;
+                    const char2 = text2[j];
+                    
+                    if (char1 === char2 || areSimilarChars(char1, char2)) {
+                        similarCount++;
+                        used.add(j);
+                        break;
+                    }
+                }
+            }
+            
+            return similarCount;
+        }
+
+        // 检查是否为相似字符（常见错别字）
+        function areSimilarChars(char1, char2) {
+            const similarPairs = [
+                ['的', '得'], ['在', '再'], ['了', '啦'], ['吗', '嘛'],
+                ['那', '哪'], ['什', '甚'], ['发', '法'], ['黄', '皇']
+            ];
+            
+            return similarPairs.some(pair => 
+                (pair[0] === char1 && pair[1] === char2) || 
+                (pair[1] === char1 && pair[0] === char2)
+            );
+        }
+
+        // 最长公共子序列
+        function longestCommonSubsequence(text1, text2) {
+            const m = text1.length, n = text2.length;
+            const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+            
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (text1[i - 1] === text2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+            
+            return dp[m][n];
+        }
+
+        // 检查问答关系
+        function checkQuestionAnswer(question, answer) {
+            const questionWords = ['什么', '怎么', '为什么', '哪里', '谁', '多少', '几', '？', '吗'];
+            const answerWords = ['是', '不是', '对', '没错', '确实', '当然', '可以', '不可以'];
+            
+            const hasQuestionWord = questionWords.some(word => question.includes(word));
+            const hasAnswerWord = answerWords.some(word => answer.includes(word));
+            
+            if (hasQuestionWord && hasAnswerWord) {
+                return {
+                    isQA: true,
+                    reason: '检测到评论是问句，ASR文本是回答'
+                };
+            }
+            
+            return { isQA: false, reason: '' };
+        }
+
+        // 检查逻辑关系
+        function checkLogicalRelation(comment, asr) {
+            // 检查对比关系
+            const comparisonResult = checkComparison(comment, asr);
+            if (comparisonResult.hasComparison) {
+                return comparisonResult;
+            }
+            
+            // 检查因果关系
+            const causalResult = checkCausal(comment, asr);
+            if (causalResult.hasCausal) {
+                return causalResult;
+            }
+            
+            return { hasLogic: false, reason: '' };
+        }
+
+        // 检查对比关系
+        function checkComparison(comment, asr) {
+            const comparisonWords = ['比', '不如', '更', '最', '确实', '反而', '相比'];
+            const negationWords = ['不', '没', '无', '非'];
+            
+            const hasComparison = comparisonWords.some(word => 
+                comment.includes(word) || asr.includes(word)
+            );
+            
+            if (hasComparison) {
+                // 检查是否有相关的实体或概念
+                const entities = extractEntities(comment);
+                const asrEntities = extractEntities(asr);
+                
+                const hasCommonEntities = entities.some(entity => 
+                    asrEntities.some(asrEntity => 
+                        entity === asrEntity || entity.includes(asrEntity) || asrEntity.includes(entity)
+                    )
+                );
+                
+                if (hasCommonEntities) {
+                    return {
+                        hasLogic: true,
+                        reason: '检测到对比关系，涉及相关实体'
+                    };
+                }
+            }
+            
+            return { hasComparison: false };
+        }
+
+        // 检查因果关系
+        function checkCausal(comment, asr) {
+            const causalWords = ['因为', '所以', '由于', '导致', '造成', '引起'];
+            
+            const hasCausal = causalWords.some(word => 
+                comment.includes(word) || asr.includes(word)
+            );
+            
+            if (hasCausal) {
+                return {
+                    hasLogic: true,
+                    reason: '检测到因果关系'
+                };
+            }
+            
+            return { hasCausal: false };
+        }
+
+        // 提取实体（简化版本）
+        function extractEntities(text) {
+            // 简化的实体提取，主要提取品牌名、产品名等
+            const entityPatterns = [
+                /\b[A-Z][A-Z0-9]*\b/g, // 大写字母组合（品牌名）
+                /[\u4e00-\u9fa5]{2,}(?=的|是|有|车|衣|产品|品牌)/g, // 中文实体
+                /\d+[A-Z]+/g // 数字+字母组合
+            ];
+            
+            const entities = [];
+            entityPatterns.forEach(pattern => {
+                const matches = text.match(pattern) || [];
+                entities.push(...matches);
+            });
+            
+            return [...new Set(entities)];
+        }
+
+        // 查找重复词
+        function findDuplicateWords(asrTexts, commentTexts) {
+            const duplicates = [];
+            const allAsrText = asrTexts.join('');
+            const allCommentText = commentTexts.map(c => c.content).join('');
+            
+            // 提取所有可能的词组（2-10个字符）
+            const asrWords = extractWords(allAsrText);
+            const commentWords = extractWords(allCommentText);
+            
+            // 查找重复的词
+            asrWords.forEach(word => {
+                if (commentWords.includes(word) && word.length >= 2) {
+                    duplicates.push(word);
+                }
+            });
+            
+            // 去重并按长度排序
+            return [...new Set(duplicates)].sort((a, b) => b.length - a.length);
+        }
+
+        // 提取词组
+        function extractWords(text) {
+            const words = [];
+            
+            // 提取2-10个字符的词组
+            for (let len = 2; len <= Math.min(10, text.length); len++) {
+                for (let i = 0; i <= text.length - len; i++) {
+                    const word = text.substr(i, len);
+                    // 过滤掉纯标点符号
+                    if (!/^[，。！？、,.!?\s]+$/.test(word)) {
+                        words.push(word);
+                    }
+                }
+            }
+            
+            return words;
+        }
+
+        // 显示分析结果
+        function displayAnalysisResult(analysis) {
+            const container = document.getElementById('analysisResult');
+            
+            let html = '';
+            
+            if (analysis.hasCorrelation) {
+                html += `
+                    <div class="correlation-result positive">
+                        <h4>🔴 相关性分析：存在相关性</h4>
+                        <p><strong>判断原因：</strong>${analysis.reasons.join('、')}</p>
+                    </div>
+                `;
+                
+                analysis.details.forEach((detail, index) => {
+                    html += `
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                            <h5 style="margin: 0 0 8px 0; color: #495057;">相关性详情 ${index + 1}：</h5>
+                            <p style="margin: 4px 0;"><strong>类型：</strong>${detail.type === 'reading' ? '读评论' : '回答评论'}</p>
+                            <p style="margin: 4px 0;"><strong>ASR文本：</strong>"${detail.asrText}"</p>
+                            <p style="margin: 4px 0;"><strong>评论文本：</strong>"${detail.commentText}"</p>
+                            <p style="margin: 4px 0;"><strong>理由：</strong>${detail.reason}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="correlation-result negative">
+                        <h4>🟢 相关性分析：不存在相关性</h4>
+                        <p>ASR文本与评论文本之间未检测到明显的相关性，没有发现读评论或回答评论的行为。</p>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 显示格式化文本
+        function displayFormattedTexts(asrTexts, commentTexts, duplicateWords) {
+            const container = document.getElementById('textDisplay');
+            
+            let html = '';
+            
+            // 显示ASR文本
+            if (asrTexts.length > 0) {
+                html += '<h4>🎤 ASR文本：</h4>';
+                const asrContent = asrTexts.join('\n');
+                const highlightedAsr = highlightDuplicateWords(asrContent, duplicateWords);
+                html += `<div class="text-display asr-display">${highlightedAsr}</div>`;
+            }
+            
+            // 显示评论文本
+            if (commentTexts.length > 0) {
+                html += '<h4>💬 评论文本：</h4>';
+                html += '<div class="text-display comment-display">';
+                
+                commentTexts.forEach(comment => {
+                    const highlightedComment = highlightDuplicateWords(comment.content, duplicateWords);
+                    html += `
+                        <div class="comment-line">
+                            <span class="comment-time">${comment.timeString}</span>
+                            <span class="comment-text">${highlightedComment}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            if (asrTexts.length === 0 && commentTexts.length === 0) {
+                html = '<div class="placeholder-message">没有解析到有效的文本内容</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 高亮重复词
+        function highlightDuplicateWords(text, duplicateWords) {
+            let highlightedText = text;
+            
+            duplicateWords.forEach((word, index) => {
+                const colorIndex = index % 10;
+                const highlightClass = `highlight-${colorIndex}`;
+                
+                // 避免重复高亮已经高亮的文本
+                const regex = new RegExp(`(?<!<span[^>]*>)${escapeRegExp(word)}(?![^<]*</span>)`, 'g');
+                highlightedText = highlightedText.replace(regex, `<span class="${highlightClass}">${word}</span>`);
+            });
+            
+            return highlightedText;
+        }
+
+        // 转义正则表达式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('parseMessage');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+        }
+
+        // 清空结果
+        function clearResults() {
+            document.getElementById('analysisResult').innerHTML = `
+                <div class="placeholder-message">
+                    请先输入ASR文本和评论文本，然后点击"解析互动内容"按钮
+                </div>
+            `;
+            document.getElementById('textDisplay').innerHTML = `
+                <div class="placeholder-message">
+                    解析完成后，将显示格式化的文本内容和重复词高亮
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 
