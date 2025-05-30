@@ -1,0 +1,36 @@
+{
+  "_instruction": "请将此文件复制为 local-test-config.json 并填入您的测试配置数据",
+  "_note": "local-test-config.json 文件已在 .gitignore 中排除，不会提交到git仓库",
+  
+  "testCases": [
+    {
+      "name": "sourceInfo格式测试",
+      "description": "测试伴侣配置格式解析",
+      "data": {
+        "resolution": "{\"width\":1920,\"height\":1080}",
+        "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"your-game.exe\",\"overlap\":0.25,\"canvasOverlap\":1,\"canvasOverlapRect\":[0,0,1920,1080],\"layer\":3}]}}",
+        "cpuTopProcessList": "[{\"name\":\"your-game.exe\",\"percentage\":45.2}]"
+      },
+      "expectedResults": {
+        "layerCount": 1,
+        "sourceTypes": ["process"],
+        "resolution": {"width": 1920, "height": 1080}
+      }
+    },
+    {
+      "name": "obsSourceInfo格式测试", 
+      "description": "测试OBS配置格式解析",
+      "data": {
+        "resolution": "{\"width\":960,\"height\":540}",
+        "obsSourceInfo": "{\"process\":[{\"exeName\":\"your-game.exe\",\"pos\":{\"x\":0,\"y\":0},\"name\":\"游戏源\"}],\"video\":[{\"volume\":1,\"filepath\":\"your-video.mp4\",\"pos\":{\"x\":240,\"y\":90}}]}",
+        "cpuTopProcessList": "[{\"name\":\"your-game.exe\",\"percentage\":45.2}]",
+        "gpuTopProcessList": "[{\"name\":\"your-game.exe\",\"percentage\":76.3}]"
+      },
+      "expectedResults": {
+        "layerCount": 2,
+        "sourceTypes": ["process", "video"], 
+        "resolution": {"width": 960, "height": 540}
+      }
+    }
+  ]
+} 
