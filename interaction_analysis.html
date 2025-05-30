@@ -1181,13 +1181,13 @@
             const allAsrText = asrTexts.join('');
             const allCommentText = commentTexts.map(c => c.content).join('');
             
-            // 提取所有可能的词组（4-10个字符）
+            // 提取所有可能的词组（3-10个字符）
             const asrWords = extractWords(allAsrText);
             const commentWords = extractWords(allCommentText);
             
             // 查找重复的词
             asrWords.forEach(word => {
-                if (commentWords.includes(word) && word.length >= 4) {
+                if (commentWords.includes(word) && word.length >= 3) {
                     duplicates.push(word);
                 }
             });
@@ -1200,8 +1200,8 @@
         function extractWords(text) {
             const words = [];
             
-            // 提取4-10个字符的词组
-            for (let len = 4; len <= Math.min(10, text.length); len++) {
+            // 提取3-10个字符的词组
+            for (let len = 3; len <= Math.min(10, text.length); len++) {
                 for (let i = 0; i <= text.length - len; i++) {
                     const word = text.substr(i, len);
                     // 过滤掉纯标点符号
