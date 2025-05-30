@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直播配置解析</title>
+    <title>配置解析</title>
     <!-- 网页标签页图标设置 - 支持多种格式以确保最佳兼容性 -->
     <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
     <link rel="icon" href="assets/icon-32.png" type="image/png" sizes="32x32">
@@ -716,8 +716,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><img src="assets/icon.svg" alt="icon" style="width: 32px; height: 32px; margin-right: 8px; vertical-align: middle;" onerror="this.src='assets/icon-32.png'"> 直播配置解析</h1>
-            <p>智能解析直播配置JSON，可视化显示各个源的位置和覆盖范围，让配置一目了然</p>
+            <h1><img src="assets/icon.svg" alt="icon" style="width: 32px; height: 32px; margin-right: 8px; vertical-align: middle;" onerror="this.src='assets/icon-32.png'"> 配置解析</h1>
+            <p>智能解析配置JSON，可视化显示各个源的位置和覆盖范围，让配置一目了然</p>
         </div>
         
         <!-- 输入区域 -->
@@ -729,7 +729,7 @@
                     <h3>🖼️ 1. 上传底图</h3>
                     <div class="file-upload" id="fileUploadArea">
                         <div class="paste-hint">Ctrl+V 粘贴</div>
-                        <p>请上传您的游戏截图或直播底图</p>
+                        <p>请上传您的游戏截图或底图</p>
                         <input type="file" id="imageUpload" accept="image/*" style="display: none;">
                         <button class="upload-btn" onclick="document.getElementById('imageUpload').click();">选择图片文件</button>
                         <p>支持 JPG, PNG, GIF 等常见图片格式<br>💡 <strong>鼠标悬停后可直接 Ctrl+V 粘贴剪贴板图片</strong></p>
@@ -742,7 +742,7 @@
                     <textarea 
                         id="jsonInput" 
                         class="json-input" 
-                        placeholder='请粘贴您的直播配置JSON，支持两种格式：
+                        placeholder='请粘贴您的配置JSON，支持两种格式：
 
 1. sourceInfo格式：
 {
@@ -765,8 +765,8 @@
                     <div class="instructions">
                         <h3>✨ 快速上手</h3>
                         <ul>
-                            <li>上传您的游戏截图或直播底图</li>
-                            <li>粘贴直播配置的JSON代码</li>
+                            <li>上传您的游戏截图或底图</li>
+                            <li>粘贴配置的JSON代码</li>
                             <li>点击"解析配置"自动生成可视化</li>
                             <li>点击图层行查看单独效果</li>
                             <li>调节透明度和显示选项</li>
@@ -1362,7 +1362,7 @@
                         parsedLayers.push({
                             ...source,
                             sourceType,
-                            configSource: 'douyin', // 标识来源为抖音直播伴侣
+                            configSource: 'douyin', // 标识来源为伴侣
                             name: source.name || source.exeName || source.fileName || `${sourceTypeNames[sourceType] || sourceType}源`
                         });
                     });
@@ -2051,17 +2051,17 @@
             `;
             layerList.appendChild(showAllItem);
             
-            // 先显示抖音直播伴侣配置
+            // 先显示伴侣配置
             if (douyinLayers.length > 0) {
                 const douyinGroupHeader = document.createElement('div');
                 douyinGroupHeader.className = 'config-group-header douyin';
                 douyinGroupHeader.innerHTML = `
-                    <div class="group-icon douyin-icon">抖</div>
-                    <span>抖音直播伴侣配置 (${douyinLayers.length}层)</span>
+                    <div class="group-icon douyin-icon">伴</div>
+                    <span>伴侣配置 (${douyinLayers.length}层)</span>
                 `;
                 layerList.appendChild(douyinGroupHeader);
                 
-                // 添加抖音配置的图层
+                // 添加伴侣配置的图层
                 douyinLayers.forEach(layer => {
                     const layerItem = createLayerItem(layer);
                     layerList.appendChild(layerItem);
@@ -2100,7 +2100,7 @@
             const desc = generateLayerDescription(layer);
             
             // 添加配置来源标识
-            const sourceLabel = layer.configSource === 'douyin' ? '抖音' : 'OBS';
+            const sourceLabel = layer.configSource === 'douyin' ? '伴侣' : 'OBS';
             
             // 获取友好的显示名称
             const displayName = getLayerDisplayName(layer);
