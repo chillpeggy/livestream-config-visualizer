@@ -241,9 +241,10 @@
             border-left: 4px solid #6f42c1;
         }
         .comment-line {
-            margin-bottom: 8px;
-            padding: 5px 0;
+            margin: 0;
+            padding: 0;
             text-align: left;
+            line-height: 1.2;
         }
         .comment-time {
             color: #007bff;
@@ -305,12 +306,14 @@
                         class="text-input" 
                         placeholder='请输入评论文本，支持多种格式：
 
-格式1: \"评论内容,？,时间戳\"
-格式2: ["评论内容,时间戳"] 
-格式3: "评论内容,时间戳"
-格式4: 评论内容,时间戳
+格式1: [\"用户名,评论内容,时间戳\",\"用户名,评论内容,时间戳\"]
+格式2: \"评论内容,？,时间戳\"
+格式3: ["评论内容,时间戳"] 
+格式4: "评论内容,时间戳"
+格式5: 评论内容,时间戳
 
 示例：
+[\"小俊,更新了什么,1748404172\",\"谢Father,你怎么没打迷宫？,1748404150\"]
 ["ii7,主播播到什么时候？不要挂着睡觉,1748363724"]
 "什么牌子的车衣最好,1748397010"
 车衣多少钱,1748397020'></textarea>
@@ -426,8 +429,66 @@
         function parseCommentText(input) {
             if (!input) return [];
             
-            const lines = input.split('\n').filter(line => line.trim());
             const comments = [];
+            
+            // 首先尝试解析JSON数组格式
+            if (input.trim().startsWith('[') && input.trim().endsWith(']')) {
+                try {
+                    console.log('尝试解析JSON数组格式');
+                    
+                    // 处理转义的引号
+                    let jsonStr = input.trim();
+                    // 将 \" 替换为 " 
+                    jsonStr = jsonStr.replace(/\\"/g, '"');
+                    
+                    console.log('处理后的JSON字符串:', jsonStr);
+                    
+                    const jsonArray = JSON.parse(jsonStr);
+                    console.log('解析的JSON数组:', jsonArray);
+                    
+                    jsonArray.forEach((item, index) => {
+                        console.log(`处理JSON数组项 ${index}:`, item);
+                        
+                        // 每个项应该是 "用户名,评论内容,时间戳" 格式
+                        const parts = item.split(',');
+                        if (parts.length >= 3) {
+                            const timestamp = parseInt(parts[parts.length - 1]);
+                            const content = parts.slice(0, -1).join(','); // 重新组合内容（处理评论中可能包含逗号的情况）
+                            
+                            console.log('解析JSON项成功:', { content, timestamp });
+                            
+                            const time = new Date(timestamp * 1000);
+                            
+                            // 转换为北京时间
+                            const beijingTime = new Date(time.getTime() + (8 * 60 * 60 * 1000));
+                            const timeString = beijingTime.toLocaleString('zh-CN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                            
+                            comments.push({
+                                content: content,
+                                timestamp: timestamp,
+                                timeString: timeString
+                            });
+                        } else {
+                            console.log('JSON项格式不正确:', item);
+                        }
+                    });
+                    
+                    if (comments.length > 0) {
+                        console.log('JSON数组解析成功，共解析', comments.length, '条评论');
+                        return comments;
+                    }
+                } catch (error) {
+                    console.log('JSON数组解析失败:', error);
+                }
+            }
+            
+            // 如果JSON解析失败，回退到逐行解析
+            console.log('回退到逐行解析模式');
+            const lines = input.split('\n').filter(line => line.trim());
             
             lines.forEach(line => {
                 console.log('处理评论行:', line);
@@ -660,20 +721,191 @@
 
         // 检查问答关系
         function checkQuestionAnswer(question, answer) {
-            const questionWords = ['什么', '怎么', '为什么', '哪里', '谁', '多少', '几', '？', '吗'];
-            const answerWords = ['是', '不是', '对', '没错', '确实', '当然', '可以', '不可以'];
+            const questionWords = ['什么', '怎么', '为什么', '哪里', '谁', '多少', '几', '？', '吗', '呢', '啊'];
+            const answerWords = ['是', '不是', '对', '没错', '确实', '当然', '可以', '不可以', '就是', '这个', '那个'];
             
             const hasQuestionWord = questionWords.some(word => question.includes(word));
-            const hasAnswerWord = answerWords.some(word => answer.includes(word));
             
-            if (hasQuestionWord && hasAnswerWord) {
+            // 如果评论不是问句，直接返回false
+            if (!hasQuestionWord) {
+                return { isQA: false, reason: '' };
+            }
+            
+            // 检查语义关联性
+            const semanticRelation = checkSemanticRelation(question, answer);
+            if (!semanticRelation.hasRelation) {
+                return { isQA: false, reason: '' };
+            }
+            
+            // 检查是否有回答的特征
+            const hasAnswerPattern = checkAnswerPattern(question, answer);
+            
+            if (hasAnswerPattern.isAnswer) {
                 return {
                     isQA: true,
-                    reason: '检测到评论是问句，ASR文本是回答'
+                    reason: `检测到评论是问句，ASR文本是回答：${semanticRelation.reason}，${hasAnswerPattern.reason}`
                 };
             }
             
             return { isQA: false, reason: '' };
+        }
+        
+        // 检查语义关联性
+        function checkSemanticRelation(question, answer) {
+            // 提取问题的关键主题词
+            const questionKeywords = extractKeywords(question);
+            const answerKeywords = extractKeywords(answer);
+            
+            // 检查关键词重叠
+            const commonKeywords = questionKeywords.filter(qword => 
+                answerKeywords.some(aword => 
+                    qword === aword || qword.includes(aword) || aword.includes(qword)
+                )
+            );
+            
+            // 如果有共同关键词，说明在讨论同一主题
+            if (commonKeywords.length > 0) {
+                return {
+                    hasRelation: true,
+                    reason: `共同主题词：${commonKeywords.join('、')}`
+                };
+            }
+            
+            // 检查特定问答模式
+            const specificPatterns = checkSpecificQuestionPatterns(question, answer);
+            if (specificPatterns.hasPattern) {
+                return specificPatterns;
+            }
+            
+            return { hasRelation: false, reason: '' };
+        }
+        
+        // 提取关键词
+        function extractKeywords(text) {
+            const keywords = [];
+            
+            // 提取名词性关键词（2-4个字的词组）
+            for (let len = 2; len <= 4; len++) {
+                for (let i = 0; i <= text.length - len; i++) {
+                    const word = text.substr(i, len);
+                    // 过滤掉纯标点符号和常见无意义词
+                    if (!/^[，。！？、,.!?\s]+$/.test(word) && !isStopWord(word)) {
+                        // 如果是有意义的词组（包含实体、动作、形容词等）
+                        if (isMeaningfulKeyword(word)) {
+                            keywords.push(word);
+                        }
+                    }
+                }
+            }
+            
+            return [...new Set(keywords)];
+        }
+        
+        // 判断是否为停用词
+        function isStopWord(word) {
+            const stopWords = ['这个', '那个', '什么', '怎么', '为什么', '哪里', '就是', '然后', '因为', '所以', '但是', '不过', '还是', '或者', '如果', '虽然'];
+            return stopWords.includes(word);
+        }
+        
+        // 判断是否为有意义的关键词
+        function isMeaningfulKeyword(word) {
+            // 检查是否包含数字、字母、或常见实体特征
+            if (/\d/.test(word) || /[a-zA-Z]/.test(word)) return true;
+            
+            // 检查是否为常见的实体类型
+            const entityPatterns = [
+                /游戏|服务|版本|更新|功能|系统|软件/,
+                /时间|什么时候|多久|几点|今天|明天/,
+                /价格|多少钱|费用|成本/,
+                /位置|地方|哪里|这里|那里/,
+                /人物|主播|玩家|用户|朋友/,
+                /产品|东西|物品|装备|道具/
+            ];
+            
+            return entityPatterns.some(pattern => pattern.test(word));
+        }
+        
+        // 检查特定问答模式
+        function checkSpecificQuestionPatterns(question, answer) {
+            // 时间相关问答
+            if (/什么时候|多久|几点|时间/.test(question)) {
+                if (/\d+点|\d+分|今天|明天|昨天|小时|分钟|天|月|年/.test(answer)) {
+                    return {
+                        hasRelation: true,
+                        reason: '时间相关问答'
+                    };
+                }
+            }
+            
+            // 数量/价格相关问答
+            if (/多少|几个|几|价格|钱/.test(question)) {
+                if (/\d+|一些|很多|不多|免费|贵|便宜/.test(answer)) {
+                    return {
+                        hasRelation: true,
+                        reason: '数量/价格相关问答'
+                    };
+                }
+            }
+            
+            // 地点相关问答
+            if (/哪里|什么地方|在哪/.test(question)) {
+                if (/这里|那里|地方|位置|上面|下面|左边|右边/.test(answer)) {
+                    return {
+                        hasRelation: true,
+                        reason: '地点相关问答'
+                    };
+                }
+            }
+            
+            // 状态/方式相关问答
+            if (/怎么|如何|怎样/.test(question)) {
+                if (/可以|不能|需要|要|应该|直接|先|然后/.test(answer)) {
+                    return {
+                        hasRelation: true,
+                        reason: '方式/状态相关问答'
+                    };
+                }
+            }
+            
+            return { hasPattern: false };
+        }
+        
+        // 检查回答模式
+        function checkAnswerPattern(question, answer) {
+            // 直接回答模式
+            const answerWords = ['是', '不是', '对', '没错', '确实', '当然', '可以', '不可以', '就是', '这个', '那个'];
+            const hasDirectAnswer = answerWords.some(word => answer.includes(word));
+            
+            // 解释性回答模式
+            const explanationWords = ['因为', '由于', '主要是', '原因是', '就是说', '也就是'];
+            const hasExplanation = explanationWords.some(word => answer.includes(word));
+            
+            // 描述性回答模式
+            const descriptionWords = ['有', '没有', '包括', '包含', '比如', '例如', '像'];
+            const hasDescription = descriptionWords.some(word => answer.includes(word));
+            
+            if (hasDirectAnswer) {
+                return {
+                    isAnswer: true,
+                    reason: '直接回答模式'
+                };
+            }
+            
+            if (hasExplanation) {
+                return {
+                    isAnswer: true,
+                    reason: '解释性回答模式'
+                };
+            }
+            
+            if (hasDescription) {
+                return {
+                    isAnswer: true,
+                    reason: '描述性回答模式'
+                };
+            }
+            
+            return { isAnswer: false, reason: '' };
         }
 
         // 检查逻辑关系
@@ -766,13 +998,13 @@
             const allAsrText = asrTexts.join('');
             const allCommentText = commentTexts.map(c => c.content).join('');
             
-            // 提取所有可能的词组（2-10个字符）
+            // 提取所有可能的词组（4-10个字符）
             const asrWords = extractWords(allAsrText);
             const commentWords = extractWords(allCommentText);
             
             // 查找重复的词
             asrWords.forEach(word => {
-                if (commentWords.includes(word) && word.length >= 2) {
+                if (commentWords.includes(word) && word.length >= 4) {
                     duplicates.push(word);
                 }
             });
@@ -785,8 +1017,8 @@
         function extractWords(text) {
             const words = [];
             
-            // 提取2-10个字符的词组
-            for (let len = 2; len <= Math.min(10, text.length); len++) {
+            // 提取4-10个字符的词组
+            for (let len = 4; len <= Math.min(10, text.length); len++) {
                 for (let i = 0; i <= text.length - len; i++) {
                     const word = text.substr(i, len);
                     // 过滤掉纯标点符号
@@ -863,15 +1095,13 @@
             html += '<div class="text-display comment-display">';
             html += '<h4>💬 评论文本</h4>';
             if (commentTexts.length > 0) {
-                commentTexts.forEach(comment => {
+                // 构建评论内容字符串，每行包含时间和内容
+                const commentLines = commentTexts.map(comment => {
                     const highlightedComment = highlightDuplicateWords(comment.content, duplicateWords);
-                    html += `
-                        <div class="comment-line">
-                            <span class="comment-time">${comment.timeString}</span>
-                            <span class="comment-text">${highlightedComment}</span>
-                        </div>
-                    `;
+                    return `<span class="comment-time">${comment.timeString}</span> ${highlightedComment}`;
                 });
+                const commentContent = commentLines.join('\n');
+                html += `<div style="text-align: left;">${commentContent}</div>`;
             } else {
                 html += '<div style="color: #6c757d; font-style: italic;">暂无评论文本</div>';
             }
@@ -923,6 +1153,30 @@
                 </div>
             `;
         }
+
+        // 页面加载完成后的处理
+        window.onload = function() {
+            console.log('🎯 互动解析页面已加载');
+            
+            // 检查URL参数，如果有预设数据则自动加载
+            const urlParams = new URLSearchParams(window.location.search);
+            const asrText = urlParams.get('asrText');
+            const commentText = urlParams.get('commentText');
+            const autoLoad = urlParams.get('autoLoad');
+            
+            if (asrText && commentText && autoLoad === 'true') {
+                // 自动填充数据
+                document.getElementById('asrInput').value = asrText;
+                document.getElementById('commentInput').value = commentText;
+                
+                // 显示提示消息
+                showMessage('✅ 测试数据已自动加载，点击"解析互动内容"开始分析', 'success');
+                
+                console.log('📥 已自动加载测试数据');
+                console.log('ASR文本长度:', asrText.length);
+                console.log('评论文本长度:', commentText.length);
+            }
+        };
     </script>
 </body>
 </html> 
