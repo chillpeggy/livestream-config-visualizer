@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动解析功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .main-app-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px 0;
+            display: block;
+            width: 100%;
+        }
+        .main-app-btn:hover {
+            background: #1e7e34;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 互动解析功能测试</h1>
+        <p>本页面提供预设测试数据，快速验证互动解析功能的各种场景。</p>
+        
+        <button class="main-app-btn" onclick="openMainApp()">🚀 打开互动解析主应用</button>
+        
+        <div class="test-section">
+            <h2>📋 测试用例</h2>
+            
+            <h3>测试用例1：读评论场景（高相似度）</h3>
+            <button class="test-btn" onclick="fillTestCase1()">加载测试用例1</button>
+            <pre id="testcase1">
+ASR文本: "3M的车衣不容易发黄"
+评论文本: "3M车衣不易发黄,？,1748397004"
+预期结果: 检测到相关性（读评论，相似度>60%）
+            </pre>
+            
+            <h3>测试用例2：回答评论场景（对比关系）</h3>
+            <button class="test-btn" onclick="fillTestCase2()">加载测试用例2</button>
+            <pre id="testcase2">
+ASR文本: "确实，XPEL的车衣容易发黄"
+评论文本: "3M的车衣不容易发黄,？,1748397004"
+预期结果: 检测到相关性（回答评论-对比关系）
+            </pre>
+            
+            <h3>测试用例3：问答场景</h3>
+            <button class="test-btn" onclick="fillTestCase3()">加载测试用例3</button>
+            <pre id="testcase3">
+ASR文本: "当然可以，3M车衣确实不错"
+评论文本: "什么牌子的车衣最好,？,1748397010"
+预期结果: 检测到相关性（回答评论-问答关系）
+            </pre>
+            
+            <h3>测试用例4：无关内容</h3>
+            <button class="test-btn" onclick="fillTestCase4()">加载测试用例4</button>
+            <pre id="testcase4">
+ASR文本: "今天天气不错"
+评论文本: "这个车衣多少钱,？,1748397020"
+预期结果: 无相关性
+            </pre>
+            
+            <h3>测试用例5：多句ASR + 多条评论</h3>
+            <button class="test-btn" onclick="fillTestCase5()">加载测试用例5</button>
+            <pre id="testcase5">
+ASR文本: "欢迎大家来到我的车展","今天给大家介绍一下这款车衣","3M的车衣确实不容易发黄"
+评论文本: 
+"3M的车衣不容易发黄,？,1748397004"
+"什么牌子的车衣最好,？,1748397010"
+"这个车衣多少钱,？,1748397020"
+预期结果: 多重相关性检测，重复词高亮
+            </pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 功能验证清单</h2>
+            <label><input type="checkbox"> ASR文本格式化（双引号提取，换行显示）</label><br>
+            <label><input type="checkbox"> 评论文本格式化（时间戳转北京时间）</label><br>
+            <label><input type="checkbox"> 文本相似度计算（LCS算法）</label><br>
+            <label><input type="checkbox"> 拼音相似度检测（错别字容错）</label><br>
+            <label><input type="checkbox"> 问答关系识别</label><br>
+            <label><input type="checkbox"> 逻辑关系识别（对比、因果）</label><br>
+            <label><input type="checkbox"> 重复词检测和高亮</label><br>
+            <label><input type="checkbox"> 相关性分析结果展示</label><br>
+        </div>
+        
+        <div class="test-section">
+            <h2>🌐 访问信息</h2>
+            <p><strong>本地服务地址：</strong></p>
+            <ul>
+                <li>主页：<a href="http://localhost:9000" target="_blank">http://localhost:9000</a></li>
+                <li>互动解析：<a href="http://localhost:9000/interaction_analysis.html" target="_blank">http://localhost:9000/interaction_analysis.html</a></li>
+                <li>配置解析：<a href="http://localhost:9000/overlay_visualization.html" target="_blank">http://localhost:9000/overlay_visualization.html</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function openMainApp() {
+            window.open('interaction_analysis.html', '_blank');
+        }
+        
+        function fillTestCase1() {
+            const asr = '"3M的车衣不容易发黄"';
+            const comment = '"3M车衣不易发黄,？,1748397004"';
+            copyToClipboard(`ASR文本: ${asr}\n评论文本: ${comment}`);
+            alert('测试用例1数据已复制到剪贴板！\n请打开主应用粘贴测试。');
+        }
+        
+        function fillTestCase2() {
+            const asr = '"确实，XPEL的车衣容易发黄"';
+            const comment = '"3M的车衣不容易发黄,？,1748397004"';
+            copyToClipboard(`ASR文本: ${asr}\n评论文本: ${comment}`);
+            alert('测试用例2数据已复制到剪贴板！\n请打开主应用粘贴测试。');
+        }
+        
+        function fillTestCase3() {
+            const asr = '"当然可以，3M车衣确实不错"';
+            const comment = '"什么牌子的车衣最好,？,1748397010"';
+            copyToClipboard(`ASR文本: ${asr}\n评论文本: ${comment}`);
+            alert('测试用例3数据已复制到剪贴板！\n请打开主应用粘贴测试。');
+        }
+        
+        function fillTestCase4() {
+            const asr = '"今天天气不错"';
+            const comment = '"这个车衣多少钱,？,1748397020"';
+            copyToClipboard(`ASR文本: ${asr}\n评论文本: ${comment}`);
+            alert('测试用例4数据已复制到剪贴板！\n请打开主应用粘贴测试。');
+        }
+        
+        function fillTestCase5() {
+            const asr = '"欢迎大家来到我的车展","今天给大家介绍一下这款车衣","3M的车衣确实不容易发黄"';
+            const comment = '"3M的车衣不容易发黄,？,1748397004"\n"什么牌子的车衣最好,？,1748397010"\n"这个车衣多少钱,？,1748397020"';
+            copyToClipboard(`ASR文本: ${asr}\n评论文本: ${comment}`);
+            alert('测试用例5数据已复制到剪贴板！\n请打开主应用粘贴测试。');
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                // 降级方案
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('复制失败:', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+    </script>
+</body>
+</html> 
