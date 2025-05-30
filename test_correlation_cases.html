@@ -225,6 +225,36 @@
         <div id="result9" class="test-result" style="display:none;"></div>
     </div>
 
+    <!-- 测试案例10：V2.1优化案例 - 游戏挂机问答 -->
+    <div class="test-case">
+        <h3>测试案例10：V2.1优化案例 - 游戏挂机问答</h3>
+        <div class="test-content">
+            <div class="test-data">
+                <h4>评论文本：</h4>
+                <pre>["顾ww,开了挂吗,1748404300"]</pre>
+                <p style="color: #6c757d; font-size: 12px; margin-top: 5px;">
+                    包含：称呼词"顾ww" + 问句"开了挂吗"
+                </p>
+            </div>
+            <div class="test-data">
+                <h4>ASR文本：</h4>
+                <pre>"的是的开了挂了开了秒杀挂"</pre>
+                <p style="color: #6c757d; font-size: 12px; margin-top: 5px;">
+                    包含：系词"的是的" + 回答"开了挂了" + 解释"开了秒杀挂"
+                </p>
+            </div>
+        </div>
+        <p style="color: #e74c3c; font-weight: bold;">
+            🎯 关键测试点：
+            <br>1. 过滤"顾ww"称呼词
+            <br>2. 过滤"的是的"系词 
+            <br>3. 识别"开了挂吗"与"开了挂了"的问答关系
+            <br>4. 应判断为：✅ 存在相关性（游戏状态问答）
+        </p>
+        <button onclick="testCase10()">测试此案例</button>
+        <div id="result10" class="test-result" style="display:none;"></div>
+    </div>
+
     <script>
         // 从主页面复制的相关性检测函数
         
@@ -339,9 +369,11 @@
                 // 英文名模式：Jack, Tom, Mike等（后面跟逗号或结尾）
                 /[A-Z][a-zA-Z]{2,}[,，]?/g,
                 
-                // === 中英文混合用户名模式 ===
-                // 复杂用户名（中英文混合、特殊字符）
+                // === 中英文混合用户名模式（增强版）===
+                // 复杂用户名（中英文混合、特殊字符）- 增强匹配"顾ww"这类
+                /[a-zA-Z0-9_\u4e00-\u9fa5]+[wW]+[,，]?/g,  // 处理"顾ww"类型
                 /[a-zA-Z0-9_\u4e00-\u9fa5]+[\u4e00-\u9fa5]*[,，]/g,
+                /[\u4e00-\u9fa5][a-zA-Z0-9_]+[,，]?/g,  // 中文+英文/数字组合
                 
                 // === 通用称呼 ===
                 /主播[,，]?/g,
@@ -413,7 +445,8 @@
                 /小陈[,，]?/g,
                 /陈哥[,，]?/g,
                 /小赵[,，]?/g,
-                /赵哥[,，]?/g
+                /赵哥[,，]?/g,
+                /顾ww[,，]?/g  // 新增：处理具体的"顾ww"用户名
             ];
             
             let result = text;
@@ -427,13 +460,24 @@
         // 移除语气词和无意义词
         function removeFillerWords(text) {
             const fillerWords = [
+                // === 基础语气词 ===
                 '啊', '呀', '嘛', '呢', '吧', '哦', '唉', '嗯', '哎',
+                
+                // === 连接词和转折词 ===
                 '那个', '这个', '就是', '然后', '所以', '因为', '但是',
                 '不过', '还是', '或者', '如果', '虽然', '可是', '只是',
                 '而且', '另外', '总之', '反正', '其实', '当然', '肯定',
                 '应该', '可能', '大概', '也许', '估计', '差不多',
+                
+                // === 无意义词组 ===
                 '的话', '来说', '方面', '情况', '问题', '东西', '事情',
                 '时候', '地方', '样子', '意思', '感觉', '觉得',
+                
+                // === 系词和判断词（新增）===
+                '的是的', '是的', '对的', '嗯嗯', '对对', '是是',
+                '确实是', '没错', '就是这样', '对了',
+                
+                // === 其他杂词 ===
                 '他妈', '尼玩', '你你', '咱说', '和和说', '[呲牙]', '[看]', '[比心]',
                 '🚴🏻', '✨', '🍃', '🐝', '🍂', '🌈'
             ];
@@ -627,6 +671,13 @@
             testCorrelation(commentInput, asrInput, 'result9', '案例9结果');
         }
 
+        function testCase10() {
+            const commentInput = '["顾ww,开了挂吗,1748404300"]';
+            const asrInput = '"的是的开了挂了开了秒杀挂"';
+            
+            testCorrelation(commentInput, asrInput, 'result10', '案例10结果');
+        }
+
         function testCorrelation(commentInput, asrInput, resultId, title) {
             console.log('========== ' + title + ' ==========');
             
@@ -692,10 +743,11 @@
             setTimeout(() => testCase7(), 600);
             setTimeout(() => testCase8(), 700);
             setTimeout(() => testCase9(), 800);
+            setTimeout(() => testCase10(), 900);
         }
 
         function clearResults() {
-            for (let i = 1; i <= 9; i++) {
+            for (let i = 1; i <= 10; i++) {
                 const resultDiv = document.getElementById('result' + i);
                 resultDiv.style.display = 'none';
             }
