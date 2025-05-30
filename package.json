@@ -1,7 +1,7 @@
 {
   "name": "livestream-config-visualizer",
   "version": "1.0.0",
-  "description": "直播配置层级可视化工具",
+  "description": "配置层级可视化工具",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -13,11 +13,10 @@
     "dist": "npm run build:all"
   },
   "keywords": [
-    "livestream",
     "config",
     "visualization",
-    "obs",
-    "douyin"
+    "overlay",
+    "process"
   ],
   "author": "Your Name",
   "license": "MIT",
@@ -27,7 +26,7 @@
   },
   "build": {
     "appId": "com.yourcompany.livestream-config-visualizer",
-    "productName": "直播配置可视化工具",
+    "productName": "配置可视化工具",
     "directories": {
       "output": "dist"
     },
@@ -80,10 +79,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "直播配置可视化工具"
+      "shortcutName": "配置可视化工具"
     },
     "dmg": {
-      "title": "直播配置可视化工具",
+      "title": "配置可视化工具",
       "icon": "assets/icon.icns",
       "background": null,
       "contents": [

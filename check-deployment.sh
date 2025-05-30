@@ -26,7 +26,7 @@ for i in {1..10}; do
         echo "   - 在手机浏览器中打开上述链接"
         echo "   - 测试拖拽上传和JSON解析功能"
         echo ""
-        echo "🎉 恭喜！您的直播配置可视化工具已成功部署！"
+        echo "🎉 恭喜！您的配置可视化工具已成功部署！"
         exit 0
     elif [ "$status_code" = "404" ]; then
         echo "⏰ 还在部署中... (状态码: $status_code)"
