@@ -196,6 +196,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             width: 100%;
+            box-sizing: border-box;
         }
         .text-display {
             background: #f8f9fa;
@@ -208,11 +209,15 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             min-height: 200px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
         }
         .text-display h4 {
             margin: 0 0 10px 0;
             font-size: 16px;
             color: #343a40;
+            font-weight: bold;
         }
         .correlation-result {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -298,14 +303,17 @@
                     <textarea 
                         id="commentInput" 
                         class="text-input" 
-                        placeholder='请输入评论文本，支持格式：
-\"评论内容1,？,时间戳\"
-\"评论内容2,？,时间戳\"
+                        placeholder='请输入评论文本，支持多种格式：
+
+格式1: \"评论内容,？,时间戳\"
+格式2: ["评论内容,时间戳"] 
+格式3: "评论内容,时间戳"
+格式4: 评论内容,时间戳
 
 示例：
-\"3M的车衣不容易发黄,？,1748397004\"
-\"什么牌子的车衣最好,？,1748397010\"
-\"这个车衣多少钱,？,1748397020\"'></textarea>
+["ii7,主播播到什么时候？不要挂着睡觉,1748363724"]
+"什么牌子的车衣最好,1748397010"
+车衣多少钱,1748397020'></textarea>
                 </div>
                 
                 <!-- 使用说明 -->
@@ -422,12 +430,38 @@
             const comments = [];
             
             lines.forEach(line => {
-                const regex = /\\"([^"]+),？,(\d+)\\"/;
-                const match = line.match(regex);
+                console.log('处理评论行:', line);
+                
+                // 支持多种格式
+                let match = null;
+                
+                // 格式1: \"评论内容,？,时间戳\"
+                let regex1 = /\\"([^"]+),？,(\d+)\\"/;
+                match = line.match(regex1);
+                
+                if (!match) {
+                    // 格式2: ["评论内容,时间戳"]
+                    let regex2 = /\["([^"]+),(\d+)"\]/;
+                    match = line.match(regex2);
+                }
+                
+                if (!match) {
+                    // 格式3: "评论内容,时间戳"
+                    let regex3 = /"([^"]+),(\d+)"/;
+                    match = line.match(regex3);
+                }
+                
+                if (!match) {
+                    // 格式4: 评论内容,时间戳
+                    let regex4 = /^([^,]+),(\d+)$/;
+                    match = line.trim().match(regex4);
+                }
                 
                 if (match) {
                     const content = match[1].trim();
                     const timestamp = parseInt(match[2]);
+                    console.log('解析成功:', { content, timestamp });
+                    
                     const time = new Date(timestamp * 1000);
                     
                     // 转换为北京时间
@@ -443,6 +477,8 @@
                         timestamp: timestamp,
                         timeString: timeString
                     });
+                } else {
+                    console.log('无法解析评论行:', line);
                 }
             });
             
@@ -817,7 +853,7 @@
             if (asrTexts.length > 0) {
                 const asrContent = asrTexts.join('\n');
                 const highlightedAsr = highlightDuplicateWords(asrContent, duplicateWords);
-                html += highlightedAsr;
+                html += `<div style="text-align: left;">${highlightedAsr}</div>`;
             } else {
                 html += '<div style="color: #6c757d; font-style: italic;">暂无ASR文本</div>';
             }
