@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动化测试 - 直播配置解析</title>
+    <title>自动化测试 - 配置解析</title>
     <style>
         body {
             font-family: 'Arial', 'Microsoft YaHei', sans-serif;
@@ -32,6 +32,59 @@
             margin: 0 0 15px 0;
             color: #333;
         }
+        .input-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .input-section h3 {
+            margin: 0 0 15px 0;
+            color: #007bff;
+        }
+        .test-input {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        .test-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        .run-test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .run-test-btn:hover {
+            background: #0056b3;
+        }
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .clear-btn:hover {
+            background: #545b62;
+        }
         .status {
             padding: 8px 16px;
             border-radius: 4px;
@@ -50,52 +103,48 @@
             background: #fab1a0;
             color: #e17055;
         }
-        .test-btn {
-            background: #0984e3;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        .test-btn:hover {
-            background: #0770c5;
-        }
-        .test-btn:disabled {
-            background: #999;
-            cursor: not-allowed;
-        }
         .test-results {
-            background: #f8f9fa;
+            margin-top: 20px;
             padding: 15px;
-            border-radius: 4px;
-            margin: 10px 0;
-            white-space: pre-wrap;
-            font-family: monospace;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .iframe-container {
-            width: 100%;
-            height: 600px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            margin: 10px 0;
+            border-radius: 6px;
+            background: #f8f9fa;
         }
-        #testFrame {
-            width: 100%;
-            height: 100%;
-            border: none;
+        .result-item {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .result-item.pass {
+            background: #d1f2eb;
+            color: #00b894;
+        }
+        .result-item.fail {
+            background: #fab1a0;
+            color: #e17055;
         }
     </style>
 </head>
 <body>
     <div class="test-container">
         <div class="test-header">
-            <h1>🧪 自动化测试 - 直播配置解析器</h1>
-            <p>每次发布前运行此测试确保功能正常</p>
+            <h1>🧪 自动化测试 - 配置解析</h1>
+            <p>手动输入配置代码进行功能测试</p>
+        </div>
+
+        <!-- 测试数据输入区域 -->
+        <div class="input-section">
+            <h3>📝 测试数据输入</h3>
+            <p>请在下方输入框中粘贴您要测试的配置JSON代码：</p>
+            <textarea id="testDataInput" class="test-input" placeholder='请粘贴测试用的配置JSON，例如：
+
+{
+  "resolution": "{\"width\":1920,\"height\":1080}",
+  "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"game.exe\",\"overlap\":0.25,\"canvasOverlap\":1,\"canvasOverlapRect\":[0,0,1920,1080],\"layer\":3}]}}",
+  "cpuTopProcessList": "[{\"name\":\"game.exe\",\"percentage\":45.2}]"
+}'></textarea>
+            <button class="run-test-btn" onclick="runTests()">🚀 开始测试</button>
+            <button class="clear-btn" onclick="clearResults()">🗑️ 清空结果</button>
         </div>
 
         <div class="test-section">
@@ -131,6 +180,38 @@
         <div class="test-section">
             <h3>📊 测试报告</h3>
             <div id="testReport" class="test-results">等待测试完成...</div>
+        </div>
+
+        <!-- 测试结果显示区域 -->
+        <div id="testResults" class="test-results" style="display: none;">
+            <h3>📋 测试结果</h3>
+            <div id="resultsList"></div>
+        </div>
+
+        <!-- 测试项目 -->
+        <div class="test-section">
+            <h3>🔍 1. 数据加载测试</h3>
+            <div id="test1" class="status pending">等待测试...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 2. JSON解析测试</h3>
+            <div id="test2" class="status pending">等待测试...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 3. 图层生成测试</h3>
+            <div id="test3" class="status pending">等待测试...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🖥️ 4. 资源特征测试</h3>
+            <div id="test4" class="status pending">等待测试...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 5. 进程匹配测试</h3>
+            <div id="test5" class="status pending">等待测试...</div>
         </div>
     </div>
 
@@ -402,6 +483,306 @@
             await loadTestData();
             if (testResults.dataLoad) {
                 alert('快速测试：数据加载正常，建议运行完整测试验证UI功能');
+            }
+        }
+
+        function runTests() {
+            const input = document.getElementById('testDataInput').value.trim();
+            
+            if (!input) {
+                alert('请先输入测试数据');
+                return;
+            }
+
+            try {
+                testData = JSON.parse(input);
+                console.log('测试数据加载成功:', testData);
+                
+                // 重置所有测试状态
+                resetTestStatus();
+                
+                // 显示测试结果区域
+                document.getElementById('testResults').style.display = 'block';
+                
+                // 开始执行测试
+                executeTests();
+                
+            } catch (error) {
+                alert('JSON格式错误: ' + error.message);
+                console.error('JSON解析错误:', error);
+            }
+        }
+
+        function resetTestStatus() {
+            testResults = [];
+            for (let i = 1; i <= 5; i++) {
+                const element = document.getElementById(`test${i}`);
+                element.className = 'status pending';
+                element.textContent = '测试中...';
+            }
+            document.getElementById('resultsList').innerHTML = '';
+        }
+
+        async function executeTests() {
+            console.log('开始执行自动化测试...');
+            
+            // 测试1: 数据加载测试
+            await runTest1();
+            
+            // 测试2: JSON解析测试  
+            await runTest2();
+            
+            // 测试3: 图层生成测试
+            await runTest3();
+            
+            // 测试4: 资源特征测试
+            await runTest4();
+            
+            // 测试5: 进程匹配测试
+            await runTest5();
+            
+            // 显示最终结果
+            showFinalResults();
+        }
+
+        async function runTest1() {
+            console.log('执行测试1: 数据加载测试');
+            try {
+                const hasData = testData !== null && typeof testData === 'object';
+                const hasRequiredFields = testData.resolution || testData.sourceInfo || testData.obsSourceInfo || testData.cpuTopProcessList || testData.gpuTopProcessList;
+                
+                if (hasData && hasRequiredFields) {
+                    setTestResult('test1', 'success', '✅ 数据加载成功');
+                    addResult('数据加载测试', true, '测试数据包含必要字段');
+                } else {
+                    setTestResult('test1', 'error', '❌ 数据加载失败');
+                    addResult('数据加载测试', false, '测试数据缺少必要字段');
+                }
+            } catch (error) {
+                setTestResult('test1', 'error', '❌ 数据加载异常: ' + error.message);
+                addResult('数据加载测试', false, error.message);
+            }
+        }
+
+        async function runTest2() {
+            console.log('执行测试2: JSON解析测试');
+            try {
+                let parseSuccess = true;
+                let parseErrors = [];
+                
+                // 测试resolution字段解析
+                if (testData.resolution) {
+                    try {
+                        JSON.parse(testData.resolution);
+                    } catch (e) {
+                        parseSuccess = false;
+                        parseErrors.push('resolution字段格式错误');
+                    }
+                }
+                
+                // 测试sourceInfo字段解析
+                if (testData.sourceInfo) {
+                    try {
+                        JSON.parse(testData.sourceInfo);
+                    } catch (e) {
+                        parseSuccess = false;
+                        parseErrors.push('sourceInfo字段格式错误');
+                    }
+                }
+                
+                // 测试obsSourceInfo字段解析
+                if (testData.obsSourceInfo) {
+                    try {
+                        JSON.parse(testData.obsSourceInfo);
+                    } catch (e) {
+                        parseSuccess = false;
+                        parseErrors.push('obsSourceInfo字段格式错误');
+                    }
+                }
+                
+                // 测试进程列表解析
+                if (testData.cpuTopProcessList) {
+                    try {
+                        JSON.parse(testData.cpuTopProcessList);
+                    } catch (e) {
+                        parseSuccess = false;
+                        parseErrors.push('cpuTopProcessList字段格式错误');
+                    }
+                }
+                
+                if (parseSuccess) {
+                    setTestResult('test2', 'success', '✅ JSON解析成功');
+                    addResult('JSON解析测试', true, '所有JSON字段格式正确');
+                } else {
+                    setTestResult('test2', 'error', '❌ JSON解析失败');
+                    addResult('JSON解析测试', false, parseErrors.join(', '));
+                }
+            } catch (error) {
+                setTestResult('test2', 'error', '❌ JSON解析异常: ' + error.message);
+                addResult('JSON解析测试', false, error.message);
+            }
+        }
+
+        async function runTest3() {
+            console.log('执行测试3: 图层生成测试');
+            try {
+                let layerCount = 0;
+                
+                // 统计sourceInfo中的图层数量
+                if (testData.sourceInfo && testData.sourceInfo !== '{}') {
+                    const sourceInfo = JSON.parse(testData.sourceInfo);
+                    Object.keys(sourceInfo).forEach(sourceType => {
+                        if (sourceType !== 'pipe' && sourceInfo[sourceType].sourceList) {
+                            layerCount += sourceInfo[sourceType].sourceList.length;
+                        }
+                    });
+                }
+                
+                // 统计obsSourceInfo中的图层数量
+                if (testData.obsSourceInfo) {
+                    const obsSourceInfo = JSON.parse(testData.obsSourceInfo);
+                    Object.keys(obsSourceInfo).forEach(sourceType => {
+                        if (['otherScenes', 'auxAudioVolumn', 'desktopAudioVolumn'].includes(sourceType)) {
+                            return;
+                        }
+                        if (Array.isArray(obsSourceInfo[sourceType])) {
+                            layerCount += obsSourceInfo[sourceType].filter(source => 
+                                source.pos && typeof source.pos === 'object'
+                            ).length;
+                        }
+                    });
+                }
+                
+                if (layerCount > 0) {
+                    setTestResult('test3', 'success', `✅ 检测到 ${layerCount} 个图层`);
+                    addResult('图层生成测试', true, `成功识别 ${layerCount} 个有效图层`);
+                } else {
+                    setTestResult('test3', 'error', '❌ 未检测到有效图层');
+                    addResult('图层生成测试', false, '配置中没有有效的图层数据');
+                }
+            } catch (error) {
+                setTestResult('test3', 'error', '❌ 图层生成异常: ' + error.message);
+                addResult('图层生成测试', false, error.message);
+            }
+        }
+
+        async function runTest4() {
+            console.log('执行测试4: 资源特征测试');
+            try {
+                const hasCpuData = testData.cpuTopProcessList && testData.cpuTopProcessList !== '[]';
+                const hasGpuData = testData.gpuTopProcessList && testData.gpuTopProcessList !== '[]';
+                
+                if (hasCpuData || hasGpuData) {
+                    let message = '✅ 资源特征数据可用';
+                    if (hasCpuData) message += ' (CPU)';
+                    if (hasGpuData) message += ' (GPU)';
+                    
+                    setTestResult('test4', 'success', message);
+                    addResult('资源特征测试', true, '检测到系统资源数据');
+                } else {
+                    setTestResult('test4', 'error', '❌ 无资源特征数据');
+                    addResult('资源特征测试', false, '未找到CPU或GPU进程数据');
+                }
+            } catch (error) {
+                setTestResult('test4', 'error', '❌ 资源特征异常: ' + error.message);
+                addResult('资源特征测试', false, error.message);
+            }
+        }
+
+        async function runTest5() {
+            console.log('执行测试5: 进程匹配测试');
+            try {
+                let processCount = 0;
+                let matchableProcesses = [];
+                
+                // 检查CPU进程列表
+                if (testData.cpuTopProcessList) {
+                    const cpuProcesses = JSON.parse(testData.cpuTopProcessList);
+                    processCount += cpuProcesses.length;
+                    matchableProcesses = matchableProcesses.concat(cpuProcesses.map(p => p.name));
+                }
+                
+                // 检查sourceInfo中的进程
+                if (testData.sourceInfo && testData.sourceInfo !== '{}') {
+                    const sourceInfo = JSON.parse(testData.sourceInfo);
+                    if (sourceInfo.process && sourceInfo.process.sourceList) {
+                        sourceInfo.process.sourceList.forEach(source => {
+                            if (source.exeName) {
+                                matchableProcesses.push(source.exeName);
+                            }
+                        });
+                    }
+                }
+                
+                // 检查obsSourceInfo中的进程
+                if (testData.obsSourceInfo) {
+                    const obsSourceInfo = JSON.parse(testData.obsSourceInfo);
+                    if (obsSourceInfo.process && Array.isArray(obsSourceInfo.process)) {
+                        obsSourceInfo.process.forEach(source => {
+                            if (source.exeName) {
+                                matchableProcesses.push(source.exeName);
+                            }
+                        });
+                    }
+                }
+                
+                if (matchableProcesses.length > 0) {
+                    setTestResult('test5', 'success', `✅ 找到 ${matchableProcesses.length} 个可匹配进程`);
+                    addResult('进程匹配测试', true, `检测到 ${matchableProcesses.length} 个进程名称`);
+                } else {
+                    setTestResult('test5', 'error', '❌ 无可匹配进程');
+                    addResult('进程匹配测试', false, '未找到进程信息');
+                }
+            } catch (error) {
+                setTestResult('test5', 'error', '❌ 进程匹配异常: ' + error.message);
+                addResult('进程匹配测试', false, error.message);
+            }
+        }
+
+        function setTestResult(testId, status, message) {
+            const element = document.getElementById(testId);
+            element.className = `status ${status}`;
+            element.textContent = message;
+        }
+
+        function addResult(testName, passed, details) {
+            testResults.push({
+                name: testName,
+                passed: passed,
+                details: details
+            });
+        }
+
+        function showFinalResults() {
+            const resultsList = document.getElementById('resultsList');
+            const passedTests = testResults.filter(r => r.passed).length;
+            const totalTests = testResults.length;
+            
+            let html = `<div style="margin-bottom: 15px; font-weight: bold;">
+                测试完成: ${passedTests}/${totalTests} 项通过
+            </div>`;
+            
+            testResults.forEach(result => {
+                html += `<div class="result-item ${result.passed ? 'pass' : 'fail'}">
+                    ${result.passed ? '✅' : '❌'} ${result.name}: ${result.details}
+                </div>`;
+            });
+            
+            resultsList.innerHTML = html;
+            
+            console.log(`测试完成: ${passedTests}/${totalTests} 项通过`);
+        }
+
+        function clearResults() {
+            document.getElementById('testDataInput').value = '';
+            document.getElementById('testResults').style.display = 'none';
+            testData = null;
+            testResults = [];
+            
+            for (let i = 1; i <= 5; i++) {
+                const element = document.getElementById(`test${i}`);
+                element.className = 'status pending';
+                element.textContent = '等待测试...';
             }
         }
     </script>

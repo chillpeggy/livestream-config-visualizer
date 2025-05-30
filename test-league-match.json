@@ -1,6 +1,0 @@
-{
-  "resolution": "{\"width\":1920,\"height\":1080}",
-  "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"LeagueClientUxRender.exe\",\"overlap\":0.8,\"canvasOverlap\":1,\"canvasOverlapRect\":[0,0,1920,1080],\"layer\":3}]}}",
-  "cpuTopProcessList": "[{\"name\":\"LeagueClientUxRender.exe\",\"percentage\":35.4},{\"name\":\"chrome.exe\",\"percentage\":12.8},{\"name\":\"obs64.exe\",\"percentage\":8.5}]",
-  "gpuTopProcessList": "[{\"name\":\"LeagueClientUxRender.exe\",\"percentage\":65.2},{\"name\":\"firefox.exe\",\"percentage\":15.7}]"
-} 

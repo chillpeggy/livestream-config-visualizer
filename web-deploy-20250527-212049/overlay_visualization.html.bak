@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直播配置解析</title>
+    <title>🔗 直播配置解析</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
     <style>
         body {
             font-family: 'Arial', 'Microsoft YaHei', sans-serif;
@@ -783,17 +784,17 @@
                         <div class="visualization-title">
                             🖼️ 解析预览图
                         </div>
-                    <div class="controls">
-                        <div class="control-group">
-                            <label>🎛️ 叠加层透明度:</label>
+                        <div class="controls">
+                            <div class="control-group">
+                                <label>🎛️ 叠加层透明度:</label>
                                 <input type="range" class="opacity-slider" id="opacitySlider" min="0.2" max="1" step="0.1" value="0.7" onchange="updateOpacity(this.value)">
                                 <span id="opacityValue">70%</span>
+                            </div>
+                            <div class="control-group">
+                                <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
+                                <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
+                            </div>
                         </div>
-                        <div class="control-group">
-                            <button class="toggle-btn active" id="layerToggle" onclick="toggleLayers()">显示层级叠加</button>
-                            <button class="toggle-btn" onclick="toggleDetails()">显示详细信息</button>
-                        </div>
-                    </div>
                     </h2>
                     
                     <div class="game-image-container" id="gameContainer">
@@ -1246,21 +1247,21 @@
                 data.gpuTopProcessList = data.gpuTopProcess;
                 delete data.gpuTopProcess; // 删除原字段避免重复处理
             }
-                
-                // 解析resolution
-                if (data.resolution) {
+            
+            // 解析resolution
+            if (data.resolution) {
                 console.log('🔍 找到resolution字段:', data.resolution);
-                    canvasResolution = JSON.parse(data.resolution);
+                canvasResolution = JSON.parse(data.resolution);
                 console.log('🔍 解析后的分辨率:', canvasResolution);
             } else {
                 console.log('⚠️ 未找到resolution字段，使用默认分辨率');
-                }
-                
-                // 收集所有图层
-                parsedLayers = [];
-                
-                // 处理sourceInfo格式
-                if (data.sourceInfo) {
+            }
+            
+            // 收集所有图层
+            parsedLayers = [];
+            
+            // 处理sourceInfo格式
+            if (data.sourceInfo) {
                 console.log('🔍 找到sourceInfo字段:', data.sourceInfo);
                 try {
                     const sourceInfoData = JSON.parse(data.sourceInfo);
@@ -1272,10 +1273,10 @@
                 }
             } else {
                 console.log('⚠️ 未找到sourceInfo字段');
-                }
-                
-                // 处理obsSourceInfo格式
-                if (data.obsSourceInfo) {
+            }
+            
+            // 处理obsSourceInfo格式
+            if (data.obsSourceInfo) {
                 console.log('🔍 找到obsSourceInfo字段:', data.obsSourceInfo);
                 try {
                     const obsSourceInfoData = JSON.parse(data.obsSourceInfo);
@@ -1290,25 +1291,25 @@
             }
             
             // 处理资源特征数据 - 现在只需要检查List格式
-                let hasResourceData = false;
-                if (data.cpuTopProcessList || data.gpuTopProcessList) {
+            let hasResourceData = false;
+            if (data.cpuTopProcessList || data.gpuTopProcessList) {
                 console.log('🔍 找到资源特征数据');
                 console.log('🔍 cpuTopProcessList:', data.cpuTopProcessList ? '存在' : '不存在');
                 console.log('🔍 gpuTopProcessList:', data.gpuTopProcessList ? '存在' : '不存在');
                 await generateResourceFeatures(data);
-                    hasResourceData = true;
+                hasResourceData = true;
             } else {
                 console.log('⚠️ 未找到资源特征数据 (cpuTopProcessList 或 gpuTopProcessList)');
-                }
-                
-                // 显示或隐藏资源特征模块
-                const resourceFeatures = document.getElementById('resourceFeatures');
-                if (hasResourceData) {
-                    resourceFeatures.style.display = 'block';
-                } else {
-                    resourceFeatures.style.display = 'none';
-                }
-                
+            }
+            
+            // 显示或隐藏资源特征模块
+            const resourceFeatures = document.getElementById('resourceFeatures');
+            if (hasResourceData) {
+                resourceFeatures.style.display = 'block';
+            } else {
+                resourceFeatures.style.display = 'none';
+            }
+            
             console.log('🔍 最终解析结果:');
             console.log('🔍 图层数量:', parsedLayers.length);
             console.log('🔍 资源特征数据:', hasResourceData ? '有' : '无');
@@ -1322,20 +1323,20 @@
                     ['sourceInfo', 'obsSourceInfo', 'cpuTopProcessList', 'gpuTopProcessList'].includes(key)
                 ));
                 throw new Error('未找到可解析的图层信息或资源特征数据，请检查JSON格式。期望的字段: sourceInfo, obsSourceInfo, cpuTopProcessList, gpuTopProcessList');
-                }
-                
-                // 按layer排序
-                parsedLayers.sort((a, b) => a.layer - b.layer);
-                
+            }
+            
+            // 按layer排序
+            parsedLayers.sort((a, b) => a.layer - b.layer);
+            
             if (parsedLayers.length === 0) {
                 showMessage(`✅ 成功解析配置！发现资源特征数据`, 'success');
             } else {
                 showMessage(`✅ 成功解析配置！发现 ${parsedLayers.length} 个图层${hasResourceData ? '和资源特征数据' : ''}`, 'success');
             }
-                
-                // 生成可视化
-                generateVisualization();
-                generateLayerList();
+            
+            // 生成可视化
+            generateVisualization();
+            generateLayerList();
         }
 
         // 解析sourceInfo格式
@@ -1403,23 +1404,23 @@
                             obsLayerWidth = Math.max(obsLayerWidth, 100); // 最小宽度100px
                             obsLayerHeight = Math.max(obsLayerHeight, 100); // 最小高度100px
                             
-                    const convertedCoords = convertObsCoordinates(
+                            const convertedCoords = convertObsCoordinates(
                                 source.pos.x || 0, 
                                 source.pos.y || 0, 
                                 obsLayerWidth, 
                                 obsLayerHeight,
-                        detectedResolution
-                    );
-                    
+                                detectedResolution
+                            );
+                            
                             // 通用的图层对象创建
                             const layerObj = {
                                 sourceType: sourceType, // 保持原始类型名
                                 configSource: 'obs',
                                 name: source.name || `${sourceTypeNames[sourceType] || sourceType}源`,
-                        layer: layerIndex++,
-                        canvasOverlapRect: convertedCoords,
-                        canvasOverlap: calculateOverlap(convertedCoords),
-                        overlap: calculateOverlap(convertedCoords),
+                                layer: layerIndex++,
+                                canvasOverlapRect: convertedCoords,
+                                canvasOverlap: calculateOverlap(convertedCoords),
+                                overlap: calculateOverlap(convertedCoords),
                                 pos: source.pos
                             };
                             
@@ -1481,15 +1482,15 @@
                 let detectedWidth, detectedHeight, detectedName;
                 
                 // 根据最大坐标推断可能的原始分辨率
-            if (maxX <= 1280 && maxY <= 720) {
+                if (maxX <= 1280 && maxY <= 720) {
                     detectedWidth = 1280; detectedHeight = 720; detectedName = '720p';
-            } else if (maxX <= 1920 && maxY <= 1080) {
+                } else if (maxX <= 1920 && maxY <= 1080) {
                     detectedWidth = 1920; detectedHeight = 1080; detectedName = '1080p';
-            } else if (maxX <= 2560 && maxY <= 1440) {
+                } else if (maxX <= 2560 && maxY <= 1440) {
                     detectedWidth = 2560; detectedHeight = 1440; detectedName = '2K';
                 } else if (maxX <= 3840 && maxY <= 2160) {
                     detectedWidth = 3840; detectedHeight = 2160; detectedName = '4K';
-            } else {
+                } else {
                     // 如果超出4K，使用动态计算
                     detectedWidth = Math.ceil(maxX / 100) * 100; // 向上取整到百位
                     detectedHeight = Math.ceil(maxY / 100) * 100;
@@ -1555,21 +1556,21 @@
                 return [scaledX, scaledY, scaledWidth, scaledHeight];
             } else {
                 // 标准转换逻辑（通过720p基准）
-            // 先转换到720p基准
-            const scale720p = 720 / detectedResolution.height;
-            const converted720pX = x * scale720p;
-            const converted720pY = y * scale720p;
-            const converted720pWidth = sourceWidth * scale720p;
-            const converted720pHeight = sourceHeight * scale720p;
-            
-            // 再转换到当前画布分辨率
-            const scaleToCanvas = canvasResolution.height / 720;
-            const finalX = converted720pX * scaleToCanvas;
-            const finalY = converted720pY * scaleToCanvas;
-            const finalWidth = converted720pWidth * scaleToCanvas;
-            const finalHeight = converted720pHeight * scaleToCanvas;
-            
-            return [finalX, finalY, finalWidth, finalHeight];
+                // 先转换到720p基准
+                const scale720p = 720 / detectedResolution.height;
+                const converted720pX = x * scale720p;
+                const converted720pY = y * scale720p;
+                const converted720pWidth = sourceWidth * scale720p;
+                const converted720pHeight = sourceHeight * scale720p;
+                
+                // 再转换到当前画布分辨率
+                const scaleToCanvas = canvasResolution.height / 720;
+                const finalX = converted720pX * scaleToCanvas;
+                const finalY = converted720pY * scaleToCanvas;
+                const finalWidth = converted720pWidth * scaleToCanvas;
+                const finalHeight = converted720pHeight * scaleToCanvas;
+                
+                return [finalX, finalY, finalWidth, finalHeight];
             }
         }
 
@@ -1767,12 +1768,12 @@
                     const heightPercent = (scaledHeight / containerHeight * 100).toFixed(2);
                     
                     // 设置叠加层样式
-                overlayDiv.style.cssText = `
-                    left: ${leftPercent}%;
-                    top: ${topPercent}%;
-                    width: ${widthPercent}%;
-                    height: ${heightPercent}%;
-                    border-color: ${color};
+                    overlayDiv.style.cssText = `
+                        left: ${leftPercent}%;
+                        top: ${topPercent}%;
+                        width: ${widthPercent}%;
+                        height: ${heightPercent}%;
+                        border-color: ${color};
                     `;
                     
                     // 标签定位：与边框左上角对齐
@@ -1983,8 +1984,8 @@
                 html += `<div><strong>坐标:</strong> (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)</div>`;
             } else {
                 // 其他配置：显示完整的转换后坐标
-            const [x, y, width, height] = layer.canvasOverlapRect;
-            html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
+                const [x, y, width, height] = layer.canvasOverlapRect;
+                html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
             }
             
             return html;
@@ -2138,8 +2139,8 @@
                         desc += ` | ${processTypes.join(' + ')}`;
                     } else {
                         // 如果是未知进程，显示进程名
-                desc += ` | ${processName}`;
-            }
+                        desc += ` | ${processName}`;
+                    }
                 } else {
                     // 其他情况或进程库未加载时，显示进程名
                     desc += ` | ${processName}`;
@@ -2153,8 +2154,8 @@
             
             // 对于OBS配置，优先显示文件名而不是完整路径
             if (layer.configSource === 'obs') {
-            if (layer.fileName) {
-                desc += ` | ${layer.fileName}`;
+                if (layer.fileName) {
+                    desc += ` | ${layer.fileName}`;
                 } else if (layer.filepath) {
                     // 如果没有fileName但有filepath，提取文件名
                     const fileName = layer.filepath.split('/').pop().split('\\').pop();
@@ -2185,8 +2186,8 @@
                 desc += ` | 坐标: (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)`;
             } else {
                 // 其他配置：显示完整的转换后坐标
-            const [x, y, width, height] = layer.canvasOverlapRect;
-            desc += ` | 坐标: (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})`;
+                const [x, y, width, height] = layer.canvasOverlapRect;
+                desc += ` | 坐标: (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})`;
             }
             
             return desc;
@@ -2514,4 +2515,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
