@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音量设置功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .test-data {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 直播音量设置功能测试</h1>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例1：正常音量数据</div>
+            <div class="test-data" id="testData1">{
+  "pcSpeakerDecibel": -26.93,
+  "micDecibleList": "[-58.94,-58.49,-61.68,-59.94,-60.48,-58.71,-60.21,-61.06,-59.94,-60.21,-59.68,-58.94,-60.21,-59.18,-61.06,-54.19,-55.04,-57.44,-57.44,-20.8,-57.64,-12.59,-24.34,-61.37,-59.18,-61.06,-50.57,-8.95,-14.53,-61.37]"
+}</div>
+            <button onclick="testCase(1)">测试案例1</button>
+            <div class="result" id="result1"></div>
+        </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例2：系统音量静音</div>
+            <div class="test-data" id="testData2">{
+  "pcSpeakerDecibel": -999.0,
+  "micDecibleList": "[-58.94,-58.49,-61.68,-59.94,-60.48]"
+}</div>
+            <button onclick="testCase(2)">测试案例2</button>
+            <div class="result" id="result2"></div>
+        </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例3：麦克风音量静音</div>
+            <div class="test-data" id="testData3">{
+  "pcSpeakerDecibel": -15.5,
+  "micDecibleList": "[-999,-999,-999,-999,-999]"
+}</div>
+            <button onclick="testCase(3)">测试案例3</button>
+            <div class="result" id="result3"></div>
+        </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例4：只有系统音量 (用户案例)</div>
+            <div class="test-data" id="testData4">{
+  "pcSpeakerDecibel": -30.25
+}</div>
+            <button onclick="testCase(4)">测试案例4</button>
+            <div class="result" id="result4"></div>
+        </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例5：只有系统音量</div>
+            <div class="test-data" id="testData5">{
+  "pcSpeakerDecibel": -30.25
+}</div>
+            <button onclick="testCase(5)">测试案例5</button>
+            <div class="result" id="result5"></div>
+        </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例6：只有麦克风音量</div>
+            <div class="test-data" id="testData6">{
+  "micDecibleList": "[-45.2,-46.1,-44.8,-45.9,-46.3]"
+}</div>
+            <button onclick="testCase(6)">测试案例6</button>
+            <div class="result" id="result6"></div>
+        </div>
+    </div>
+
+    <script>
+        // 复制音量设置处理函数
+        function generateAudioSettings(data) {
+            console.log('🎵 开始处理音量设置数据');
+            console.log('🎵 pcSpeakerDecibel:', data.pcSpeakerDecibel);
+            console.log('🎵 micDecibleList:', data.micDecibleList);
+            
+            // 检查是否有音量相关数据
+            if (!data.pcSpeakerDecibel && !data.micDecibleList) {
+                console.log('🎵 未找到音量设置数据');
+                return '暂无音量设置数据';
+            }
+            
+            let systemVolumeDisplay = '无输入';
+            let micVolumeDisplay = '无输入';
+            
+            // 处理系统音量设置
+            if (data.pcSpeakerDecibel !== undefined && data.pcSpeakerDecibel !== null) {
+                const systemVolume = parseFloat(data.pcSpeakerDecibel);
+                if (systemVolume < -900) {
+                    systemVolumeDisplay = '完全静音';
+                } else {
+                    systemVolumeDisplay = `${systemVolume.toFixed(2)} dB`;
+                }
+                console.log('🎵 系统音量处理结果:', systemVolumeDisplay);
+            }
+            
+            // 处理麦克风音量设置
+            if (data.micDecibleList) {
+                try {
+                    const micVolumeArray = JSON.parse(data.micDecibleList);
+                    console.log('🎵 解析的麦克风音量数组:', micVolumeArray);
+                    
+                    if (Array.isArray(micVolumeArray) && micVolumeArray.length > 0) {
+                        // 计算平均值
+                        const numericValues = micVolumeArray.filter(val => typeof val === 'number' && !isNaN(val));
+                        if (numericValues.length > 0) {
+                            const average = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
+                            
+                            if (average < -900) {
+                                micVolumeDisplay = '完全静音';
+                            } else {
+                                micVolumeDisplay = `${average.toFixed(2)} dB (平均值)`;
+                            }
+                            console.log('🎵 麦克风音量处理结果:', micVolumeDisplay, '数组长度:', numericValues.length);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('🎵 无法解析micDecibleList:', e);
+                }
+            }
+            
+            return `
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; border-left: 4px solid #6c757d;">
+                    <div style="font-weight: bold; font-size: 16px; color: #495057; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">🎵 直播音量设置</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 30px; font-size: 14px; color: #495057;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="font-weight: bold; color: #343a40;">系统音量设置:</div>
+                            <div style="font-weight: bold; color: ${systemVolumeDisplay.includes('静音') || systemVolumeDisplay.includes('无输入') ? '#dc3545' : '#6c757d'}; font-family: 'Courier New', monospace;">${systemVolumeDisplay}</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="font-weight: bold; color: #343a40;">麦克风音量设置:</div>
+                            <div style="font-weight: bold; color: ${micVolumeDisplay.includes('静音') || micVolumeDisplay.includes('无输入') ? '#dc3545' : '#6c757d'}; font-family: 'Courier New', monospace;">${micVolumeDisplay}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function testCase(caseNumber) {
+            const testDataElement = document.getElementById(`testData${caseNumber}`);
+            const resultElement = document.getElementById(`result${caseNumber}`);
+            
+            try {
+                const data = JSON.parse(testDataElement.textContent);
+                const html = generateAudioSettings(data);
+                resultElement.innerHTML = html;
+                console.log(`测试案例${caseNumber}执行完成`);
+            } catch (error) {
+                resultElement.innerHTML = `<div style="color: red;">错误: ${error.message}</div>`;
+                console.error(`测试案例${caseNumber}执行失败:`, error);
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -711,6 +711,54 @@
         .global-layer-details div:last-child {
             margin-bottom: 0; /* 最后一行不需要底部间距 */
         }
+        
+        /* 音量设置模块样式 - 中性色彩 */
+        .audio-settings {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border-left: 4px solid #6c757d; /* 中性灰色 */
+        }
+        
+        .audio-settings-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #495057; /* 中性深灰色 */
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .audio-settings-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .audio-setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .audio-setting-label {
+            font-weight: bold;
+            color: #343a40;
+        }
+        
+        .audio-setting-value {
+            font-weight: bold;
+            color: #6c757d; /* 中性颜色显示数值 */
+            font-family: 'Courier New', monospace;
+        }
+        
+        .audio-setting-value.muted {
+            color: #dc3545; /* 静音状态用红色 */
+        }
     </style>
 </head>
 <body>
@@ -1300,14 +1348,16 @@
             
             // 处理资源特征数据 - 现在只需要检查List格式
                 let hasResourceData = false;
-                if (data.cpuTopProcessList || data.gpuTopProcessList) {
+                if (data.cpuTopProcessList || data.gpuTopProcessList || data.pcSpeakerDecibel || data.micDecibleList) {
                 console.log('🔍 找到资源特征数据');
                 console.log('🔍 cpuTopProcessList:', data.cpuTopProcessList ? '存在' : '不存在');
                 console.log('🔍 gpuTopProcessList:', data.gpuTopProcessList ? '存在' : '不存在');
+                console.log('🔍 pcSpeakerDecibel:', data.pcSpeakerDecibel !== undefined ? '存在' : '不存在');
+                console.log('🔍 micDecibleList:', data.micDecibleList ? '存在' : '不存在');
                 await generateResourceFeatures(data);
                     hasResourceData = true;
             } else {
-                console.log('⚠️ 未找到资源特征数据 (cpuTopProcessList 或 gpuTopProcessList)');
+                console.log('⚠️ 未找到资源特征数据 (cpuTopProcessList, gpuTopProcessList, pcSpeakerDecibel, micDecibleList)');
                 }
                 
                 // 显示或隐藏资源特征模块
@@ -2452,7 +2502,10 @@
             // 检测特定风险类型
             const riskDetectionHTML = generateRiskDetection(cpuTopProcesses);
             
-            container.innerHTML = tableHTML + riskDetectionHTML;
+            // 生成音量设置检测结果
+            const audioSettingsHTML = generateAudioSettings(data);
+            
+            container.innerHTML = tableHTML + riskDetectionHTML + audioSettingsHTML;
             
             // 添加调试信息
             console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
@@ -2497,6 +2550,74 @@
                         <div><strong>自动操作脚本:</strong> <span style="color: ${hasAutoScript ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAutoScript ? '是' : '否'}</span></div>
                         <div><strong>弹幕爬取软件:</strong> <span style="color: ${hasDanmuCrawler ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasDanmuCrawler ? '是' : '否'}</span></div>
                         <div><strong>黑产进程:</strong> <span style="color: ${hasBlackProduct ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasBlackProduct ? '是' : '否'}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 生成音量设置检测结果
+        function generateAudioSettings(data) {
+            console.log('🎵 开始处理音量设置数据');
+            console.log('🎵 pcSpeakerDecibel:', data.pcSpeakerDecibel);
+            console.log('🎵 micDecibleList:', data.micDecibleList);
+            
+            // 检查是否有音量相关数据
+            if (!data.pcSpeakerDecibel && !data.micDecibleList) {
+                console.log('🎵 未找到音量设置数据');
+                return ''; // 没有音量数据时不显示
+            }
+            
+            let systemVolumeDisplay = '<span class="muted">无输入</span>';
+            let micVolumeDisplay = '<span class="muted">无输入</span>';
+            
+            // 处理系统音量设置
+            if (data.pcSpeakerDecibel !== undefined && data.pcSpeakerDecibel !== null) {
+                const systemVolume = parseFloat(data.pcSpeakerDecibel);
+                if (systemVolume < -900) {
+                    systemVolumeDisplay = '<span class="muted">完全静音</span>';
+                } else {
+                    systemVolumeDisplay = `${systemVolume.toFixed(2)} dB`;
+                }
+                console.log('🎵 系统音量处理结果:', systemVolumeDisplay);
+            }
+            
+            // 处理麦克风音量设置
+            if (data.micDecibleList) {
+                try {
+                    const micVolumeArray = JSON.parse(data.micDecibleList);
+                    console.log('🎵 解析的麦克风音量数组:', micVolumeArray);
+                    
+                    if (Array.isArray(micVolumeArray) && micVolumeArray.length > 0) {
+                        // 计算平均值
+                        const numericValues = micVolumeArray.filter(val => typeof val === 'number' && !isNaN(val));
+                        if (numericValues.length > 0) {
+                            const average = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
+                            
+                            if (average < -900) {
+                                micVolumeDisplay = '<span class="muted">完全静音</span>';
+                            } else {
+                                micVolumeDisplay = `${average.toFixed(2)} dB (平均值)`;
+                            }
+                            console.log('🎵 麦克风音量处理结果:', micVolumeDisplay, '数组长度:', numericValues.length);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('🎵 无法解析micDecibleList:', e);
+                }
+            }
+            
+            return `
+                <div class="audio-settings">
+                    <div class="audio-settings-title">🎵 直播音量设置</div>
+                    <div class="audio-settings-content">
+                        <div class="audio-setting-item">
+                            <div class="audio-setting-label">系统音量设置:</div>
+                            <div class="audio-setting-value">${systemVolumeDisplay}</div>
+                        </div>
+                        <div class="audio-setting-item">
+                            <div class="audio-setting-label">麦克风音量设置:</div>
+                            <div class="audio-setting-value">${micVolumeDisplay}</div>
+                        </div>
                     </div>
                 </div>
             `;
