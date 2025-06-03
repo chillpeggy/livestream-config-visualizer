@@ -120,6 +120,16 @@
             <button onclick="testCase(6)">测试案例6</button>
             <div class="result" id="result6"></div>
         </div>
+        
+        <div class="test-case">
+            <div class="test-title">测试案例7：麦克风几乎无声音</div>
+            <div class="test-data" id="testData7">{
+  "pcSpeakerDecibel": -25.0,
+  "micDecibleList": "[-58.94,-58.49,-61.68,-59.94,-60.48]"
+}</div>
+            <button onclick="testCase(7)">测试案例7</button>
+            <div class="result" id="result7"></div>
+        </div>
     </div>
 
     <script>
@@ -163,6 +173,8 @@
                             
                             if (average < -900) {
                                 micVolumeDisplay = '完全静音';
+                            } else if (average < -40) {
+                                micVolumeDisplay = `几乎无声音（${average.toFixed(2)} dB）`;
                             } else {
                                 micVolumeDisplay = `${average.toFixed(2)} dB (平均值)`;
                             }
@@ -184,7 +196,7 @@
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <div style="font-weight: bold; color: #343a40;">麦克风音量设置:</div>
-                            <div style="font-weight: bold; color: ${micVolumeDisplay.includes('静音') || micVolumeDisplay.includes('无输入') ? '#dc3545' : '#6c757d'}; font-family: 'Courier New', monospace;">${micVolumeDisplay}</div>
+                            <div style="font-weight: bold; color: ${micVolumeDisplay.includes('静音') || micVolumeDisplay.includes('无输入') || micVolumeDisplay.includes('几乎无声音') ? '#dc3545' : '#6c757d'}; font-family: 'Courier New', monospace;">${micVolumeDisplay}</div>
                         </div>
                     </div>
                 </div>

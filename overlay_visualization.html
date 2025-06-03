@@ -2595,6 +2595,8 @@
                             
                             if (average < -900) {
                                 micVolumeDisplay = '<span class="muted">完全静音</span>';
+                            } else if (average < -40) {
+                                micVolumeDisplay = `<span class="muted">几乎无声音（${average.toFixed(2)} dB）</span>`;
                             } else {
                                 micVolumeDisplay = `${average.toFixed(2)} dB (平均值)`;
                             }
