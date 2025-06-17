@@ -2670,6 +2670,30 @@
             const globalDetails = document.getElementById('globalLayerDetails');
             globalDetails.classList.remove('show');
         }
+
+        // 1. 读取进程库，建立映射
+        let processLabelMap = {};
+        fetch('process-library.csv').then(res => res.text()).then(csv => {
+          csv.split('\n').slice(1).forEach(line => {
+            const [exe, label] = line.split(',');
+            if (exe && label) processLabelMap[exe.trim().toLowerCase()] = label.trim();
+          });
+        });
+
+        // 2. 修改getLayerDisplayName函数（如无则在createLayerItem前加）
+        function getLayerDisplayName(layer) {
+          if (layer.sourceType === 'process' && layer.exeName) {
+            // 去掉扩展名
+            const exeBase = layer.exeName.replace(/\.[^/.]+$/, '').toLowerCase();
+            if (processLabelMap[exeBase]) {
+              return processLabelMap[exeBase];
+            }
+            // 进程库找不到则用原始进程名
+            return layer.exeName;
+          }
+          // 其他类型保持原有逻辑
+          return layer.name;
+        }
     </script>
 </body>
 </html>
