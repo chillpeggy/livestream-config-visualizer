@@ -943,46 +943,40 @@
             }
         }
         
-        // 进程名模糊匹配 - 返回所有匹配的标签
+        // 进程名模糊匹配 - 返回所有匹配的标签 - 修复版本
         function matchProcessType(processName) {
-            if (!processName || processLibrary.length === 0) {
-                console.log('匹配失败: processName =', processName, ', processLibrary.length =', processLibrary.length);
+            if (!processName || !isProcessLibraryLoaded) {
+                console.log('匹配失败: processName =', processName, ', isProcessLibraryLoaded =', isProcessLibraryLoaded);
                 return ['未知进程'];
             }
             
-            // 移除.exe后缀进行匹配
+            // 移除.exe后缀进行匹配，转换为小写
             const cleanProcessName = processName.toLowerCase().replace(/\.exe$/, '');
             console.log('匹配进程:', processName, '→', cleanProcessName);
             
-            let matchedTypes = [];
-            
-            // 精确匹配 - 收集所有匹配项
-            const exactMatches = processLibrary.filter(item => 
-                item.exe.toLowerCase() === processName.toLowerCase() ||
-                item.exe.toLowerCase() === cleanProcessName
-            );
-            
-            if (exactMatches.length > 0) {
-                matchedTypes = exactMatches.map(match => match.type);
-                console.log('精确匹配成功:', exactMatches);
-            } else {
-                // 模糊匹配（包含关系） - 收集所有匹配项
-                const fuzzyMatches = processLibrary.filter(item => 
-                    cleanProcessName.includes(item.exe.toLowerCase()) ||
-                    item.exe.toLowerCase().includes(cleanProcessName)
-                );
-                
-                if (fuzzyMatches.length > 0) {
-                    matchedTypes = fuzzyMatches.map(match => match.type);
-                    console.log('模糊匹配成功:', fuzzyMatches);
-                } else {
-                    console.log('匹配失败，进程库前5条:', processLibrary.slice(0, 5));
-                    matchedTypes = ['未知进程'];
-                }
+            // 直接在processLabelMap中查找
+            if (processLabelMap[cleanProcessName]) {
+                const label = processLabelMap[cleanProcessName];
+                console.log('精确匹配成功:', cleanProcessName, '→', label);
+                return [label];
             }
             
-            // 去重
-            return [...new Set(matchedTypes)];
+            // 如果精确匹配失败，尝试模糊匹配
+            const fuzzyMatches = Object.keys(processLabelMap).filter(key => 
+                cleanProcessName.includes(key) || key.includes(cleanProcessName)
+            );
+            
+            if (fuzzyMatches.length > 0) {
+                const matchedTypes = fuzzyMatches.map(key => processLabelMap[key]);
+                console.log('模糊匹配成功:', fuzzyMatches, '→', matchedTypes);
+                return [...new Set(matchedTypes)]; // 去重
+            }
+            
+            console.log('匹配失败，进程库中的相关键:', Object.keys(processLabelMap).filter(key => 
+                key.includes('microsoft') || key.includes('media') || key.includes('player')
+            ));
+            
+            return ['未知进程'];
         }
         
         // 生成标签HTML - 支持多个标签
