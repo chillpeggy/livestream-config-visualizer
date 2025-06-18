@@ -2673,26 +2673,66 @@
 
         // 1. 读取进程库，建立映射
         let processLabelMap = {};
-        fetch('process-library.csv').then(res => res.text()).then(csv => {
-          csv.split('\n').slice(1).forEach(line => {
-            const [exe, label] = line.split(',');
-            if (exe && label) processLabelMap[exe.trim().toLowerCase()] = label.trim();
-          });
-        });
+        let isProcessLibraryLoaded = false;
 
-        // 2. 修改getLayerDisplayName函数（如无则在createLayerItem前加）
-        function getLayerDisplayName(layer) {
-          if (layer.sourceType === 'process' && layer.exeName) {
-            // 去掉扩展名
-            const exeBase = layer.exeName.replace(/\.[^/.]+$/, '').toLowerCase();
-            if (processLabelMap[exeBase]) {
-              return processLabelMap[exeBase];
+        // 异步加载进程库
+        async function loadProcessLibrary() {
+            try {
+                const response = await fetch('process-library.csv');
+                const csv = await response.text();
+                
+                console.log('🔍 开始加载进程库...');
+                
+                csv.split('\n').slice(1).forEach(line => {
+                    if (line.trim()) {
+                        const [exe, label] = line.split(',');
+                        if (exe && label) {
+                            const cleanExe = exe.trim().toLowerCase();
+                            const cleanLabel = label.trim();
+                            processLabelMap[cleanExe] = cleanLabel;
+                            console.log(`📋 进程映射: ${cleanExe} -> ${cleanLabel}`);
+                        }
+                    }
+                });
+                
+                isProcessLibraryLoaded = true;
+                console.log(`✅ 进程库加载完成，共 ${Object.keys(processLabelMap).length} 个进程映射`);
+                
+                // 如果已经有解析的图层数据，重新渲染图层列表
+                if (parsedLayers.length > 0) {
+                    console.log('🔄 进程库加载完成，重新渲染图层列表...');
+                    generateLayerList();
+                }
+                
+            } catch (error) {
+                console.error('❌ 加载进程库失败:', error);
             }
-            // 进程库找不到则用原始进程名
-            return layer.exeName;
-          }
-          // 其他类型保持原有逻辑
-          return layer.name;
+        }
+
+        // 页面加载时开始加载进程库
+        loadProcessLibrary();
+
+        // 2. 改进getLayerDisplayName函数
+        function getLayerDisplayName(layer) {
+            if (layer.sourceType === 'process' && layer.exeName) {
+                // 去掉扩展名，转换为小写
+                const exeBase = layer.exeName.replace(/\.[^/.]+$/, '').toLowerCase();
+                
+                console.log(`🔍 查找进程标签: ${layer.exeName} -> ${exeBase}`);
+                
+                if (isProcessLibraryLoaded && processLabelMap[exeBase]) {
+                    const label = processLabelMap[exeBase];
+                    console.log(`✅ 找到进程标签: ${exeBase} -> ${label}`);
+                    return label;
+                } else {
+                    console.log(`❌ 未找到进程标签: ${exeBase}, 进程库已加载: ${isProcessLibraryLoaded}`);
+                }
+                
+                // 进程库找不到则用原始进程名
+                return layer.exeName;
+            }
+            // 其他类型保持原有逻辑
+            return layer.name || layer.sourceType;
         }
     </script>
 </body>
