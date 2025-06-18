@@ -2697,8 +2697,12 @@
                 
                 csv.split('\n').slice(1).forEach(line => {
                     if (line.trim()) {
-                        const [exe, label] = line.split(',');
-                        if (exe && label) {
+                        // 修复：只取前两个字段，忽略后面的空逗号
+                        const parts = line.split(',');
+                        const exe = parts[0];
+                        const label = parts[1];
+                        
+                        if (exe && label && exe.trim() && label.trim()) {
                             const cleanExe = exe.trim().toLowerCase();
                             const cleanLabel = label.trim();
                             processLabelMap[cleanExe] = cleanLabel;
