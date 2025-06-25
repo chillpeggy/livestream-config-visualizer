@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直播配置解析</title>
+    <title>配置解析</title>
+    <!-- 网页标签页图标设置 - 支持多种格式以确保最佳兼容性 -->
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="assets/icon-16.png" type="image/png" sizes="16x16">
+    <link rel="shortcut icon" href="assets/icon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/icon-256.png" sizes="256x256">
+    <!-- 阻止浏览器自动请求默认favicon.ico（放在最后作为fallback） -->
+    <link rel="icon" href="data:," type="image/x-icon">
     <style>
         body {
             font-family: 'Arial', 'Microsoft YaHei', sans-serif;
@@ -708,8 +716,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔗 直播配置解析</h1>
-            <p>智能解析直播配置JSON，可视化显示各个源的位置和覆盖范围，让配置一目了然</p>
+            <h1><img src="assets/icon.svg" alt="icon" style="width: 32px; height: 32px; margin-right: 8px; vertical-align: middle;" onerror="this.src='assets/icon-32.png'"> 配置解析</h1>
+            <p>智能解析配置JSON，可视化显示各个源的位置和覆盖范围，让配置一目了然</p>
         </div>
         
         <!-- 输入区域 -->
@@ -721,7 +729,7 @@
                     <h3>🖼️ 1. 上传底图</h3>
                     <div class="file-upload" id="fileUploadArea">
                         <div class="paste-hint">Ctrl+V 粘贴</div>
-                        <p>请上传您的游戏截图或直播底图</p>
+                        <p>请上传您的游戏截图或底图</p>
                         <input type="file" id="imageUpload" accept="image/*" style="display: none;">
                         <button class="upload-btn" onclick="document.getElementById('imageUpload').click();">选择图片文件</button>
                         <p>支持 JPG, PNG, GIF 等常见图片格式<br>💡 <strong>鼠标悬停后可直接 Ctrl+V 粘贴剪贴板图片</strong></p>
@@ -734,7 +742,7 @@
                     <textarea 
                         id="jsonInput" 
                         class="json-input" 
-                        placeholder='请粘贴您的直播配置JSON，支持两种格式：
+                        placeholder='请粘贴您的配置JSON，支持两种格式：
 
 1. sourceInfo格式：
 {
@@ -757,8 +765,8 @@
                     <div class="instructions">
                         <h3>✨ 快速上手</h3>
                         <ul>
-                            <li>上传您的游戏截图或直播底图</li>
-                            <li>粘贴直播配置的JSON代码</li>
+                            <li>上传您的游戏截图或底图</li>
+                            <li>粘贴配置的JSON代码</li>
                             <li>点击"解析配置"自动生成可视化</li>
                             <li>点击图层行查看单独效果</li>
                             <li>调节透明度和显示选项</li>
@@ -1025,7 +1033,8 @@
             'overlay': '叠加层',
             'filter': '滤镜',
             'transition': '转场',
-            'scene': '场景'
+            'scene': '场景',
+            'iosWirelessProjection': '手机投屏'
         };
 
         // 图片上传处理
@@ -1246,21 +1255,21 @@
                 data.gpuTopProcessList = data.gpuTopProcess;
                 delete data.gpuTopProcess; // 删除原字段避免重复处理
             }
-            
-            // 解析resolution
-            if (data.resolution) {
+                
+                // 解析resolution
+                if (data.resolution) {
                 console.log('🔍 找到resolution字段:', data.resolution);
-                canvasResolution = JSON.parse(data.resolution);
+                    canvasResolution = JSON.parse(data.resolution);
                 console.log('🔍 解析后的分辨率:', canvasResolution);
             } else {
                 console.log('⚠️ 未找到resolution字段，使用默认分辨率');
-            }
-            
-            // 收集所有图层
-            parsedLayers = [];
-            
-            // 处理sourceInfo格式
-            if (data.sourceInfo) {
+                }
+                
+                // 收集所有图层
+                parsedLayers = [];
+                
+                // 处理sourceInfo格式
+                if (data.sourceInfo) {
                 console.log('🔍 找到sourceInfo字段:', data.sourceInfo);
                 try {
                     const sourceInfoData = JSON.parse(data.sourceInfo);
@@ -1272,10 +1281,10 @@
                 }
             } else {
                 console.log('⚠️ 未找到sourceInfo字段');
-            }
-            
-            // 处理obsSourceInfo格式
-            if (data.obsSourceInfo) {
+                }
+                
+                // 处理obsSourceInfo格式
+                if (data.obsSourceInfo) {
                 console.log('🔍 找到obsSourceInfo字段:', data.obsSourceInfo);
                 try {
                     const obsSourceInfoData = JSON.parse(data.obsSourceInfo);
@@ -1290,25 +1299,25 @@
             }
             
             // 处理资源特征数据 - 现在只需要检查List格式
-            let hasResourceData = false;
-            if (data.cpuTopProcessList || data.gpuTopProcessList) {
+                let hasResourceData = false;
+                if (data.cpuTopProcessList || data.gpuTopProcessList) {
                 console.log('🔍 找到资源特征数据');
                 console.log('🔍 cpuTopProcessList:', data.cpuTopProcessList ? '存在' : '不存在');
                 console.log('🔍 gpuTopProcessList:', data.gpuTopProcessList ? '存在' : '不存在');
                 await generateResourceFeatures(data);
-                hasResourceData = true;
+                    hasResourceData = true;
             } else {
                 console.log('⚠️ 未找到资源特征数据 (cpuTopProcessList 或 gpuTopProcessList)');
-            }
-            
-            // 显示或隐藏资源特征模块
-            const resourceFeatures = document.getElementById('resourceFeatures');
-            if (hasResourceData) {
-                resourceFeatures.style.display = 'block';
-            } else {
-                resourceFeatures.style.display = 'none';
-            }
-            
+                }
+                
+                // 显示或隐藏资源特征模块
+                const resourceFeatures = document.getElementById('resourceFeatures');
+                if (hasResourceData) {
+                    resourceFeatures.style.display = 'block';
+                } else {
+                    resourceFeatures.style.display = 'none';
+                }
+                
             console.log('🔍 最终解析结果:');
             console.log('🔍 图层数量:', parsedLayers.length);
             console.log('🔍 资源特征数据:', hasResourceData ? '有' : '无');
@@ -1322,20 +1331,20 @@
                     ['sourceInfo', 'obsSourceInfo', 'cpuTopProcessList', 'gpuTopProcessList'].includes(key)
                 ));
                 throw new Error('未找到可解析的图层信息或资源特征数据，请检查JSON格式。期望的字段: sourceInfo, obsSourceInfo, cpuTopProcessList, gpuTopProcessList');
-            }
-            
-            // 按layer排序
-            parsedLayers.sort((a, b) => a.layer - b.layer);
-            
+                }
+                
+                // 按layer排序
+                parsedLayers.sort((a, b) => a.layer - b.layer);
+                
             if (parsedLayers.length === 0) {
                 showMessage(`✅ 成功解析配置！发现资源特征数据`, 'success');
             } else {
                 showMessage(`✅ 成功解析配置！发现 ${parsedLayers.length} 个图层${hasResourceData ? '和资源特征数据' : ''}`, 'success');
             }
-            
-            // 生成可视化
-            generateVisualization();
-            generateLayerList();
+                
+                // 生成可视化
+                generateVisualization();
+                generateLayerList();
         }
 
         // 解析sourceInfo格式
@@ -1353,7 +1362,7 @@
                         parsedLayers.push({
                             ...source,
                             sourceType,
-                            configSource: 'douyin', // 标识来源为抖音直播伴侣
+                            configSource: 'douyin', // 标识来源为伴侣
                             name: source.name || source.exeName || source.fileName || `${sourceTypeNames[sourceType] || sourceType}源`
                         });
                     });
@@ -1481,15 +1490,15 @@
                 let detectedWidth, detectedHeight, detectedName;
                 
                 // 根据最大坐标推断可能的原始分辨率
-                if (maxX <= 1280 && maxY <= 720) {
+            if (maxX <= 1280 && maxY <= 720) {
                     detectedWidth = 1280; detectedHeight = 720; detectedName = '720p';
-                } else if (maxX <= 1920 && maxY <= 1080) {
+            } else if (maxX <= 1920 && maxY <= 1080) {
                     detectedWidth = 1920; detectedHeight = 1080; detectedName = '1080p';
-                } else if (maxX <= 2560 && maxY <= 1440) {
+            } else if (maxX <= 2560 && maxY <= 1440) {
                     detectedWidth = 2560; detectedHeight = 1440; detectedName = '2K';
                 } else if (maxX <= 3840 && maxY <= 2160) {
                     detectedWidth = 3840; detectedHeight = 2160; detectedName = '4K';
-                } else {
+            } else {
                     // 如果超出4K，使用动态计算
                     detectedWidth = Math.ceil(maxX / 100) * 100; // 向上取整到百位
                     detectedHeight = Math.ceil(maxY / 100) * 100;
@@ -1555,21 +1564,21 @@
                 return [scaledX, scaledY, scaledWidth, scaledHeight];
             } else {
                 // 标准转换逻辑（通过720p基准）
-                // 先转换到720p基准
-                const scale720p = 720 / detectedResolution.height;
-                const converted720pX = x * scale720p;
-                const converted720pY = y * scale720p;
-                const converted720pWidth = sourceWidth * scale720p;
-                const converted720pHeight = sourceHeight * scale720p;
-                
-                // 再转换到当前画布分辨率
-                const scaleToCanvas = canvasResolution.height / 720;
-                const finalX = converted720pX * scaleToCanvas;
-                const finalY = converted720pY * scaleToCanvas;
-                const finalWidth = converted720pWidth * scaleToCanvas;
-                const finalHeight = converted720pHeight * scaleToCanvas;
-                
-                return [finalX, finalY, finalWidth, finalHeight];
+            // 先转换到720p基准
+            const scale720p = 720 / detectedResolution.height;
+            const converted720pX = x * scale720p;
+            const converted720pY = y * scale720p;
+            const converted720pWidth = sourceWidth * scale720p;
+            const converted720pHeight = sourceHeight * scale720p;
+            
+            // 再转换到当前画布分辨率
+            const scaleToCanvas = canvasResolution.height / 720;
+            const finalX = converted720pX * scaleToCanvas;
+            const finalY = converted720pY * scaleToCanvas;
+            const finalWidth = converted720pWidth * scaleToCanvas;
+            const finalHeight = converted720pHeight * scaleToCanvas;
+            
+            return [finalX, finalY, finalWidth, finalHeight];
             }
         }
 
@@ -1864,9 +1873,9 @@
                         // 所有条件满足，但仍然延迟一小段时间确保CSS完全应用
                         setTimeout(() => {
                             console.log(`🎯 开始计算图层${layer.layer}的坐标位置`);
-                            calculateAndSetOverlayPosition();
+                    calculateAndSetOverlayPosition();
                         }, 50); // 50ms延迟确保CSS稳定
-                    } else {
+                } else {
                         // 如果还没准备好，再次检查
                         setTimeout(ensureCalculatePosition, 20);
                     }
@@ -1909,29 +1918,15 @@
                 }
             }
             
-            // 其他情况的处理逻辑
+            // 其他情况的处理逻辑 - 保持原始信息不变
             if (layer.sourceType === 'process' && layer.exeName) {
-                // 进程类型：使用进程匹配的标签
+                // 进程类型：直接显示原始进程名，不进行进程匹配替换
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                    return processTypes.join(' + '); // 多个标签用 + 连接
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return processName;
-                }
+                return processName;
             } else if (layer.sourceType === 'window' && layer.exeName) {
-                // 窗口类型：显示"窗口 | 进程标签"格式
+                // 窗口类型：显示"窗口 | 原始进程名"格式
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                const processTypes = matchProcessType(processName);
-                // 如果匹配到的不是"未知进程"，则显示标签
-                if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                    return `${sourceTypeNames[layer.sourceType]} | ${processTypes.join(' + ')}`;
-                } else {
-                    // 如果是未知进程，显示进程名
-                    return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
-                }
+                return `${sourceTypeNames[layer.sourceType]} | ${processName}`;
             } else if (sourceTypeNames[layer.sourceType]) {
                 // 其他源类型：使用友好的中文名称
                 return sourceTypeNames[layer.sourceType];
@@ -1983,8 +1978,8 @@
                 html += `<div><strong>坐标:</strong> (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)</div>`;
             } else {
                 // 其他配置：显示完整的转换后坐标
-                const [x, y, width, height] = layer.canvasOverlapRect;
-                html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
+            const [x, y, width, height] = layer.canvasOverlapRect;
+            html += `<div><strong>坐标:</strong> (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})</div>`;
             }
             
             return html;
@@ -2056,17 +2051,17 @@
             `;
             layerList.appendChild(showAllItem);
             
-            // 先显示抖音直播伴侣配置
+            // 先显示伴侣配置
             if (douyinLayers.length > 0) {
                 const douyinGroupHeader = document.createElement('div');
                 douyinGroupHeader.className = 'config-group-header douyin';
                 douyinGroupHeader.innerHTML = `
-                    <div class="group-icon douyin-icon">抖</div>
-                    <span>抖音直播伴侣配置 (${douyinLayers.length}层)</span>
+                    <div class="group-icon douyin-icon">伴</div>
+                    <span>伴侣配置 (${douyinLayers.length}层)</span>
                 `;
                 layerList.appendChild(douyinGroupHeader);
                 
-                // 添加抖音配置的图层
+                // 添加伴侣配置的图层
                 douyinLayers.forEach(layer => {
                     const layerItem = createLayerItem(layer);
                     layerList.appendChild(layerItem);
@@ -2123,27 +2118,21 @@
 
         // 生成图层描述
         function generateLayerDescription(layer) {
-            // 描述中保留原始的源类型信息
-            let desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            // 描述中保留原始的源类型信息 - 对于iosWirelessProjection保持原始名称
+            let desc;
+            if (layer.sourceType === 'iosWirelessProjection') {
+                // 特殊处理：iosWirelessProjection在描述中保持原始名称
+                desc = layer.sourceType;
+            } else {
+                // 其他源类型使用中文映射
+                desc = `${sourceTypeNames[layer.sourceType] || layer.sourceType}`;
+            }
             
-            // 添加特殊信息
+            // 添加特殊信息 - 保持原始进程信息不变
             if (layer.exeName) {
                 const processName = layer.exeName.split(':').pop() || layer.exeName;
-                
-                // 对于window层和process层，如果有进程匹配，显示进程标签
-                if ((layer.sourceType === 'window' || layer.sourceType === 'process') && processLibrary.length > 0) {
-                    const processTypes = matchProcessType(processName);
-                    // 如果匹配到的不是"未知进程"，则显示标签
-                    if (processTypes.length > 0 && !processTypes.includes('未知进程')) {
-                        desc += ` | ${processTypes.join(' + ')}`;
-                    } else {
-                        // 如果是未知进程，显示进程名
-                        desc += ` | ${processName}`;
-                    }
-                } else {
-                    // 其他情况或进程库未加载时，显示进程名
-                    desc += ` | ${processName}`;
-                }
+                // 直接显示原始进程名，不进行进程匹配替换
+                desc += ` | ${processName}`;
             }
             
             // 对于摄像头设备，优先显示deviceId
@@ -2185,8 +2174,8 @@
                 desc += ` | 坐标: (${layer.pos.x || 0}, ${layer.pos.y || 0}, /, /)`;
             } else {
                 // 其他配置：显示完整的转换后坐标
-                const [x, y, width, height] = layer.canvasOverlapRect;
-                desc += ` | 坐标: (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})`;
+            const [x, y, width, height] = layer.canvasOverlapRect;
+            desc += ` | 坐标: (${Math.round(x)}, ${Math.round(y)}, ${Math.round(width)}, ${Math.round(height)})`;
             }
             
             return desc;
@@ -2460,11 +2449,57 @@
                 </table>
             `;
             
-            container.innerHTML = tableHTML;
+            // 检测特定风险类型
+            const riskDetectionHTML = generateRiskDetection(cpuTopProcesses);
+            
+            container.innerHTML = tableHTML + riskDetectionHTML;
             
             // 添加调试信息
             console.log(`资源特征表格生成完成: CPU进程${cpuTopProcesses.length}个, GPU进程${gpuTopProcesses.length}个, 最大进程数${maxProcessCount}`);
             console.log(`进程库状态: 共${processLibrary.length}条记录`);
+        }
+        
+        // 生成风险进程检测结果
+        function generateRiskDetection(cpuTopProcesses) {
+            if (cpuTopProcesses.length === 0) {
+                return ''; // 没有CPU进程数据时不显示检测结果
+            }
+            
+            // 收集所有CPU进程的标签
+            let allCpuTags = [];
+            cpuTopProcesses.forEach(process => {
+                const processTypes = matchProcessType(process.name);
+                allCpuTags = allCpuTags.concat(processTypes);
+            });
+            
+            // 检测各种风险类型
+            const hasHumanVerification = allCpuTags.includes('人机校验作弊进程');
+            const hasAIAudio = allCpuTags.includes('音频录制AI互动进程');
+            const hasAutoScript = allCpuTags.includes('自动操作脚本');
+            const hasDanmuCrawler = allCpuTags.includes('弹幕爬取进程');
+            const hasBlackProduct = allCpuTags.includes('黑产进程');
+            
+            console.log('风险检测结果:', {
+                '人机校验软件': hasHumanVerification,
+                'AI音频软件': hasAIAudio,
+                '自动操作脚本': hasAutoScript,
+                '弹幕爬取软件': hasDanmuCrawler,
+                '黑产进程': hasBlackProduct,
+                '检测到的标签': allCpuTags
+            });
+            
+            return `
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; border-left: 4px solid #dc3545;">
+                    <div style="font-weight: bold; font-size: 16px; color: #dc3545; margin-bottom: 10px;">🔍 风险进程检测</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 30px; font-size: 14px; color: #495057;">
+                        <div><strong>人机校验软件:</strong> <span style="color: ${hasHumanVerification ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasHumanVerification ? '是' : '否'}</span></div>
+                        <div><strong>AI音频软件:</strong> <span style="color: ${hasAIAudio ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAIAudio ? '是' : '否'}</span></div>
+                        <div><strong>自动操作脚本:</strong> <span style="color: ${hasAutoScript ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasAutoScript ? '是' : '否'}</span></div>
+                        <div><strong>弹幕爬取软件:</strong> <span style="color: ${hasDanmuCrawler ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasDanmuCrawler ? '是' : '否'}</span></div>
+                        <div><strong>黑产进程:</strong> <span style="color: ${hasBlackProduct ? '#dc3545' : '#28a745'}; font-weight: bold;">${hasBlackProduct ? '是' : '否'}</span></div>
+                    </div>
+                </div>
+            `;
         }
         
         // 窗口大小变化时重新计算叠加层位置

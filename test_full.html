@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>完整流程测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .layer-item { background: #fff; border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        textarea { width: 100%; height: 150px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🧪 完整流程测试</h1>
+    
+    <div class="debug-info">
+        <h3>测试JSON配置</h3>
+        <textarea id="jsonInput">{
+  "resolution": "{\"width\":1920,\"height\":1080}",
+  "sourceInfo": "{\"process\":{\"sourceList\":[{\"exeName\":\"dnplayer.exe\",\"overlap\":0.7,\"canvasOverlap\":0.7,\"canvasOverlapRect\":[791,156,341,195],\"layer\":1}]}}"
+}</textarea>
+    </div>
+    
+    <button onclick="testFullProcess()">🚀 完整测试</button>
+    <button onclick="clearResults()">🧹 清除结果</button>
+    
+    <div id="results"></div>
+
+    <script>
+        let processLabelMap = {};
+        let isProcessLibraryLoaded = false;
+        let parsedLayers = [];
+
+        // 异步加载进程库 (复制自主页面)
+        async function loadProcessLibrary() {
+            try {
+                const response = await fetch('process-library.csv');
+                const csv = await response.text();
+                
+                console.log('🔍 开始加载进程库...');
+                
+                csv.split('\n').slice(1).forEach(line => {
+                    if (line.trim()) {
+                        const [exe, label] = line.split(',');
+                        if (exe && label) {
+                            const cleanExe = exe.trim().toLowerCase();
+                            const cleanLabel = label.trim();
+                            processLabelMap[cleanExe] = cleanLabel;
+                            console.log(`📋 进程映射: ${cleanExe} -> ${cleanLabel}`);
+                        }
+                    }
+                });
+                
+                isProcessLibraryLoaded = true;
+                console.log(`✅ 进程库加载完成，共 ${Object.keys(processLabelMap).length} 个进程映射`);
+                
+                // 如果已经有解析的图层数据，重新渲染图层列表
+                if (parsedLayers.length > 0) {
+                    console.log('🔄 进程库加载完成，重新渲染图层列表...');
+                    generateLayerList();
+                }
+                
+            } catch (error) {
+                console.error('❌ 加载进程库失败:', error);
+            }
+        }
+
+        // getLayerDisplayName函数 (复制自主页面)
+        function getLayerDisplayName(layer) {
+            // 对于进程类型，无论是伴侣配置还是OBS配置，都尝试查找标签
+            if (layer.sourceType === 'process' && layer.exeName) {
+                // 去掉扩展名，转换为小写
+                const exeBase = layer.exeName.replace(/\.[^/.]+$/, '').toLowerCase();
+                
+                console.log(`🔍 查找进程标签: ${layer.exeName} -> ${exeBase}`);
+                
+                if (isProcessLibraryLoaded && processLabelMap[exeBase]) {
+                    const label = processLabelMap[exeBase];
+                    console.log(`✅ 找到进程标签: ${exeBase} -> ${label}`);
+                    return label;
+                } else {
+                    console.log(`❌ 未找到进程标签: ${exeBase}, 进程库已加载: ${isProcessLibraryLoaded}`);
+                    // 调试信息：显示进程库中的相关条目
+                    if (isProcessLibraryLoaded) {
+                        const similarKeys = Object.keys(processLabelMap).filter(key => 
+                            key.includes(exeBase) || exeBase.includes(key)
+                        );
+                        console.log(`🔍 进程库中相似的键: ${similarKeys.join(', ')}`);
+                    }
+                }
+                
+                // 进程库找不到则用原始进程名
+                return layer.exeName;
+            }
+            
+            // 对于OBS配置，优先显示name字段
+            if (layer.configSource === 'obs') {
+                if (layer.name && layer.name.trim()) {
+                    return layer.name;
+                }
+            }
+            
+            // 其他类型保持原有逻辑
+            return layer.name || layer.sourceType;
+        }
+
+        // 解析sourceInfo格式 (简化版)
+        function parseSourceInfo(sourceInfo) {
+            Object.keys(sourceInfo).forEach(sourceType => {
+                const sourceData = sourceInfo[sourceType];
+                if (sourceData.sourceList) {
+                    sourceData.sourceList.forEach(source => {
+                        parsedLayers.push({
+                            ...source,
+                            sourceType,
+                            configSource: 'douyin',
+                            name: source.name || source.exeName || source.fileName || `${sourceType}源`
+                        });
+                    });
+                }
+            });
+        }
+
+        // 生成图层列表 (简化版)
+        function generateLayerList() {
+            let html = '<div class="debug-info"><h3>📋 解析的图层列表</h3>';
+            
+            parsedLayers.forEach(layer => {
+                const displayName = getLayerDisplayName(layer);
+                const isCorrect = (layer.exeName === 'dnplayer.exe' && displayName === '安卓模拟器');
+                
+                html += `<div class="layer-item ${isCorrect ? 'success' : 'error'}">`;
+                html += `<strong>第${layer.layer}层 - ${displayName}</strong><br>`;
+                html += `原始进程名: ${layer.exeName}<br>`;
+                html += `配置来源: ${layer.configSource}<br>`;
+                html += `源类型: ${layer.sourceType}`;
+                html += `</div>`;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 完整测试流程
+        async function testFullProcess() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="debug-info">🔄 开始完整测试...</div>';
+            
+            let html = '';
+            
+            try {
+                // 1. 加载进程库
+                html += '<div class="debug-info">📚 步骤1: 加载进程库...</div>';
+                await loadProcessLibrary();
+                
+                if (isProcessLibraryLoaded) {
+                    html += '<div class="debug-info success">✅ 进程库加载成功</div>';
+                } else {
+                    html += '<div class="debug-info error">❌ 进程库加载失败</div>';
+                    resultsDiv.innerHTML = html;
+                    return;
+                }
+                
+                // 2. 解析JSON配置
+                html += '<div class="debug-info">🔧 步骤2: 解析JSON配置...</div>';
+                const jsonInput = document.getElementById('jsonInput').value;
+                const data = JSON.parse(jsonInput);
+                
+                // 解析resolution
+                const canvasResolution = JSON.parse(data.resolution);
+                console.log('解析分辨率:', canvasResolution);
+                
+                // 解析sourceInfo
+                parsedLayers = [];
+                if (data.sourceInfo) {
+                    const sourceInfoData = JSON.parse(data.sourceInfo);
+                    parseSourceInfo(sourceInfoData);
+                }
+                
+                html += '<div class="debug-info success">✅ JSON解析成功</div>';
+                html += `<div class="debug-info">解析到 ${parsedLayers.length} 个图层</div>`;
+                
+                // 3. 生成图层列表
+                html += '<div class="debug-info">🎨 步骤3: 生成图层显示名称...</div>';
+                html += generateLayerList();
+                
+                // 4. 验证结果
+                const dnplayerLayer = parsedLayers.find(layer => layer.exeName === 'dnplayer.exe');
+                if (dnplayerLayer) {
+                    const displayName = getLayerDisplayName(dnplayerLayer);
+                    if (displayName === '安卓模拟器') {
+                        html += '<div class="debug-info success"><h3>🎉 测试成功！</h3>';
+                        html += `dnplayer.exe 正确显示为 "安卓模拟器"</div>`;
+                    } else {
+                        html += '<div class="debug-info error"><h3>❌ 测试失败</h3>';
+                        html += `dnplayer.exe 显示为 "${displayName}"，期望为 "安卓模拟器"</div>`;
+                    }
+                }
+                
+            } catch (error) {
+                html += `<div class="debug-info error">❌ 测试过程中出错: ${error.message}</div>`;
+                console.error('测试错误:', error);
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            parsedLayers = [];
+        }
+
+        // 页面加载时开始加载进程库
+        loadProcessLibrary();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程标签调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 进程标签匹配调试</h1>
+    
+    <div class="debug-info">
+        <h3>测试配置</h3>
+        <p><strong>进程名:</strong> dnplayer.exe</p>
+        <p><strong>期望标签:</strong> 安卓模拟器</p>
+    </div>
+    
+    <button onclick="testProcessMatching()">🧪 开始测试</button>
+    
+    <div id="results"></div>
+
+    <script>
+        let processLabelMap = {};
+        let isProcessLibraryLoaded = false;
+
+        // 异步加载进程库
+        async function loadProcessLibrary() {
+            try {
+                console.log('🔍 开始加载进程库...');
+                const response = await fetch('process-library.csv');
+                const csv = await response.text();
+                
+                console.log('📄 CSV内容前500字符:', csv.substring(0, 500));
+                
+                const lines = csv.split('\n');
+                console.log('📄 CSV总行数:', lines.length);
+                
+                lines.slice(1).forEach((line, index) => {
+                    if (line.trim()) {
+                        const [exe, label] = line.split(',');
+                        if (exe && label) {
+                            const cleanExe = exe.trim().toLowerCase();
+                            const cleanLabel = label.trim();
+                            processLabelMap[cleanExe] = cleanLabel;
+                            
+                            // 特别关注dnplayer
+                            if (cleanExe.includes('dnplayer')) {
+                                console.log(`🎯 找到dnplayer相关记录 (行${index + 2}): "${exe}" -> "${label}"`);
+                                console.log(`🎯 清理后: "${cleanExe}" -> "${cleanLabel}"`);
+                            }
+                        }
+                    }
+                });
+                
+                isProcessLibraryLoaded = true;
+                console.log(`✅ 进程库加载完成，共 ${Object.keys(processLabelMap).length} 个进程映射`);
+                
+                // 检查dnplayer是否在映射中
+                if (processLabelMap['dnplayer']) {
+                    console.log(`✅ dnplayer映射成功: ${processLabelMap['dnplayer']}`);
+                } else {
+                    console.log(`❌ dnplayer映射失败`);
+                    console.log('🔍 映射表中包含dnplayer的键:', Object.keys(processLabelMap).filter(k => k.includes('dnplayer')));
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('❌ 加载进程库失败:', error);
+                return false;
+            }
+        }
+
+        // 测试进程标签匹配
+        function getLayerDisplayName(exeName) {
+            if (!exeName) return '无进程名';
+            
+            // 去掉扩展名，转换为小写
+            const exeBase = exeName.replace(/\.[^/.]+$/, '').toLowerCase();
+            
+            console.log(`🔍 查找进程标签: ${exeName} -> ${exeBase}`);
+            
+            if (isProcessLibraryLoaded && processLabelMap[exeBase]) {
+                const label = processLabelMap[exeBase];
+                console.log(`✅ 找到进程标签: ${exeBase} -> ${label}`);
+                return label;
+            } else {
+                console.log(`❌ 未找到进程标签: ${exeBase}, 进程库已加载: ${isProcessLibraryLoaded}`);
+                
+                // 调试信息：显示进程库中的相关条目
+                if (isProcessLibraryLoaded) {
+                    const allKeys = Object.keys(processLabelMap);
+                    const similarKeys = allKeys.filter(key => 
+                        key.includes(exeBase) || exeBase.includes(key)
+                    );
+                    console.log(`🔍 进程库中相似的键: ${similarKeys.join(', ')}`);
+                    console.log(`🔍 进程库中所有键的前10个: ${allKeys.slice(0, 10).join(', ')}`);
+                }
+                
+                return exeName; // 返回原始进程名
+            }
+        }
+
+        // 测试函数
+        async function testProcessMatching() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="debug-info">🔄 正在测试...</div>';
+            
+            console.log('🧪 开始进程标签匹配测试');
+            
+            // 1. 加载进程库
+            const loadSuccess = await loadProcessLibrary();
+            
+            let html = '';
+            
+            if (loadSuccess) {
+                html += '<div class="debug-info success"><h3>✅ 进程库加载成功</h3>';
+                html += `<p>共加载 ${Object.keys(processLabelMap).length} 个进程映射</p></div>`;
+                
+                // 2. 测试dnplayer.exe
+                const testExe = 'dnplayer.exe';
+                const result = getLayerDisplayName(testExe);
+                
+                if (result === '安卓模拟器') {
+                    html += '<div class="debug-info success"><h3>🎉 测试成功！</h3>';
+                    html += `<p><strong>${testExe}</strong> 正确映射为 <strong>${result}</strong></p></div>`;
+                } else {
+                    html += '<div class="debug-info error"><h3>❌ 测试失败</h3>';
+                    html += `<p><strong>${testExe}</strong> 映射为 <strong>${result}</strong>，期望为 <strong>安卓模拟器</strong></p></div>`;
+                }
+                
+                // 3. 显示映射详情
+                html += '<div class="debug-info"><h3>🔍 映射详情</h3>';
+                html += `<p><strong>原始进程名:</strong> ${testExe}</p>`;
+                html += `<p><strong>处理后的键:</strong> ${testExe.replace(/\.[^/.]+$/, '').toLowerCase()}</p>`;
+                html += `<p><strong>进程库中的值:</strong> ${processLabelMap['dnplayer'] || '未找到'}</p>`;
+                html += `<p><strong>进程库已加载:</strong> ${isProcessLibraryLoaded}</p></div>`;
+                
+            } else {
+                html += '<div class="debug-info error"><h3>❌ 进程库加载失败</h3></div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // 页面加载时自动运行测试
+        window.addEventListener('load', function() {
+            console.log('📄 页面加载完成，准备测试');
+            setTimeout(testProcessMatching, 1000); // 延迟1秒确保所有资源加载完成
+        });
+    </script>
+</body>
+</html> 
