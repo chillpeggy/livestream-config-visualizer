@@ -376,6 +376,15 @@
             background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
             border-left: 4px solid #28a745;
         }
+        .layer-item.hack-notice {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 4px solid #f44336;
+            border-radius: 8px;
+        }
+        .layer-item.hack-notice:hover {
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+            transform: translateX(2px);
+        }
         .layer-color-dot {
             width: 14px;
             height: 14px;
@@ -1285,6 +1294,19 @@
             console.log('🔍 开始解析数据，原始数据结构:', data);
             console.log('🔍 数据的所有键:', Object.keys(data));
             
+            // 检查并保存hackInfo信息
+            if (data.hackInfo) {
+                try {
+                    window.currentHackInfo = JSON.parse(data.hackInfo);
+                    console.log('🔍 检测到hackInfo:', window.currentHackInfo);
+                } catch (e) {
+                    console.warn('🔍 hackInfo解析失败:', e);
+                    window.currentHackInfo = null;
+                }
+            } else {
+                window.currentHackInfo = null;
+            }
+            
             // 字段名标准化：将cpuTopProcess转换为cpuTopProcessList，gpuTopProcess转换为gpuTopProcessList
             if (data.cpuTopProcess && !data.cpuTopProcessList) {
                 console.log('检测到cpuTopProcess字段，转换为cpuTopProcessList');
@@ -2088,6 +2110,22 @@
         function generateLayerList() {
             const layerList = document.getElementById('layerList');
             layerList.innerHTML = '';
+            
+            // 检查是否为hack推流且无图层信息
+            if (parsedLayers.length === 0 && window.currentHackInfo) {
+                console.log('🔍 检测到hack推流且无图层信息，显示特殊提示');
+                const hackNoticeItem = document.createElement('div');
+                hackNoticeItem.className = 'layer-item hack-notice';
+                hackNoticeItem.innerHTML = `
+                    <div class="layer-color-dot" style="background: #ff6b6b;"></div>
+                    <div class="layer-text">
+                        <div class="layer-title" style="color: #ff6b6b;">⚠️ Hack推流模式</div>
+                        <div class="layer-desc">hack推流，无解析图层信息</div>
+                    </div>
+                `;
+                layerList.appendChild(hackNoticeItem);
+                return;
+            }
             
             // 按配置来源分组
             const douyinLayers = parsedLayers.filter(layer => layer.configSource === 'douyin');
