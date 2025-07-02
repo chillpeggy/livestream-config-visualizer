@@ -1247,6 +1247,10 @@
             let fixed = jsonStr;
             
             console.log('开始JSON容错修复...');
+            console.log('原始字符串前100字符:', fixed.substring(0, 100));
+            
+            // 0. 检测并修复双重转义问题
+            fixed = fixDoubleEscaping(fixed);
             
             // 特殊处理：修复嵌套JSON字符串转义问题
             fixed = fixNestedJsonEscaping(fixed);
@@ -1289,7 +1293,42 @@
             }
             
             console.log('JSON修复完成');
+            console.log('修复后字符串前100字符:', fixed.substring(0, 100));
             return fixed;
+        }
+
+        // 修复双重转义问题的函数
+        function fixDoubleEscaping(jsonStr) {
+            console.log('🔧 检查双重转义问题...');
+            
+            // 检测是否是双重转义的JSON字符串
+            // 双重转义的特征：开头是 {\" 而不是 {"
+            if (jsonStr.startsWith('{\\')) {
+                console.log('🔧 检测到双重转义，进行修复...');
+                
+                try {
+                    // 尝试解析一次来去掉外层转义
+                    const unescaped = JSON.parse('"' + jsonStr + '"');
+                    console.log('✅ 双重转义修复成功');
+                    console.log('修复后前100字符:', unescaped.substring(0, 100));
+                    return unescaped;
+                } catch (e) {
+                    console.log('⚠️ 双重转义修复失败，尝试其他方法:', e.message);
+                    
+                    // 手动处理双重转义
+                    let fixed = jsonStr;
+                    // 将 \\" 替换为 "
+                    fixed = fixed.replace(/\\"/g, '"');
+                    // 将 \\\\ 替换为 \\
+                    fixed = fixed.replace(/\\\\/g, '\\');
+                    
+                    console.log('🔧 手动双重转义修复完成');
+                    console.log('手动修复后前100字符:', fixed.substring(0, 100));
+                    return fixed;
+                }
+            }
+            
+            return jsonStr;
         }
 
         // 修复嵌套JSON字符串转义问题的专用函数

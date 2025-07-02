@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双重转义修复测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        textarea { width: 100%; height: 200px; font-family: monospace; font-size: 11px; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; font-family: monospace; font-size: 12px; }
+        .log { background: #f1f3f4; padding: 10px; margin: 10px 0; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>双重转义修复功能测试</h1>
+    
+    <div class="test-case">
+        <h3>测试用例：用户提供的双重转义配置</h3>
+        <textarea id="doubleEscapeConfig">{"anglogSourceOverlap":0,"cameraSourceOverlap":0,"hackInfo":"{\"hackExe\":\"obs64.exe\",\"hackExePath\":\"D:\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe\",\"hackRemotePort\":1935,\"roomId\":\"7522380260442835752\"}","hangupVersion":10,"isMirroring":false,"isVirtualIdol":false,"liveMode":0,"micDecible":-0.01,"micDecibleList":"[-1.32,-46.56,-3.08,-0.88,-38.58,-39.04,-40.04,-33.57,0,-3.91,-37.44,-17.78,-5.76,-10.51,-26.8,-16.68,-27.83,-38.81,-1.1,-41.37,-38.05,-39.02,-1.25,-9.08,-28.28,-1.44,-28.55,-39.38,-8.89,-44.55]","obsSourceInfo":"{\"audio\":[{\"deviceId\":\"{0.0.1.00000000}.{64aa2605-b327-4082-8273-d044d89e2948}\",\"name\":\"游戏\",\"pos\":{\"x\":0,\"y\":0},\"volume\":1}],\"auxAudioVolumn\":1,\"camera\":[{\"deviceId\":\"Piva-VD05\",\"isSoftware\":false,\"name\":\"苹果平板\",\"pos\":{\"x\":0,\"y\":0},\"realDeviceId\":\"\\\\\\\\?\\\\usb#22vid_048d\\u0026pid_9335\\u0026mi_00#228\\u0026289e0d86\\u00260\\u00260000#22{65e8773d-8f56-11d0-a3b9-00a0c9223196}\\\\global\",\"volume\":1}],\"desktopAudioVolumn\":1,\"image\":[{\"fileSize\":175744,\"filepath\":\"D:/十三定制游戏lut合集勿删/黑边/黑边-勿删.jpg\",\"name\":\"黑边\",\"pos\":{\"x\":0,\"y\":0}},{\"fileSize\":5533,\"filepath\":\"D:/十三定制游戏lut合集勿删/黑边/皇冠图.gif\",\"name\":\"皇冠\",\"pos\":{\"x\":56,\"y\":1729}},{\"fileSize\":164582,\"filepath\":\"C:/Users/Administrator/Desktop/扫码.jpg\",\"name\":\"扫码遮挡图\",\"pos\":{\"x\":789,\"y\":448}}],\"video\":[{\"fileSize\":180858,\"filepath\":\"C:/Users/Administrator/Desktop/绿幕素材.mp4\",\"looping\":true,\"name\":\"蜡笔小新\",\"pos\":{\"x\":0,\"y\":1715},\"volume\":1}],\"window\":[{\"exeName\":\"和平精英:Qt5152QWindowIcon:GameAssistEmulator.exe\",\"name\":\"安卓系统\",\"pos\":{\"x\":0,\"y\":0}},{\"exeName\":\"和平精英模拟器高清版:UnrealWindow:hpjyhd.exe\",\"name\":\"安卓高清模拟器\",\"pos\":{\"x\":1.2427184581756592,\"y\":0}},{\"exeName\":\"x.:Qt5152QWindowIcon:i4AirPlayer.exe\",\"name\":\"露脸\",\"pos\":{\"x\":0,\"y\":1207}}]}","pcSpeakerDecibel":-29.33,"resolution":"{\"height\":1440,\"width\":1920}","sourceInfo":"{\"window\":{\"sourceList\":[{\"canvasOverlap\":0,\"canvasOverlapRect\":[0,0,3,361.71],\"exeName\":\"obs64.exe\",\"layer\":0,\"overlap\":0}],\"totalOverlap\":0}}","timestamp":1751442577,"vcamInfo":"[]","videoSourcesOverlap":0}</textarea>
+        <button onclick="testDoubleEscape()">测试双重转义修复</button>
+        <div id="doubleEscapeResult" class="result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试日志</h3>
+        <div id="testLog" class="log"></div>
+    </div>
+
+    <script>
+        let testLog = [];
+
+        function log(message) {
+            testLog.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+            document.getElementById('testLog').innerHTML = testLog.join('\n');
+            console.log(message);
+        }
+
+        // 复制修复函数
+        function fixDoubleEscaping(jsonStr) {
+            log('🔧 检查双重转义问题...');
+            
+            if (jsonStr.startsWith('{\\')) {
+                log('🔧 检测到双重转义，进行修复...');
+                
+                try {
+                    const unescaped = JSON.parse('"' + jsonStr + '"');
+                    log('✅ 双重转义修复成功');
+                    log('修复后前100字符: ' + unescaped.substring(0, 100));
+                    return unescaped;
+                } catch (e) {
+                    log('⚠️ 双重转义修复失败，尝试其他方法: ' + e.message);
+                    
+                    let fixed = jsonStr;
+                    fixed = fixed.replace(/\\"/g, '"');
+                    fixed = fixed.replace(/\\\\/g, '\\');
+                    
+                    log('🔧 手动双重转义修复完成');
+                    log('手动修复后前100字符: ' + fixed.substring(0, 100));
+                    return fixed;
+                }
+            }
+            
+            return jsonStr;
+        }
+
+        function parseNestedJsonField(jsonStr, fieldName) {
+            try {
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                log(`🔧 ${fieldName}直接解析失败，尝试修复转义: ${e.message}`);
+                
+                try {
+                    let fixed = jsonStr;
+                    if (!fixed.startsWith('{') && fixed.includes('{')) {
+                        if (fixed.match(/^"?\{/)) {
+                            fixed = fixed.replace(/^"/, '');
+                            fixed = fixed.replace(/"$/, '');
+                        }
+                    }
+                    
+                    const result = JSON.parse(fixed);
+                    log(`✅ ${fieldName}修复后解析成功`);
+                    return result;
+                } catch (e2) {
+                    throw e2;
+                }
+            }
+        }
+
+        function testDoubleEscape() {
+            const configText = document.getElementById('doubleEscapeConfig').value;
+            const resultDiv = document.getElementById('doubleEscapeResult');
+            
+            log('\n🧪 开始测试双重转义修复...');
+            log('原始字符串前100字符: ' + configText.substring(0, 100));
+            
+            try {
+                // 先尝试直接解析
+                try {
+                    const directParse = JSON.parse(configText);
+                    log('✅ 直接解析成功（不需要修复）');
+                    
+                    // 测试嵌套字段
+                    testNestedFields(directParse, resultDiv, '直接解析');
+                    return;
+                } catch (e) {
+                    log('⚠️ 直接解析失败: ' + e.message);
+                }
+                
+                // 使用双重转义修复
+                const fixedConfig = fixDoubleEscaping(configText);
+                log('🔧 双重转义修复完成，尝试解析...');
+                
+                const parsedData = JSON.parse(fixedConfig);
+                log('✅ 修复后JSON解析成功');
+                
+                // 测试嵌套字段
+                testNestedFields(parsedData, resultDiv, '修复后解析');
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h4>❌ 测试失败</h4>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                `;
+                resultDiv.className = 'result error';
+                log('💥 测试失败: ' + error.message);
+            }
+        }
+
+        function testNestedFields(data, resultDiv, method) {
+            const tests = [];
+            
+            if (data.obsSourceInfo) {
+                try {
+                    const obsData = parseNestedJsonField(data.obsSourceInfo, 'obsSourceInfo');
+                    tests.push(`obsSourceInfo: ${Object.keys(obsData).length}个源类型`);
+                    
+                    // 详细分析源
+                    if (obsData.audio) tests.push(`- 音频源: ${obsData.audio.length}个`);
+                    if (obsData.camera) tests.push(`- 摄像头源: ${obsData.camera.length}个`);
+                    if (obsData.image) tests.push(`- 图片源: ${obsData.image.length}个`);
+                    if (obsData.video) tests.push(`- 视频源: ${obsData.video.length}个`);
+                    if (obsData.window) tests.push(`- 窗口源: ${obsData.window.length}个`);
+                    
+                } catch (e) {
+                    tests.push(`obsSourceInfo: 解析失败 - ${e.message}`);
+                }
+            }
+            
+            if (data.sourceInfo) {
+                try {
+                    const sourceData = parseNestedJsonField(data.sourceInfo, 'sourceInfo');
+                    tests.push(`sourceInfo: ${Object.keys(sourceData).length}个源类型`);
+                } catch (e) {
+                    tests.push(`sourceInfo: 解析失败 - ${e.message}`);
+                }
+            }
+            
+            if (data.resolution) {
+                try {
+                    const resolutionData = parseNestedJsonField(data.resolution, 'resolution');
+                    tests.push(`resolution: ${resolutionData.width}x${resolutionData.height}`);
+                } catch (e) {
+                    tests.push(`resolution: 解析失败 - ${e.message}`);
+                }
+            }
+            
+            if (data.hackInfo) {
+                try {
+                    const hackData = parseNestedJsonField(data.hackInfo, 'hackInfo');
+                    tests.push(`hackInfo: ${Object.keys(hackData).length}个字段`);
+                    if (hackData.hackExe) tests.push(`- 执行文件: ${hackData.hackExe}`);
+                    if (hackData.roomId) tests.push(`- 房间ID: ${hackData.roomId}`);
+                } catch (e) {
+                    tests.push(`hackInfo: 解析失败 - ${e.message}`);
+                }
+            }
+            
+            resultDiv.innerHTML = `
+                <h4>✅ 双重转义修复测试成功</h4>
+                <p><strong>解析方法:</strong> ${method}</p>
+                <p><strong>主字段数量:</strong> ${Object.keys(data).length}</p>
+                <p><strong>嵌套字段测试:</strong></p>
+                <ul>${tests.map(test => `<li>${test}</li>`).join('')}</ul>
+            `;
+            resultDiv.className = 'result success';
+            
+            log('🎉 双重转义测试成功完成');
+        }
+
+        // 初始化
+        log('📋 双重转义测试页面加载完成');
+    </script>
+</body>
+</html> 
