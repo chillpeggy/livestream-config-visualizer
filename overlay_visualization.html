@@ -1247,13 +1247,21 @@
             let fixed = jsonStr;
             
             console.log('开始JSON容错修复...');
-            console.log('原始字符串前100字符:', fixed.substring(0, 100));
+            console.log('原始字符串前200字符:', fixed.substring(0, 200));
             
             // 0. 检测并修复双重转义问题
             fixed = fixDoubleEscaping(fixed);
             
             // 特殊处理：修复嵌套JSON字符串转义问题
             fixed = fixNestedJsonEscaping(fixed);
+            
+            // 新增：处理复杂设备ID转义问题
+            // 修复形如 \\\\\\\\?\\\\\\\\usb 的复杂转义
+            fixed = fixed.replace(/\\\\\\\\\\\\\\\\\?/g, '\\\\\\\\?');
+            fixed = fixed.replace(/\\\\\\\\\\\\\\\\/g, '\\\\\\\\');
+            
+            // 修复Unicode转义序列中的双重反斜杠
+            fixed = fixed.replace(/\\\\u([0-9a-fA-F]{4})/g, '\\u$1');
             
             // 1. 修复开头缺少双引号的问题
             // 匹配 {字母 而不是 {"字母
@@ -1263,9 +1271,8 @@
             // 匹配 ,字母: 或 {字母: 而不是 ,"字母": 或 {"字母":
             fixed = fixed.replace(/([,{]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
             
-            // 3. 修复多余的反斜杠问题
-            // 将 \\\\\\\\替换为 \\\\
-            fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
+            // 3. 修复多余的反斜杠问题（调整顺序，在处理嵌套JSON后进行）
+            // 不再进行全局的4->2反斜杠替换，因为可能破坏设备ID
             
             // 4. 修复缺少逗号的问题
             // 在 }" 和 "字母 之间添加逗号
@@ -1293,7 +1300,7 @@
             }
             
             console.log('JSON修复完成');
-            console.log('修复后字符串前100字符:', fixed.substring(0, 100));
+            console.log('修复后字符串前200字符:', fixed.substring(0, 200));
             return fixed;
         }
 
@@ -1315,12 +1322,32 @@
                 } catch (e) {
                     console.log('⚠️ 双重转义修复失败，尝试其他方法:', e.message);
                     
-                    // 手动处理双重转义
+                    // 手动处理双重转义 - 更精确的方法
                     let fixed = jsonStr;
-                    // 将 \\" 替换为 "
+                    
+                    // 分步修复，避免破坏正常的转义序列
+                    // 1. 先处理设备ID中的复杂转义 \\\\\\\\?\\\\\\\\
+                    fixed = fixed.replace(/\\\\\\\\\\\\\\\\\?/g, '\\\\\\\\?');
+                    
+                    // 2. 处理一般的8个反斜杠 -> 4个反斜杠
+                    fixed = fixed.replace(/\\\\\\\\\\\\\\\\/g, '\\\\\\\\');
+                    
+                    // 3. 处理4个反斜杠 -> 2个反斜杠 (但要保护设备ID)
+                    // 先临时标记设备ID部分
+                    fixed = fixed.replace(/(\\\\\\\\.*?\\\\\\\\)/g, (match) => {
+                        return '___DEVICE_ID_PLACEHOLDER___' + btoa(match) + '___END___';
+                    });
+                    
+                    // 4. 现在安全地处理剩余的4个反斜杠
+                    fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
+                    
+                    // 5. 恢复设备ID部分
+                    fixed = fixed.replace(/___DEVICE_ID_PLACEHOLDER___(.*?)___END___/g, (match, encoded) => {
+                        return atob(encoded);
+                    });
+                    
+                    // 6. 最后处理双引号转义
                     fixed = fixed.replace(/\\"/g, '"');
-                    // 将 \\\\ 替换为 \\
-                    fixed = fixed.replace(/\\\\/g, '\\');
                     
                     console.log('🔧 手动双重转义修复完成');
                     console.log('手动修复后前100字符:', fixed.substring(0, 100));
@@ -1405,14 +1432,8 @@
                             const nestedJsonStr = fixed.substring(valueStart, valueEnd);
                             console.log(`🔧 提取${fieldName}的嵌套JSON:`, nestedJsonStr.substring(0, 100) + '...');
                             
-                            // 对嵌套JSON进行转义修复
-                            const fixedNestedJson = nestedJsonStr.replace(/"/g, '\\"');
-                            
-                            // 替换原始字符串
-                            const before = fixed.substring(0, valueStart);
-                            const after = fixed.substring(valueEnd);
-                            fixed = before + fixedNestedJson + after;
-                            
+                            // 不要对嵌套JSON进行额外转义，因为已经在fixDoubleEscaping中处理过了
+                            // 只需要确保这个字段的内容是正确的JSON格式
                             console.log(`✅ ${fieldName}字段转义修复完成`);
                         }
                     }
@@ -1435,10 +1456,25 @@
                 return JSON.parse(jsonStr);
             } catch (e) {
                 console.log(`🔧 ${fieldName}直接解析失败，尝试修复转义:`, e.message);
+                console.log(`🔧 原始字符串:`, jsonStr.substring(0, 200));
                 
                 try {
                     // 尝试修复转义问题
                     let fixed = jsonStr;
+                    
+                    // 处理复杂的设备ID转义问题
+                    // 先处理8个反斜杠 (\\\\\\\\) -> 4个反斜杠 (\\\\)
+                    fixed = fixed.replace(/\\\\\\\\\\\\\\\\/g, '\\\\\\\\');
+                    
+                    // 再处理4个反斜杠 (\\\\) -> 2个反斜杠 (\\)  
+                    fixed = fixed.replace(/\\\\\\\\/g, '\\\\');
+                    
+                    // 处理双引号转义 (\") -> (")
+                    fixed = fixed.replace(/\\"/g, '"');
+                    
+                    // 处理Unicode转义序列中的双重转义
+                    // \\u -> \u
+                    fixed = fixed.replace(/\\\\u/g, '\\u');
                     
                     // 如果字符串不是以 { 开头但包含 {，可能是转义丢失的问题
                     if (!fixed.startsWith('{') && fixed.includes('{')) {
@@ -1451,12 +1487,28 @@
                         }
                     }
                     
+                    console.log(`🔧 修复后字符串:`, fixed.substring(0, 200));
+                    
                     // 尝试再次解析
                     const result = JSON.parse(fixed);
                     console.log(`✅ ${fieldName}修复后解析成功`);
                     return result;
                 } catch (e2) {
                     console.error(`❌ ${fieldName}修复后仍然解析失败:`, e2.message);
+                    console.error(`❌ 修复后的字符串:`, fixed.substring(0, 200));
+                    
+                    // 最后的容错处理：如果是空对象字符串
+                    if (jsonStr === '{}' || jsonStr === '"{}' || jsonStr === '{}"') {
+                        console.log(`🔧 ${fieldName}检测到空对象字符串，返回空对象`);
+                        return {};
+                    }
+                    
+                    // 如果是空数组字符串
+                    if (jsonStr === '[]' || jsonStr === '"[]' || jsonStr === '[]"') {
+                        console.log(`🔧 ${fieldName}检测到空数组字符串，返回空数组`);
+                        return [];
+                    }
+                    
                     throw e2;
                 }
             }
