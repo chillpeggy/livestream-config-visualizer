@@ -1242,11 +1242,14 @@
             }
         }
 
-        // JSON容错修复函数
+        // JSON容错修复函数 - 增强版本
         function fixJsonErrors(jsonStr) {
             let fixed = jsonStr;
             
             console.log('开始JSON容错修复...');
+            
+            // 特殊处理：修复嵌套JSON字符串转义问题
+            fixed = fixNestedJsonEscaping(fixed);
             
             // 1. 修复开头缺少双引号的问题
             // 匹配 {字母 而不是 {"字母
@@ -1289,6 +1292,137 @@
             return fixed;
         }
 
+        // 修复嵌套JSON字符串转义问题的专用函数
+        function fixNestedJsonEscaping(jsonStr) {
+            console.log('🔧 开始修复嵌套JSON转义问题...');
+            
+            // 需要修复的字段列表（这些字段包含嵌套的JSON字符串）
+            const nestedJsonFields = ['obsSourceInfo', 'sourceInfo', 'resolution', 'hackInfo'];
+            
+            let fixed = jsonStr;
+            
+            nestedJsonFields.forEach(fieldName => {
+                // 构建匹配模式：查找类似 "fieldName":"{ 这样的模式
+                const fieldPattern = new RegExp(`"${fieldName}"\\s*:\\s*"\\{`, 'g');
+                
+                if (fieldPattern.test(fixed)) {
+                    console.log(`🔧 检测到${fieldName}字段需要修复转义`);
+                    
+                    // 重置正则表达式的 lastIndex
+                    fieldPattern.lastIndex = 0;
+                    
+                    // 找到字段开始位置
+                    const fieldMatch = fieldPattern.exec(fixed);
+                    if (fieldMatch) {
+                        const fieldStart = fieldMatch.index;
+                        const valueStart = fieldMatch.index + fieldMatch[0].length - 1; // 指向开始的 {
+                        
+                        // 从字段值开始位置查找对应的结束位置
+                        let braceCount = 0;
+                        let inString = false;
+                        let escapeNext = false;
+                        let valueEnd = -1;
+                        
+                        for (let i = valueStart; i < fixed.length; i++) {
+                            const char = fixed[i];
+                            
+                            if (escapeNext) {
+                                escapeNext = false;
+                                continue;
+                            }
+                            
+                            if (char === '\\') {
+                                escapeNext = true;
+                                continue;
+                            }
+                            
+                            if (char === '"' && !escapeNext) {
+                                inString = !inString;
+                                continue;
+                            }
+                            
+                            if (!inString) {
+                                if (char === '{') {
+                                    braceCount++;
+                                } else if (char === '}') {
+                                    braceCount--;
+                                    if (braceCount === 0) {
+                                        // 找到了嵌套JSON的结束位置
+                                        // 现在需要找到外层字符串的结束引号
+                                        for (let j = i + 1; j < fixed.length; j++) {
+                                            if (fixed[j] === '"') {
+                                                valueEnd = j;
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (valueEnd > valueStart) {
+                            // 提取嵌套的JSON内容
+                            const nestedJsonStr = fixed.substring(valueStart, valueEnd);
+                            console.log(`🔧 提取${fieldName}的嵌套JSON:`, nestedJsonStr.substring(0, 100) + '...');
+                            
+                            // 对嵌套JSON进行转义修复
+                            const fixedNestedJson = nestedJsonStr.replace(/"/g, '\\"');
+                            
+                            // 替换原始字符串
+                            const before = fixed.substring(0, valueStart);
+                            const after = fixed.substring(valueEnd);
+                            fixed = before + fixedNestedJson + after;
+                            
+                            console.log(`✅ ${fieldName}字段转义修复完成`);
+                        }
+                    }
+                }
+            });
+            
+            console.log('🔧 嵌套JSON转义修复完成');
+            return fixed;
+        }
+
+        // 安全解析嵌套JSON字段的函数
+        function parseNestedJsonField(jsonStr, fieldName) {
+            if (typeof jsonStr !== 'string') {
+                console.log(`🔧 ${fieldName}不是字符串，直接返回:`, jsonStr);
+                return jsonStr;
+            }
+            
+            try {
+                // 首先尝试直接解析
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                console.log(`🔧 ${fieldName}直接解析失败，尝试修复转义:`, e.message);
+                
+                try {
+                    // 尝试修复转义问题
+                    let fixed = jsonStr;
+                    
+                    // 如果字符串不是以 { 开头但包含 {，可能是转义丢失的问题
+                    if (!fixed.startsWith('{') && fixed.includes('{')) {
+                        // 检查是否是 "{ 这种格式（缺少转义）
+                        if (fixed.match(/^"?\{/)) {
+                            // 移除开头可能的引号
+                            fixed = fixed.replace(/^"/, '');
+                            // 移除结尾可能的引号
+                            fixed = fixed.replace(/"$/, '');
+                        }
+                    }
+                    
+                    // 尝试再次解析
+                    const result = JSON.parse(fixed);
+                    console.log(`✅ ${fieldName}修复后解析成功`);
+                    return result;
+                } catch (e2) {
+                    console.error(`❌ ${fieldName}修复后仍然解析失败:`, e2.message);
+                    throw e2;
+                }
+            }
+        }
+
         // 解析成功后的数据处理
         async function parseSuccessfulData(data) {
             console.log('🔍 开始解析数据，原始数据结构:', data);
@@ -1297,7 +1431,7 @@
             // 检查并保存hackInfo信息
             if (data.hackInfo) {
                 try {
-                    window.currentHackInfo = JSON.parse(data.hackInfo);
+                    window.currentHackInfo = parseNestedJsonField(data.hackInfo, 'hackInfo');
                     console.log('🔍 检测到hackInfo:', window.currentHackInfo);
                 } catch (e) {
                     console.warn('🔍 hackInfo解析失败:', e);
@@ -1323,7 +1457,7 @@
                 // 解析resolution
                 if (data.resolution) {
                 console.log('🔍 找到resolution字段:', data.resolution);
-                    canvasResolution = JSON.parse(data.resolution);
+                    canvasResolution = parseNestedJsonField(data.resolution, 'resolution');
                 console.log('🔍 解析后的分辨率:', canvasResolution);
             } else {
                 console.log('⚠️ 未找到resolution字段，使用默认分辨率');
@@ -1336,7 +1470,7 @@
                 if (data.sourceInfo) {
                 console.log('🔍 找到sourceInfo字段:', data.sourceInfo);
                 try {
-                    const sourceInfoData = JSON.parse(data.sourceInfo);
+                    const sourceInfoData = parseNestedJsonField(data.sourceInfo, 'sourceInfo');
                     console.log('🔍 解析后的sourceInfo:', sourceInfoData);
                     parseSourceInfo(sourceInfoData);
                     console.log('🔍 sourceInfo解析完成，当前图层数:', parsedLayers.length);
@@ -1351,7 +1485,7 @@
                 if (data.obsSourceInfo) {
                 console.log('🔍 找到obsSourceInfo字段:', data.obsSourceInfo);
                 try {
-                    const obsSourceInfoData = JSON.parse(data.obsSourceInfo);
+                    const obsSourceInfoData = parseNestedJsonField(data.obsSourceInfo, 'obsSourceInfo');
                     console.log('🔍 解析后的obsSourceInfo:', obsSourceInfoData);
                     parseObsSourceInfo(obsSourceInfoData);
                     console.log('🔍 obsSourceInfo解析完成，当前图层数:', parsedLayers.length);
